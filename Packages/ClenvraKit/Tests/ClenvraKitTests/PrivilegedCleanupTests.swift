@@ -223,13 +223,13 @@ struct PrivilegedCleanupTests {
     @Test("an orphaned system daemon can be removed only with the helper, which unloads it and trashes its plist")
     func orphanedSystemDaemon() async throws {
         let runner = FakeCommandRunner()
-        runner.stub("/bin/launchctl", ["bootout", "system/com.vendor.gone"])
         let helper = InProcessHelper(
             service: HelperService(
                 allowlist: HelperAllowlist(systemRoot: system), clientHome: home, clientUID: getuid(),
                 log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"),
                 processPaths: { [] }, runner: runner))
         let orphan = try systemDaemon("com.vendor.gone", program: "/Gone/vendord", state: .missing)
+        runner.stub("/bin/launchctl", ["bootout", "system", orphan.plistPath])
 
         let without = startupSession(privileged: nil, runner: runner)
         #expect(!without.canRemove(orphan))
@@ -241,7 +241,7 @@ struct PrivilegedCleanupTests {
 
         #expect(await session.remove(orphan) == .removed)
         #expect(!FileManager.default.fileExists(atPath: orphan.plistPath))
-        #expect(runner.commands.map(\.arguments) == [["bootout", "system/com.vendor.gone"]])
+        #expect(runner.commands.map(\.arguments) == [["bootout", "system", orphan.plistPath]])
         let records = try await activityLog.readAll().records
         #expect(records.last { $0.itemPath == orphan.plistPath }?.privileged == true)
     }

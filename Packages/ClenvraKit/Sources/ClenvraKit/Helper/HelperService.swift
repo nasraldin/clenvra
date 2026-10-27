@@ -220,10 +220,16 @@ public struct HelperService: Sendable {
         var info = stat()
         guard lstat(program, &info) != 0, errno == ENOENT else { return .skipped(.programStillInstalled) }
 
+        // The full gate first: nothing is unloaded for an item that would not be removed.
+        let check = await perform(
+            HelperRequest(operationID: operationID, mode: .dryRun, items: [item], ownerBundlePaths: [:]))
+        guard check.outcomes.first == .wouldDelete else { return check.outcomes.first ?? .notAttempted }
+
+        // Unload by plist path, so only the job loaded from this very file can be stopped (never another job that
+        // happens to share the label). A failure usually means it was not loaded; the plist is removed either way.
         let isDaemon = (item.ruleRoot as NSString).lastPathComponent == "LaunchDaemons"
-        let target = isDaemon ? "system/\(label)" : "gui/\(clientUID)/\(label)"
-        // A failure here usually means it was not loaded; the plist is removed either way, through the gate.
-        _ = try? await runner.run(Command(executable: "/bin/launchctl", arguments: ["bootout", target]))
+        let domain = isDaemon ? "system" : "gui/\(clientUID)"
+        _ = try? await runner.run(Command(executable: "/bin/launchctl", arguments: ["bootout", domain, item.path]))
         let response = await perform(
             HelperRequest(operationID: operationID, mode: .moveToTrash, items: [item], ownerBundlePaths: [:]))
         return response.outcomes.first ?? .notAttempted

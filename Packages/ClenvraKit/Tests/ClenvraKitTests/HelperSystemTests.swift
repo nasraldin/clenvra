@@ -47,13 +47,14 @@ struct HelperSystemTests {
     func removesOrphanedDaemon() async throws {
         let item = try writePlist(
             "Library/LaunchDaemons/com.vendor.old.plist", ["Label": "com.vendor.old", "Program": "/Gone/Vendor/oldd"])
-        runner.stub("/bin/launchctl", ["bootout", "system/com.vendor.old"])
+        runner.stub("/bin/launchctl", ["bootout", "system", item.path])
 
         let outcome = await service.removeOrphanedLaunchItem(item, operationID: UUID())
 
         #expect(outcome.isMovedToTrash)
         #expect(!FileManager.default.fileExists(atPath: item.path))
-        #expect(runner.commands.map(\.arguments) == [["bootout", "system/com.vendor.old"]])
+        // By plist path, so only the job loaded from this very file can be stopped, never another job's label.
+        #expect(runner.commands.map(\.arguments) == [["bootout", "system", item.path]])
     }
 
     @Test("an orphaned agent in /Library/LaunchAgents is unloaded from the requesting user's session")
@@ -61,12 +62,12 @@ struct HelperSystemTests {
         let item = try writePlist(
             "Library/LaunchAgents/com.vendor.agent.plist",
             ["Label": "com.vendor.agent", "ProgramArguments": ["/Gone/Vendor/agent", "--run"]])
-        runner.stub("/bin/launchctl", ["bootout", "gui/501/com.vendor.agent"])
+        runner.stub("/bin/launchctl", ["bootout", "gui/501", item.path])
 
         let outcome = await service.removeOrphanedLaunchItem(item, operationID: UUID())
 
         #expect(outcome.isMovedToTrash)
-        #expect(runner.commands.map(\.arguments) == [["bootout", "gui/501/com.vendor.agent"]])
+        #expect(runner.commands.map(\.arguments) == [["bootout", "gui/501", item.path]])
     }
 
     @Test("an item whose program still exists is not orphaned and is left alone, with nothing run")
@@ -100,6 +101,21 @@ struct HelperSystemTests {
             #expect(!outcome.isMovedToTrash, "\(name) must be refused")
             #expect(FileManager.default.fileExists(atPath: item.path))
         }
+        #expect(runner.commands.isEmpty)
+    }
+
+    @Test("nothing is unloaded when the deletion gate would refuse the plist (it changed after the scan)")
+    func gateRunsBeforeBootout() async throws {
+        let item = try writePlist(
+            "Library/LaunchDaemons/com.vendor.old.plist", ["Label": "com.vendor.old", "Program": "/Gone/Vendor/oldd"])
+        // Replaced after the app scanned it: a different file now, though still an orphan.
+        try FileManager.default.removeItem(atPath: item.path)
+        _ = try writePlist(
+            "Library/LaunchDaemons/com.vendor.old.plist", ["Label": "com.vendor.old", "Program": "/Gone/Vendor/oldd"])
+
+        let outcome = await service.removeOrphanedLaunchItem(item, operationID: UUID())
+
+        #expect(outcome == .skipped(.changedSinceScan))
         #expect(runner.commands.isEmpty)
     }
 

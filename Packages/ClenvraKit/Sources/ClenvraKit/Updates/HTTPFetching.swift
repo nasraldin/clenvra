@@ -38,16 +38,34 @@ public struct URLSessionFetcher: HTTPFetching {
 
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-        let data: Data
+        let bytes: URLSession.AsyncBytes
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: request, delegate: SecureRedirects())
+            (bytes, response) = try await session.bytes(for: request, delegate: SecureRedirects())
         } catch {
             throw FetchError.requestFailed
         }
         guard let http = response as? HTTPURLResponse else { throw FetchError.requestFailed }
         guard (200..<300).contains(http.statusCode) else { throw FetchError.badStatus(http.statusCode) }
-        guard data.count <= Self.maximumBytes else { throw FetchError.tooLarge }
+        guard http.expectedContentLength <= Int64(Self.maximumBytes) else { throw FetchError.tooLarge }
+        // Counted while it streams in, so an endless or oversized body is cut off at the limit, not after it.
+        return try await Self.collect(bytes, limit: Self.maximumBytes)
+    }
+
+    /// Reads at most `limit` bytes, stopping (and failing) as soon as the body goes past it.
+    static func collect<Bytes: AsyncSequence>(_ bytes: Bytes, limit: Int) async throws -> Data
+    where Bytes.Element == UInt8 {
+        var data = Data()
+        do {
+            for try await byte in bytes {
+                guard data.count < limit else { throw FetchError.tooLarge }
+                data.append(byte)
+            }
+        } catch let error as FetchError {
+            throw error
+        } catch {
+            throw FetchError.requestFailed
+        }
         return data
     }
 

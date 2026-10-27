@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import Testing
 
 @testable import ClenvraKit
@@ -151,5 +152,36 @@ struct UpdateSourcesTests {
             let url = try #require(URL(string: text))
             await #expect(throws: FetchError.insecureURL) { try await fetcher.data(from: url) }
         }
+    }
+
+    @Test("a download over the size limit is cut off while it streams, not after it arrived")
+    func streamingLimit() async throws {
+        final class Counter: Sendable {
+            let value = Mutex(0)
+        }
+        let consumed = Counter()
+        struct Counting: AsyncSequence {
+            typealias Element = UInt8
+            let total: Int
+            let consumed: Counter
+            struct Iterator: AsyncIteratorProtocol {
+                var remaining: Int
+                let consumed: Counter
+                mutating func next() async -> UInt8? {
+                    guard remaining > 0 else { return nil }
+                    remaining -= 1
+                    consumed.value.withLock { $0 += 1 }
+                    return 0x41
+                }
+            }
+            func makeAsyncIterator() -> Iterator { Iterator(remaining: total, consumed: consumed) }
+        }
+
+        await #expect(throws: FetchError.tooLarge) {
+            _ = try await URLSessionFetcher.collect(Counting(total: 1_000_000, consumed: consumed), limit: 10)
+        }
+        #expect(consumed.value.withLock { $0 } <= 11)
+        let small = try await URLSessionFetcher.collect(Counting(total: 5, consumed: Counter()), limit: 10)
+        #expect(small.count == 5)
     }
 }
