@@ -238,7 +238,10 @@ struct ToolAdaptersTests {
 
     @Test(
         "visibility-only tools are detected by their folder and never offer a command",
-        arguments: [("gradle", ".gradle/caches", "gradle.caches"), ("cargo", ".cargo/registry", "cargo.registry")])
+        arguments: [
+            ("gradle", ".gradle/caches", "gradle.caches"), ("cargo", ".cargo/registry", "cargo.registry"),
+            ("maven", ".m2/repository", "maven.repository"),
+        ])
     func visibilityOnly(adapterID: String, relative: String, rowID: String) async throws {
         let fixture = try ToolFixture()
         let runner = FakeCommandRunner()
@@ -263,12 +266,12 @@ struct ToolAdaptersTests {
             ("512B", 512), ("3.4TB", 3_400_000_000_000), ("1.5KB", 1_500),
         ])
     func dockerSizes(text: String, bytes: Int64) {
-        #expect(DockerAdapter.parseSize(text) == bytes)
+        #expect(ContainerEngineAdapter.parseSize(text) == bytes)
     }
 
     @Test("unparseable Docker sizes are nil", arguments: ["", "GB", "abc", "1.2XB", "-1GB", "1e400GB", "N/A"])
     func dockerBadSizes(text: String) {
-        #expect(DockerAdapter.parseSize(text) == nil)
+        #expect(ContainerEngineAdapter.parseSize(text) == nil)
     }
 
     private static let dockerDF = """
@@ -529,14 +532,309 @@ struct ToolAdaptersTests {
         #expect(try await inspect("lima", fixture, runner).isEmpty)
     }
 
+    // MARK: Folder-detected caches with an optional tool command
+
+    @Test(
+        "folder-detected caches show their size and offer the tool's command only when the tool is found",
+        arguments: [
+            ("nuget", "dotnet", ".nuget/packages", "nuget.packages", ["nuget", "locals", "all", "--clear"]),
+            ("swiftpm", "swift", "Library/Caches/org.swift.swiftpm", "swiftpm.cache", ["package", "purge-cache"]),
+        ])
+    func folderDetectedTools(
+        adapterID: String, executable: String, relative: String, rowID: String, command: [String]
+    ) async throws {
+        let fixture = try ToolFixture()
+        let runner = FakeCommandRunner()
+        try fixture.install(executable)
+        #expect(try await inspect(adapterID, fixture, runner).isEmpty, "a tool without its folder shows nothing")
+
+        let cache = try fixture.fill(relative)
+        let row = try #require(try await inspect(adapterID, fixture, runner).first)
+        #expect(row.id == rowID)
+        #expect(row.category == .packageCaches)
+        #expect(row.location == cache)
+        #expect(row.size == (try await fixture.measured(cache)))
+        #expect(
+            row.cleanup?.command
+                == Command(executable: fixture.tool(executable), arguments: command, timeout: .seconds(600)))
+        #expect(row.cleanup?.summary == ([executable] + command).joined(separator: " "))
+        #expect(row.cleanup?.risk == .safe)
+        #expect(row.note.map { String(localized: $0) }?.isEmpty == false)
+        #expect(runner.commands.isEmpty)
+
+        let withoutTool = try ToolFixture()
+        try withoutTool.fill(relative)
+        let sizeOnly = try #require(try await inspect(adapterID, withoutTool, runner).first)
+        #expect(sizeOnly.id == rowID)
+        #expect((sizeOnly.size ?? 0) > 0)
+        #expect(sizeOnly.cleanup == nil)
+    }
+
+    // MARK: conda
+
+    private static let condaInfo = ["info", "--json"]
+
+    @Test("conda: measures the first existing pkgs_dirs entry and offers conda clean for review")
+    func condaProbe() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("conda")
+        let pkgs = try fixture.fill("custom/conda/pkgs", bytes: 40_000)
+        let runner = FakeCommandRunner()
+        runner.stub(
+            fixture.tool("conda"), Self.condaInfo,
+            stdout: """
+                {"conda_version": "25.1.0", "root_prefix": "/somewhere",
+                 "pkgs_dirs": ["\(fixture.home)/missing/pkgs", 7, "relative/pkgs", "\(pkgs)"]}
+                """)
+
+        let rows = try await inspect("conda", fixture, runner)
+
+        let row = try #require(rows.first)
+        #expect(rows.count == 1)
+        #expect(row.id == "conda.pkgs")
+        #expect(row.category == .packageCaches)
+        #expect(row.location == pkgs)
+        #expect(row.size == (try await fixture.measured(pkgs)))
+        #expect(
+            row.cleanup?.command
+                == Command(
+                    executable: fixture.tool("conda"), arguments: ["clean", "--all", "--yes"], timeout: .seconds(600)))
+        #expect(row.cleanup?.summary == "conda clean --all --yes")
+        #expect(row.cleanup?.risk == .review)
+        #expect(
+            runner.commands
+                == [Command(executable: fixture.tool("conda"), arguments: Self.condaInfo, timeout: .seconds(10))])
+    }
+
+    @Test(
+        "conda: unusable info output falls back to the common install roots",
+        arguments: ["", "not json", "[]", #"{"pkgs_dirs": "nope"}"#, #"{"pkgs_dirs": []}"#, "fail"])
+    func condaFallback(output: String) async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("conda")
+        let pkgs = try fixture.fill("miniforge3/pkgs")
+        let runner = FakeCommandRunner()
+        if output == "fail" {
+            runner.stub(fixture.tool("conda"), Self.condaInfo, stderr: "boom", status: 1)
+        } else {
+            runner.stub(fixture.tool("conda"), Self.condaInfo, stdout: output)
+        }
+
+        let row = try #require(try await inspect("conda", fixture, runner).first)
+        #expect(row.location == pkgs)
+        #expect(row.size == (try await fixture.measured(pkgs)))
+        #expect(row.cleanup?.summary == "conda clean --all --yes")
+    }
+
+    @Test("conda: without the tool a known pkgs folder is shown for information only")
+    func condaWithoutTool() async throws {
+        let runner = FakeCommandRunner()
+        for root in ["miniconda3", "anaconda3", "miniforge3"] {
+            let fixture = try ToolFixture()
+            let pkgs = try fixture.fill("\(root)/pkgs")
+            let row = try #require(try await inspect("conda", fixture, runner).first)
+            #expect(row.location == pkgs)
+            #expect(row.cleanup == nil)
+        }
+        #expect(try await inspect("conda", try ToolFixture(), runner).isEmpty)
+        #expect(runner.commands.isEmpty)
+    }
+
+    @Test("conda installed but no pkgs folder anywhere: no row")
+    func condaNoFolder() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("conda")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("conda"), Self.condaInfo, stdout: #"{"pkgs_dirs": ["/nonexistent/clenvra/pkgs"]}"#)
+        #expect(try await inspect("conda", fixture, runner).isEmpty)
+    }
+
+    // MARK: OrbStack
+
+    @Test(
+        "OrbStack data is shown for information only",
+        arguments: ["Library/Group Containers/HUAQ24HBR6.dev.orbstack", ".orbstack"])
+    func orbStack(relative: String) async throws {
+        let fixture = try ToolFixture()
+        let runner = FakeCommandRunner()
+        #expect(try await inspect("orbstack", fixture, runner).isEmpty)
+
+        let data = try fixture.fill(relative, bytes: 20_000)
+        let row = try #require(try await inspect("orbstack", fixture, runner).first)
+        #expect(row.id == "orbstack.data")
+        #expect(row.category == .containers)
+        #expect(row.location == data)
+        #expect(row.size == (try await fixture.measured(data)))
+        #expect(row.cleanup == nil)
+        #expect(row.note.map { String(localized: $0) }?.isEmpty == false)
+        #expect(runner.commands.isEmpty)
+    }
+
+    @Test("OrbStack: with both folders the group container is measured")
+    func orbStackPrefersGroupContainer() async throws {
+        let fixture = try ToolFixture()
+        try fixture.fill(".orbstack")
+        let container = try fixture.fill("Library/Group Containers/HUAQ24HBR6.dev.orbstack")
+        let row = try #require(try await inspect("orbstack", fixture, FakeCommandRunner()).first)
+        #expect(row.location == container)
+    }
+
+    // MARK: Colima
+
+    @Test("Colima: the download cache is measured and colima prune --force offered")
+    func colimaCache() async throws {
+        let fixture = try ToolFixture()
+        let runner = FakeCommandRunner()
+        let cache = try fixture.fill("Library/Caches/colima")
+        #expect(try await inspect("colima-cache", fixture, runner).isEmpty, "no colima, no row")
+
+        try fixture.install("colima")
+        let row = try #require(try await inspect("colima-cache", fixture, runner).first)
+        #expect(row.id == "colima.cache")
+        #expect(row.category == .containers)
+        #expect(row.location == cache)
+        #expect(row.size == (try await fixture.measured(cache)))
+        #expect(
+            row.cleanup?.command
+                == Command(executable: fixture.tool("colima"), arguments: ["prune", "--force"], timeout: .seconds(600)))
+        #expect(row.cleanup?.summary == "colima prune --force")
+        #expect(row.cleanup?.risk == .safe)
+        #expect(runner.commands.isEmpty)
+    }
+
+    @Test("Colima profiles are listed with their measured VM folders and no command")
+    func colimaProfiles() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("colima")
+        let instance = try fixture.fill(".colima/_lima/colima", bytes: 30_000)
+        let disk = try fixture.fill(".colima/_lima/_disks/colima", bytes: 50_000)
+        let runner = FakeCommandRunner()
+        runner.stub(
+            fixture.tool("colima"), ["list", "--json"],
+            stdout: """
+                {"name":"default","status":"Running","arch":"aarch64","cpus":2,"memory":2147483648,"disk":64424509440}
+                {"name":"work","status":"Stopped","disk":"lots"}
+                not json
+                {"status":"Stopped"}
+                {"name":"../evil"}
+
+                """)
+
+        let rows = try await inspect("colima", fixture, runner)
+
+        #expect(rows.map(\.id) == ["colima.default", "colima.work"])
+        #expect(String(localized: rows[0].tool) == "Colima (default)")
+        #expect(rows[0].location == instance)
+        let instanceSize = try #require(try await fixture.measured(instance))
+        let diskSize = try #require(try await fixture.measured(disk))
+        #expect(rows[0].size == instanceSize + diskSize)
+        #expect(rows[1].location == nil)
+        #expect(rows[1].size == nil)
+        #expect(rows.allSatisfy { $0.cleanup == nil && $0.category == .containers })
+        #expect(
+            runner.commands
+                == [Command(executable: fixture.tool("colima"), arguments: ["list", "--json"], timeout: .seconds(10))])
+    }
+
+    @Test("Colima: a JSON array listing is accepted too")
+    func colimaArray() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("colima")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("colima"), ["list", "--json"], stdout: #"[{"name":"default"},{"name":"dev"}]"#)
+        let rows = try await inspect("colima", fixture, runner)
+        #expect(rows.map(\.id) == ["colima.default", "colima.dev"])
+    }
+
+    @Test("Colima: a failing or absent colima yields no profile rows", arguments: ["fail", "absent"])
+    func colimaFailure(mode: String) async throws {
+        let fixture = try ToolFixture()
+        let runner = FakeCommandRunner()
+        if mode == "fail" {
+            try fixture.install("colima")
+            runner.stub(fixture.tool("colima"), ["list", "--json"], stderr: "fatal", status: 1)
+        }
+        #expect(try await inspect("colima", fixture, runner).isEmpty)
+    }
+
+    // MARK: Podman
+
+    private static let podmanDF = ["system", "df", "--format", "{{json .}}"]
+
+    @Test("podman system df becomes an images row with only the dangling-image prune")
+    func podmanRows() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("podman")
+        let runner = FakeCommandRunner()
+        runner.stub(
+            fixture.tool("podman"), Self.podmanDF,
+            stdout: """
+                {"Type":"Images","Total":5,"Active":2,"Size":"1.208GB","Reclaimable":"600MB (50%)"}
+                {"Type":"Containers","Total":2,"Active":1,"Size":"12kB","Reclaimable":"0B (0%)"}
+                {"Type":"Local Volumes","Total":1,"Active":1,"Size":"3GB","Reclaimable":"0B (0%)"}
+
+                """)
+
+        let rows = try await inspect("podman", fixture, runner)
+
+        let row = try #require(rows.first)
+        #expect(rows.map(\.id) == ["podman.images"])
+        #expect(row.category == .containers)
+        #expect(row.size == 1_208_000_000)
+        #expect(
+            row.cleanup?.command
+                == Command(
+                    executable: fixture.tool("podman"), arguments: ["image", "prune", "-f"], timeout: .seconds(600)))
+        #expect(row.cleanup?.summary == "podman image prune -f")
+        #expect(row.cleanup?.risk == .review)
+        #expect(
+            runner.commands
+                == [Command(executable: fixture.tool("podman"), arguments: Self.podmanDF, timeout: .seconds(10))])
+    }
+
+    @Test("podman: a JSON array and numeric sizes are accepted; an odd size is unknown")
+    func podmanVariants() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("podman")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("podman"), Self.podmanDF, stdout: #"[{"Type":"Images","Size":4096}]"#)
+        #expect(try await inspect("podman", fixture, runner).first?.size == 4096)
+
+        runner.stub(fixture.tool("podman"), Self.podmanDF, stdout: #"{"Type":"Images","Size":"huge"}"#)
+        let row = try #require(try await inspect("podman", fixture, runner).first)
+        #expect(row.size == nil)
+        #expect(row.cleanup?.summary == "podman image prune -f")
+    }
+
+    @Test("podman machine not running: one row with unknown size, a note and no command")
+    func podmanDown() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("podman")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("podman"), Self.podmanDF, stderr: "Cannot connect to Podman.", status: 125)
+
+        let rows = try await inspect("podman", fixture, runner)
+        #expect(rows.map(\.id) == ["podman"])
+        #expect(rows.first?.size == nil)
+        #expect(rows.first?.cleanup == nil)
+        #expect(rows.first?.note == "Podman is not running.")
+    }
+
     // MARK: Invariants
 
     @Test("no adapter offers or runs anything that removes volumes, containers, VMs or other user data")
     func noDestructiveCommands() async throws {
         let fixture = try simulatorFixture()
-        let tools = ["npm", "pnpm", "yarn", "bun", "brew", "uv", "pip3", "pod", "go", "docker", "limactl"]
+        let tools = [
+            "npm", "pnpm", "yarn", "bun", "brew", "uv", "pip3", "pod", "go", "docker", "limactl", "dotnet", "swift",
+            "conda", "colima", "podman",
+        ]
         for tool in tools { try fixture.install(tool) }
-        for relative in [".gradle/caches", ".cargo/registry", ".bun/install/cache", "Library/Caches/CocoaPods"] {
+        for relative in [
+            ".gradle/caches", ".cargo/registry", ".bun/install/cache", "Library/Caches/CocoaPods", ".m2/repository",
+            ".nuget/packages", "Library/Caches/org.swift.swiftpm", "miniconda3/pkgs", ".orbstack",
+            "Library/Caches/colima", ".colima/_lima/colima",
+        ] {
             try fixture.fill(relative)
         }
         let runner = FakeCommandRunner()
@@ -551,6 +849,8 @@ struct ToolAdaptersTests {
         runner.stub(fixture.tool("docker"), ["system", "df", "--format", "{{json .}}"], stdout: Self.dockerDF)
         runner.stub(
             fixture.tool("limactl"), ["list", "--json"], stdout: #"{"name":"default","dir":"/nonexistent"}"# + "\n")
+        runner.stub(fixture.tool("colima"), ["list", "--json"], stdout: #"{"name":"default"}"# + "\n")
+        runner.stub(fixture.tool("podman"), Self.podmanDF, stdout: #"{"Type":"Images","Size":"1GB"}"# + "\n")
         runner.stub(Self.xcrun, ["simctl", "list", "-j", "devices"], stdout: Self.devicesJSON)
         runner.stub(Self.xcrun, ["simctl", "runtime", "list", "-j"], stdout: Self.runtimesJSON)
 
@@ -559,10 +859,10 @@ struct ToolAdaptersTests {
             rows += await adapter.inspect(locator: fixture.locator, runner: runner, home: fixture.home)
         }
 
-        #expect(rows.count >= 16)
+        #expect(rows.count >= 25)
         #expect(Set(rows.map(\.id)).count == rows.count)
         let actions = rows.compactMap(\.cleanup)
-        #expect(actions.count == 12)
+        #expect(actions.count == 17)
         let forbidden = ["volume", "--volumes", "system prune", "rm ", "delete", "erase", "kill", "stop"]
         for action in actions {
             #expect(action.command.executable.hasPrefix("/"))
