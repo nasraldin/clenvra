@@ -1,0 +1,371 @@
+import Darwin
+import Foundation
+import Testing
+
+@testable import ClenvraKit
+
+/// Moves items into a `.Trash` folder inside the test directory.
+private struct StorageScratchTrash: TrashOperations {
+    let directory: String
+
+    func moveToTrash(path: String) throws -> String {
+        let destination = directory + "/" + UUID().uuidString
+        guard rename(path, destination) == 0 else { throw FileSystemError.current("rename", path) }
+        return destination
+    }
+}
+
+@MainActor
+@Suite("StorageSession")
+struct StorageSessionTests {
+    private let scratch: TemporaryDirectory
+    private let fixture: FixtureBuilder
+    private let now = Date()
+
+    init() throws {
+        scratch = try TemporaryDirectory()
+        fixture = FixtureBuilder(root: scratch.url)
+        try fixture.directory(".Trash")
+        try fixture.file("Projects/big/video.mov", bytes: 3_000_000)
+        try fixture.file("Projects/big/recent.bin", bytes: 2_000_000)
+        try fixture.file("Projects/small/a.txt", bytes: 1_000)
+        try fixture.file("Projects/notes.txt", bytes: 2_000)
+        try fixture.file("Projects/.env", bytes: 10)
+        try fixture.file(".ssh/id_ed25519", bytes: 10)
+        try fixture.file("Downloads/Installer.dmg", bytes: 5_000)
+        try fixture.file("Downloads/photos.zip", bytes: 4_000)
+        try fixture.file("Downloads/Screenshot 2026-01-01 at 10.00.00.png", bytes: 300)
+        try fixture.directory("Downloads/Unpacked")
+        try fixture.file("Desktop/Screenshot 2026-02-01 at 09.00.00.png", bytes: 700)
+        try fixture.file("Desktop/Screen Recording 2026-02-01 at 09.05.00.mov", bytes: 900)
+        try fixture.file("Desktop/لقطة شاشة 2026-02-02.png", bytes: 500)
+        try fixture.file("Desktop/report.pdf", bytes: 800)
+        try fixture.file("Desktop/Screenshot notes.txt", bytes: 100)
+        try setModified("Projects/big/video.mov", daysAgo: 800)
+        try setModified("Downloads/photos.zip", daysAgo: 400)
+    }
+
+    private var home: String { String(scratch.url.path(percentEncoded: false).dropLast()) }
+    private func path(_ relative: String) -> String { home + "/" + relative }
+
+    private func setModified(_ relative: String, daysAgo: Double) throws {
+        try FileManager.default.setAttributes(
+            [.modificationDate: now.addingTimeInterval(-daysAgo * 86_400)], ofItemAtPath: path(relative))
+    }
+
+    private func session(volumes: [Volume] = [], screenshotsLocation: String? = nil) -> StorageSession {
+        let policy = ProtectionPolicy(home: home)
+        let ownerState: @Sendable (String) -> OwnerState = { _ in .notRunning }
+        return StorageSession(
+            home: home, policy: policy,
+            deleter: DeletionExecutor(
+                gate: DeletionGate(policy: policy, ownerState: ownerState),
+                log: ActivityLog(directory: fixture.url("log")),
+                trash: StorageScratchTrash(directory: path(".Trash"))),
+            screenshotsLocation: screenshotsLocation,
+            options: ScanOptions(largeFileThreshold: 1_000_000, excludedPaths: [path("log"), path(".Trash")]),
+            volumes: { volumes }, now: { [now] in now })
+    }
+
+    private func volume(_ path: String, name: String, root: Bool, kind: Volume.Kind = .internal) -> Volume {
+        Volume(
+            id: URL(filePath: path, directoryHint: .isDirectory), name: name, kind: kind, fileSystem: "apfs",
+            isRoot: root, isReadOnly: false, isEjectable: !root, totalCapacity: 1_000, availableCapacity: 400,
+            availableForImportantUsage: 500)
+    }
+
+    // MARK: - Targets
+
+    @Test("targets are the home folder, the startup volume's data volume and external volumes at their mount point")
+    func targets() async {
+        let session = session(volumes: [
+            volume("/", name: "Macintosh HD", root: true),
+            volume("/Volumes/Backup", name: "Backup", root: false, kind: .external),
+        ])
+
+        await session.refreshVolumes()
+
+        #expect(session.volumes.map(\.name) == ["Macintosh HD", "Backup"])
+        #expect(session.targets.map(\.root) == [home, "/System/Volumes/Data", "/Volumes/Backup"])
+        #expect(session.targets.map(\.kind) == [.home, .startupVolume, .volume(.external)])
+        #expect(session.target.kind == .home)
+
+        session.select(session.targets[2])
+        #expect(session.target.root == "/Volumes/Backup")
+        #expect(session.currentPath == "/Volumes/Backup")
+        #expect(session.snapshot == nil)
+    }
+
+    // MARK: - Scanning and browsing
+
+    @Test("scanning lists the root's children by size; home's own folders are protected and not selectable")
+    func scanAndProtection() async throws {
+        let session = session()
+
+        await session.scan()
+
+        #expect(session.phase == .ready)
+        #expect(session.isPartial == false)
+        #expect(session.currentPath == home)
+        let names = session.children.map(\.name)
+        #expect(names.first == "Projects")
+        #expect(Set(names).isSuperset(of: ["Projects", "Downloads", "Desktop", ".ssh"]))
+        let projects = try #require(session.children.first { $0.name == "Projects" })
+        #expect(projects.kind == .directory)
+        #expect(projects.allocatedSize >= 5_000_000)
+        #expect(projects.fileCount == 5)
+        #expect(projects.folderCount == 2)
+        #expect(projects.protection == .homeRoot)
+        #expect(!projects.isSelectable)
+
+        session.setSelection([projects.path, path(".ssh")])
+        #expect(session.selection.isEmpty)
+    }
+
+    @Test("drill into a folder, see files and subfolders, go back up; breadcrumbs follow")
+    func browse() async throws {
+        let session = session()
+        await session.scan()
+
+        await session.open(path("Projects"))
+
+        #expect(session.currentPath == path("Projects"))
+        #expect(session.breadcrumbs.map(\.path) == [home, path("Projects")])
+        #expect(session.children.map(\.name) == ["big", "notes.txt", "small", ".env"])
+        let notes = try #require(session.children.first { $0.name == "notes.txt" })
+        #expect(notes.kind == .file && notes.fileCount == 1 && notes.isSelectable)
+        #expect(session.children.first { $0.name == ".env" }?.protection == .secret)
+        #expect(session.canGoUp)
+
+        await session.open(path("Projects/big"))
+        #expect(session.breadcrumbs.count == 3)
+
+        await session.goUp()
+        #expect(session.currentPath == path("Projects"))
+        await session.goUp()
+        #expect(session.currentPath == home)
+        #expect(!session.canGoUp)
+        await session.goUp()
+        #expect(session.currentPath == home)
+
+        await session.open(path("Projects/notes.txt"))
+        #expect(session.currentPath == home)
+    }
+
+    @Test("cancelling a scan keeps a partial snapshot and says so")
+    func cancellation() async {
+        let session = session()
+
+        let running = Task { await session.scan() }
+        while session.phase == .idle { await Task.yield() }
+        session.cancelScan()
+        await running.value
+
+        #expect(session.phase == .ready)
+        #expect(session.isPartial)
+        #expect(session.snapshot?.isComplete == false)
+    }
+
+    @Test("a missing root fails the scan without crashing")
+    func missingRoot() async {
+        let session = session(volumes: [volume(path("Nowhere"), name: "Gone", root: false, kind: .external)])
+        await session.refreshVolumes()
+        session.select(session.targets[1])
+
+        await session.scan()
+
+        #expect(session.phase == .failed)
+        #expect(session.snapshot == nil)
+    }
+
+    // MARK: - Large & Old
+
+    @Test("large files are filtered by minimum size and age")
+    func largeFiles() async {
+        let session = session()
+        await session.scan()
+        session.list = .largeFiles
+
+        session.largeFileMinimum = 1_000_000
+        #expect(session.largeFiles.map(\.name) == ["video.mov", "recent.bin"])
+
+        session.largeFileMinimum = 2_500_000
+        #expect(session.largeFiles.map(\.name) == ["video.mov"])
+
+        session.largeFileMinimum = 1_000_000
+        session.largeFileAge = .oneYear
+        #expect(session.largeFiles.map(\.name) == ["video.mov"])
+        session.largeFileAge = .sixMonths
+        #expect(session.largeFiles.map(\.name) == ["video.mov"])
+        session.largeFileAge = .twoYears
+        #expect(session.largeFiles.map(\.name) == ["video.mov"])
+        try? setModified("Projects/big/video.mov", daysAgo: 0)
+        #expect(session.largeFiles.map(\.name) == ["video.mov"])  // the list reflects the scan, not the disk
+
+        session.largeFileAge = .any
+        session.largeFileMinimum = 50_000_000
+        #expect(session.largeFiles.isEmpty)
+    }
+
+    // MARK: - Downloads & Screenshots
+
+    @Test("screenshot names match the system patterns in English and Arabic")
+    func screenshotNames() {
+        #expect(ClutterKind.screenshotKind(forName: "Screenshot 2026-01-01 at 10.00.00.png") == .screenshot)
+        #expect(ClutterKind.screenshotKind(forName: "Screen Shot 2019-01-01 at 10.00.00.PNG") == .screenshot)
+        #expect(ClutterKind.screenshotKind(forName: "Screenshot 2026.heic") == .screenshot)
+        #expect(ClutterKind.screenshotKind(forName: "Screenshot 2026.jpg") == .screenshot)
+        #expect(ClutterKind.screenshotKind(forName: "Screen Recording 2026-01-01.mov") == .screenRecording)
+        #expect(ClutterKind.screenshotKind(forName: "لقطة شاشة 2026-01-01.png") == .screenshot)
+        #expect(ClutterKind.screenshotKind(forName: "تسجيل الشاشة 2026-01-01.mov") == .screenRecording)
+        #expect(ClutterKind.screenshotKind(forName: "Screenshot notes.txt") == nil)
+        #expect(ClutterKind.screenshotKind(forName: "Holiday.png") == nil)
+        #expect(ClutterKind.classify(name: "Installer.DMG") == .installer)
+        #expect(ClutterKind.classify(name: "photos.zip") == .archive)
+        #expect(ClutterKind.classify(name: "song.mp3") == .audio)
+        #expect(ClutterKind.classify(name: "README") == .other)
+    }
+
+    @Test("the screenshots folder defaults to the Desktop and expands a configured location")
+    func screenshotsFolder() {
+        func folder(_ configured: String?) -> String {
+            StorageSession.screenshotsFolder(configured: configured, home: "/Users/a")
+        }
+        #expect(folder(nil) == "/Users/a/Desktop")
+        #expect(folder("  ") == "/Users/a/Desktop")
+        #expect(folder("~/Pictures/Shots/") == "/Users/a/Pictures/Shots")
+        #expect(folder("/Volumes/X/Shots") == "/Volumes/X/Shots")
+        #expect(folder("relative") == "/Users/a/Desktop")
+    }
+
+    @Test("downloads and screenshots are listed, grouped by kind and age, and never pre-selected")
+    func clutter() async throws {
+        let session = session()
+
+        await session.loadClutter()
+        session.list = .clutter
+
+        #expect(session.screenshotsPath == path("Desktop"))
+        #expect(
+            Set(session.clutter.map(\.item.name)) == [
+                "Installer.dmg", "photos.zip", "Screenshot 2026-01-01 at 10.00.00.png",
+                "Screenshot 2026-02-01 at 09.00.00.png", "Screen Recording 2026-02-01 at 09.05.00.mov",
+                "لقطة شاشة 2026-02-02.png",
+            ])
+        #expect(session.selection.isEmpty)
+        #expect(session.clutter.allSatisfy { $0.item.isSelectable })
+
+        let byKind = session.clutterGroups(by: .kind)
+        #expect(byKind.map(\.key) == [.kind(.screenshot), .kind(.screenRecording), .kind(.installer), .kind(.archive)])
+        #expect(byKind[0].items.count == 3)
+        #expect(byKind[0].totalBytes > 0)
+
+        let byAge = session.clutterGroups(by: .age)
+        #expect(byAge.map(\.key) == [.age(.thisWeek), .age(.older)])
+        #expect(byAge[1].items.map(\.item.name) == ["photos.zip"])
+    }
+
+    @Test("a configured screenshots location is used")
+    func configuredScreenshots() async throws {
+        try fixture.file("Shots/Screenshot 1.png", bytes: 10)
+        let session = session(screenshotsLocation: path("Shots") + "/")
+
+        await session.loadClutter()
+
+        #expect(session.screenshotsPath == path("Shots"))
+        #expect(session.clutter.contains { $0.item.name == "Screenshot 1.png" && $0.kind == .screenshot })
+        #expect(!session.clutter.contains { $0.item.name == "Screenshot 2026-02-01 at 09.00.00.png" })
+    }
+
+    // MARK: - Deleting
+
+    @Test("selection only holds selectable items of the visible list, and switching lists clears it")
+    func selectionScope() async {
+        let session = session()
+        await session.scan()
+        await session.open(path("Projects"))
+
+        session.setSelection([path("Projects/notes.txt"), path("Projects/.env"), path("Projects/big/video.mov")])
+        #expect(session.selection == [path("Projects/notes.txt")])
+        #expect(session.selectedCount == 1)
+        #expect(session.selectedBytes >= 2_000)
+
+        session.list = .largeFiles
+        #expect(session.selection.isEmpty)
+    }
+
+    @Test("moving browser items to the Trash rescans and updates the totals")
+    func deleteFromBrowser() async throws {
+        let session = session()
+        await session.scan()
+        await session.open(path("Projects"))
+        let before = try #require(session.snapshot?.aggregate(at: path("Projects"))?.fileCount)
+        session.setSelection([path("Projects/notes.txt"), path("Projects/small")])
+
+        let summary = await session.moveSelectionToTrash()
+
+        #expect(summary.movedToTrashCount == 2)
+        #expect(summary.problems.isEmpty)
+        #expect(summary.freedBytes > 0)
+        #expect(session.lastSummary == summary)
+        #expect(!FileManager.default.fileExists(atPath: path("Projects/notes.txt")))
+        #expect(session.phase == .ready)
+        #expect(!session.isStale)
+        #expect(session.selection.isEmpty)
+        #expect(session.currentPath == path("Projects"))
+        #expect(session.children.map(\.name) == ["big", ".env"])
+        #expect(session.snapshot?.aggregate(at: path("Projects"))?.fileCount == before - 2)
+    }
+
+    @Test("after deleting the folder being browsed, the browser moves to the nearest remaining ancestor")
+    func deleteCurrentAncestor() async throws {
+        let session = session()
+        await session.scan()
+        await session.open(path("Projects"))
+        await session.open(path("Projects/big"))
+        session.list = .largeFiles
+        session.largeFileMinimum = 1_000_000
+        session.setSelection([path("Projects/big/video.mov")])
+
+        let summary = await session.moveSelectionToTrash()
+
+        #expect(summary.movedToTrashCount == 1)
+        #expect(session.largeFiles.map(\.name) == ["recent.bin"])
+        #expect(session.currentPath == path("Projects/big"))
+
+        try FileManager.default.removeItem(atPath: path("Projects/big"))
+        await session.scan()
+        #expect(session.currentPath == path("Projects"))
+    }
+
+    @Test("an item changed after the scan is skipped with a reason, not deleted")
+    func changedSinceScan() async throws {
+        let session = session()
+        await session.scan()
+        await session.open(path("Projects"))
+        session.setSelection([path("Projects/notes.txt")])
+        try FileManager.default.removeItem(atPath: path("Projects/notes.txt"))
+        try fixture.file("Projects/notes.txt", bytes: 2_000)
+
+        let summary = await session.moveSelectionToTrash()
+
+        #expect(summary.movedToTrashCount == 0)
+        #expect(summary.problems.map(\.path) == [path("Projects/notes.txt")])
+        #expect(FileManager.default.fileExists(atPath: path("Projects/notes.txt")))
+    }
+
+    @Test("deleting downloads and screenshots reloads that list")
+    func deleteClutter() async throws {
+        let session = session()
+        await session.loadClutter()
+        session.list = .clutter
+        session.setSelection([path("Downloads/Installer.dmg"), path("Desktop/Screenshot 2026-02-01 at 09.00.00.png")])
+
+        let summary = await session.moveSelectionToTrash()
+
+        #expect(summary.movedToTrashCount == 2)
+        #expect(!session.clutter.contains { $0.item.name == "Installer.dmg" })
+        #expect(session.clutter.count == 4)
+        #expect(session.snapshot == nil)
+    }
+}

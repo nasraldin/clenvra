@@ -1,0 +1,436 @@
+import Darwin
+public import Foundation
+public import Observation
+
+/// The Storage section: volume capacity, a scanned space map to browse, Large & Old files, and the
+/// Downloads & Screenshots review, with deletion of selected items through the deletion gate.
+///
+/// The UI binds to this model; directory reads, scans and deletions run off the main actor.
+@MainActor
+@Observable
+public final class StorageSession {
+    public enum Phase: Sendable, Equatable {
+        case idle
+        /// `nil` until the scanner reports its first counters.
+        case scanning(ScanProgress?)
+        case ready
+        /// The target folder could not be opened.
+        case failed
+        case deleting
+    }
+
+    /// One level of the path bar.
+    public struct Breadcrumb: Sendable, Hashable, Identifiable {
+        public var id: String { path }
+        public let name: String
+        public let path: String
+    }
+
+    // MARK: State
+
+    public private(set) var volumes: [Volume] = []
+    public private(set) var target: ScanTarget
+    public private(set) var phase = Phase.idle
+    public private(set) var snapshot: StorageSnapshot?
+    /// Set when items were deleted after the scan, until the rescan finishes.
+    public private(set) var isStale = false
+    public private(set) var currentPath: String
+    /// Children of `currentPath`, largest first.
+    public private(set) var children: [StorageItem] = []
+    public private(set) var clutter: [ClutterItem] = []
+    public private(set) var isLoadingClutter = false
+    /// Canonical screenshots folder, once Downloads & Screenshots has been loaded.
+    public private(set) var screenshotsPath: String?
+    public private(set) var selection: Set<String> = []
+    public private(set) var lastSummary: CleanupSummary?
+
+    /// The visible list; changing it clears the selection so only what the user sees can be deleted.
+    public var list = StorageList.browser {
+        didSet { if list != oldValue { selection = [] } }
+    }
+    /// Minimum allocated size of Large & Old files, in bytes.
+    public var largeFileMinimum: Int64 = 50_000_000 {
+        didSet { pruneSelection() }
+    }
+    public var largeFileAge = LargeFileAge.any {
+        didSet { pruneSelection() }
+    }
+
+    // MARK: Dependencies
+
+    private let home: String
+    private let policy: ProtectionPolicy
+    private let deleter: DeletionExecutor
+    private let screenshotsLocation: String?
+    private let options: ScanOptions
+    private let loadVolumes: @Sendable () -> [Volume]
+    private let executor: FSExecutor
+    private let now: @Sendable () -> Date
+    private var scanTask: Task<StorageSnapshot, any Error>?
+    private var scanGeneration = 0
+
+    /// - Parameters:
+    ///   - home: canonical home folder, the default scan target.
+    ///   - screenshotsLocation: the `location` value of the `com.apple.screencapture` defaults, if set.
+    ///   - options: scan tunables; the large-file threshold should not exceed the smallest Large & Old filter.
+    ///   - volumes: lists mounted volumes; injected so tests do not depend on this Mac's disks.
+    public init(
+        home: String, policy: ProtectionPolicy, deleter: DeletionExecutor, screenshotsLocation: String? = nil,
+        options: ScanOptions = ScanOptions(largeFileThreshold: 50_000_000),
+        volumes: @escaping @Sendable () -> [Volume] = { VolumeInventory.mountedVolumes() },
+        executor: FSExecutor = .shared, now: @escaping @Sendable () -> Date = { Date() }
+    ) {
+        let home = StorageScanner.normalize(home)
+        self.home = home
+        self.policy = policy
+        self.deleter = deleter
+        self.screenshotsLocation = screenshotsLocation
+        self.options = options
+        self.loadVolumes = volumes
+        self.executor = executor
+        self.now = now
+        target = ScanTarget(root: home, name: (home as NSString).lastPathComponent, kind: .home)
+        currentPath = home
+    }
+
+    // MARK: - Volumes and targets
+
+    /// The home folder first, then one target per mounted volume.
+    public var targets: [ScanTarget] {
+        [ScanTarget(root: home, name: (home as NSString).lastPathComponent, kind: .home)]
+            + volumes.map(ScanTarget.target(for:))
+    }
+
+    public func refreshVolumes() async {
+        let load = loadVolumes
+        volumes = (try? await executor.run { load() }) ?? volumes
+    }
+
+    /// Switches the scan target; the previous snapshot is discarded and a running scan is stopped.
+    public func select(_ newTarget: ScanTarget) {
+        guard newTarget != target else { return }
+        cancelScan()
+        scanGeneration += 1
+        target = newTarget
+        snapshot = nil
+        isStale = false
+        children = []
+        selection = []
+        currentPath = newTarget.root
+        phase = .idle
+    }
+
+    // MARK: - Scanning
+
+    /// `true` when the scan was cancelled, so totals are lower bounds.
+    public var isPartial: Bool { snapshot?.isComplete == false }
+
+    /// Scans the current target, showing progress; cancelling (or `cancelScan()`) keeps a partial snapshot.
+    public func scan() async {
+        scanTask?.cancel()
+        scanGeneration += 1
+        let generation = scanGeneration
+        phase = .scanning(nil)
+        let root = target.root
+        let options = options
+        let executor = executor
+        let task = Task<StorageSnapshot, any Error> {
+            try await StorageScanner.scan(root: root, options: options, executor: executor) { progress in
+                Task { @MainActor in self.report(progress, generation: generation) }
+            }
+        }
+        scanTask = task
+        let result = await withTaskCancellationHandler {
+            await task.result
+        } onCancel: {
+            task.cancel()
+        }
+        guard generation == scanGeneration else { return }
+        scanTask = nil
+        switch result {
+        case .success(let snapshot):
+            self.snapshot = snapshot
+            isStale = false
+            currentPath = nearestScannedFolder(to: currentPath, in: snapshot)
+            await loadChildren()
+            phase = .ready
+        case .failure:
+            snapshot = nil
+            children = []
+            phase = .failed
+        }
+    }
+
+    /// Stops a running scan; the folders read so far are kept and labelled partial.
+    public func cancelScan() {
+        scanTask?.cancel()
+    }
+
+    private func report(_ progress: ScanProgress, generation: Int) {
+        guard generation == scanGeneration, case .scanning = phase else { return }
+        phase = .scanning(progress)
+    }
+
+    private func nearestScannedFolder(to path: String, in snapshot: StorageSnapshot) -> String {
+        var candidate = path
+        while candidate.hasPrefix(snapshot.root), candidate != snapshot.root {
+            if snapshot.directories[candidate] != nil { return candidate }
+            candidate = (candidate as NSString).deletingLastPathComponent
+        }
+        return snapshot.root
+    }
+
+    // MARK: - Browsing
+
+    /// The path bar, from the scanned root to the current folder.
+    public var breadcrumbs: [Breadcrumb] {
+        let root = target.root
+        let rootName = target.kind == .home ? (root as NSString).lastPathComponent : target.name
+        var crumbs = [Breadcrumb(name: rootName, path: root)]
+        guard currentPath.hasPrefix(root + "/") || (root == "/" && currentPath != "/") else { return crumbs }
+        var path = root
+        for name in currentPath.dropFirst(root.count).split(separator: "/") {
+            path = path == "/" ? "/" + name : path + "/" + name
+            crumbs.append(Breadcrumb(name: String(name), path: path))
+        }
+        return crumbs
+    }
+
+    /// Totals of the folder being browsed.
+    public var currentAggregate: DirectoryAggregate? { snapshot?.aggregate(at: currentPath) }
+
+    public var canGoUp: Bool { snapshot != nil && currentPath != target.root }
+
+    /// Shows a scanned folder's children; files and unscanned folders are ignored.
+    public func open(_ path: String) async {
+        let path = StorageScanner.normalize(path)
+        guard snapshot?.directories[path] != nil, path != currentPath else { return }
+        currentPath = path
+        selection = []
+        await loadChildren()
+    }
+
+    /// Goes to the parent folder (stops at the scanned root).
+    public func goUp() async {
+        guard canGoUp else { return }
+        await open((currentPath as NSString).deletingLastPathComponent)
+    }
+
+    private func loadChildren() async {
+        guard let snapshot, let aggregate = snapshot.directories[currentPath] else {
+            children = []
+            return
+        }
+        let path = currentPath
+        let entries = (try? await executor.run { try OpenDirectory(path: path).entries() }) ?? []
+        guard path == currentPath, self.snapshot?.root == snapshot.root else { return }
+
+        var items: [StorageItem] = []
+        for name in aggregate.childDirectoryNames {
+            let childPath = Self.join(path, name)
+            guard let child = snapshot.directories[childPath] else { continue }
+            items.append(
+                StorageItem(
+                    path: childPath, name: name, kind: .directory, allocatedSize: child.allocated,
+                    reclaimableSize: child.reclaimable, logicalSize: child.logical, fileCount: child.fileCount,
+                    folderCount: child.directoryCount, modificationDate: child.latestModification,
+                    protection: policy.protection(for: childPath), ruleRoot: snapshot.root,
+                    snapshot: FileSnapshot(
+                        identity: child.identity, kind: .directory, logicalSize: nil, modificationDate: nil)))
+        }
+        for entry in entries where entry.kind != .directory {
+            items.append(fileItem(entry, in: path, ruleRoot: snapshot.root))
+        }
+        children = Self.sorted(items)
+        pruneSelection()
+    }
+
+    private func fileItem(_ entry: FileEntry, in folder: String, ruleRoot: String) -> StorageItem {
+        let path = Self.join(folder, entry.name)
+        return StorageItem(
+            path: path, name: entry.name, kind: entry.kind, allocatedSize: entry.size.allocated,
+            reclaimableSize: entry.linkCount > 1 ? 0 : entry.size.freedIfDeleted,
+            logicalSize: entry.size.logical, fileCount: 1, folderCount: 0,
+            modificationDate: entry.modificationDate, protection: policy.protection(for: path), ruleRoot: ruleRoot,
+            snapshot: FileSnapshot(entry))
+    }
+
+    /// Largest first; ties by content size, then name, so the order is stable.
+    private static func sorted(_ items: [StorageItem]) -> [StorageItem] {
+        items.sorted { lhs, rhs in
+            if lhs.allocatedSize != rhs.allocatedSize { return lhs.allocatedSize > rhs.allocatedSize }
+            if lhs.logicalSize != rhs.logicalSize { return lhs.logicalSize > rhs.logicalSize }
+            return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+        }
+    }
+
+    private nonisolated static func join(_ parent: String, _ name: String) -> String {
+        parent.hasSuffix("/") ? parent + name : parent + "/" + name
+    }
+
+    // MARK: - Large & Old
+
+    /// Large files of the last scan that match the size and age filters, largest first.
+    public var largeFiles: [StorageItem] {
+        guard let snapshot else { return [] }
+        let cutoff = largeFileAge.cutoff(now: now())
+        return snapshot.largeFiles
+            .filter { [largeFileMinimum] in $0.size.allocated >= largeFileMinimum }
+            .filter { file in cutoff.map { file.modificationDate < $0 } ?? true }
+            .map { file in
+                StorageItem(
+                    path: file.path, name: (file.path as NSString).lastPathComponent, kind: .file,
+                    allocatedSize: file.size.allocated,
+                    reclaimableSize: file.linkCount > 1 ? 0 : file.size.freedIfDeleted,
+                    logicalSize: file.size.logical, fileCount: 1, folderCount: 0,
+                    modificationDate: file.modificationDate, protection: policy.protection(for: file.path),
+                    ruleRoot: snapshot.root,
+                    snapshot: FileSnapshot(
+                        identity: file.identity, kind: .file, logicalSize: file.size.logical,
+                        modificationDate: file.modificationDate))
+            }
+    }
+
+    // MARK: - Downloads & Screenshots
+
+    /// The folder screenshots are saved to: the configured location (with `~` expanded) or the Desktop.
+    public nonisolated static func screenshotsFolder(configured: String?, home: String) -> String {
+        let fallback = join(home, "Desktop")
+        guard let configured = configured?.trimmingCharacters(in: .whitespacesAndNewlines), !configured.isEmpty
+        else { return fallback }
+        var path = configured
+        if path == "~" {
+            path = home
+        } else if path.hasPrefix("~/") {
+            path = join(home, String(path.dropFirst(2)))
+        }
+        guard path.hasPrefix("/") else { return fallback }
+        return StorageScanner.normalize(path)
+    }
+
+    /// Reads ~/Downloads (files only) and the screenshots folder (system-named screenshots and recordings only).
+    public func loadClutter() async {
+        isLoadingClutter = true
+        defer { isLoadingClutter = false }
+        let downloads = Self.join(home, "Downloads")
+        let shots = Self.screenshotsFolder(configured: screenshotsLocation, home: home)
+        let read = try? await executor.run {
+            let entries = (try? OpenDirectory(path: downloads).entries()) ?? []
+            let canonical = Self.canonical(shots)
+            let shotEntries = canonical.flatMap { try? OpenDirectory(path: $0).entries() } ?? []
+            return ClutterRead(downloads: entries, screenshotsFolder: canonical, screenshots: shotEntries)
+        }
+        let downloadEntries = read?.downloads ?? []
+        let shotsFolder = read?.screenshotsFolder
+        let shotEntries = read?.screenshots ?? []
+        let date = now()
+        var items: [String: ClutterItem] = [:]
+        for entry in downloadEntries where entry.kind == .file {
+            let item = fileItem(entry, in: downloads, ruleRoot: downloads)
+            items[item.path] = ClutterItem(
+                item: item, kind: ClutterKind.classify(name: entry.name), age: .of(entry.modificationDate, now: date),
+                source: .downloads)
+        }
+        if let shotsFolder {
+            for entry in shotEntries where entry.kind == .file {
+                guard let kind = ClutterKind.screenshotKind(forName: entry.name) else { continue }
+                let item = fileItem(entry, in: shotsFolder, ruleRoot: shotsFolder)
+                if items[item.path] != nil { continue }
+                items[item.path] = ClutterItem(
+                    item: item, kind: kind, age: .of(entry.modificationDate, now: date), source: .screenshots)
+            }
+        }
+        screenshotsPath = shotsFolder
+        clutter = items.values.sorted { lhs, rhs in
+            lhs.item.allocatedSize != rhs.item.allocatedSize
+                ? lhs.item.allocatedSize > rhs.item.allocatedSize : lhs.item.path < rhs.item.path
+        }
+        pruneSelection()
+    }
+
+    /// Downloads & Screenshots grouped by kind or by age, in a fixed order; empty groups are left out.
+    public func clutterGroups(by grouping: ClutterGrouping) -> [ClutterGroup] {
+        switch grouping {
+        case .kind:
+            ClutterKind.allCases.compactMap { kind in
+                let items = clutter.filter { $0.kind == kind }
+                return items.isEmpty ? nil : ClutterGroup(key: .kind(kind), items: items)
+            }
+        case .age:
+            ClutterAge.allCases.compactMap { age in
+                let items = clutter.filter { $0.age == age }
+                return items.isEmpty ? nil : ClutterGroup(key: .age(age), items: items)
+            }
+        }
+    }
+
+    private nonisolated static func canonical(_ path: String) -> String? {
+        guard let resolved = realpath(path, nil) else { return nil }
+        defer { free(resolved) }
+        return String(cString: resolved)
+    }
+
+    // MARK: - Selection
+
+    /// Items of the visible list, by path.
+    private var visibleItems: [String: StorageItem] {
+        let items: [StorageItem] =
+            switch list {
+            case .browser: children
+            case .largeFiles: largeFiles
+            case .clutter: clutter.map(\.item)
+            }
+        return Dictionary(items.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Replaces the selection; protected items and items not in the visible list are dropped.
+    public func setSelection(_ paths: Set<String>) {
+        let visible = visibleItems
+        selection = paths.filter { visible[$0]?.isSelectable == true }
+    }
+
+    public var selectedCount: Int { selection.count }
+
+    /// Estimated bytes the selection frees.
+    public var selectedBytes: Int64 {
+        let visible = visibleItems
+        return selection.reduce(0) { $0 + (visible[$1]?.reclaimableSize ?? 0) }
+    }
+
+    private func pruneSelection() {
+        guard !selection.isEmpty else { return }
+        setSelection(selection)
+    }
+
+    // MARK: - Deleting
+
+    /// Moves the selection to the Trash through the deletion gate, then rescans what changed.
+    @discardableResult
+    public func moveSelectionToTrash() async -> CleanupSummary {
+        let visible = visibleItems
+        let items = selection.sorted().compactMap { visible[$0]?.deletionItem() }
+        let previousPhase = phase
+        phase = .deleting
+        let results = await deleter.run(items, mode: .moveToTrash)
+
+        let summary = CleanupSummary(results: results)
+        lastSummary = summary
+        selection = []
+
+        if !clutter.isEmpty || list == .clutter { await loadClutter() }
+        if snapshot != nil, summary.movedToTrashCount > 0 {
+            isStale = true
+            await scan()
+        } else {
+            phase = previousPhase
+        }
+        return summary
+    }
+}
+
+/// What `loadClutter` read on the executor.
+private struct ClutterRead: Sendable {
+    let downloads: [FileEntry]
+    let screenshotsFolder: String?
+    let screenshots: [FileEntry]
+}
