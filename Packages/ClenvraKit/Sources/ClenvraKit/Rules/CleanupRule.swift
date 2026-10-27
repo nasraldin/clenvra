@@ -14,6 +14,7 @@ public enum CleanupCategory: String, Sendable, Hashable, Codable, CaseIterable {
     /// Outside the home folder; removed through the privileged helper (M13).
     case systemCaches, systemLogs
     case xcode, simulators, packageCaches, projectArtifacts, ideCaches, containers
+    case aiModels
 }
 
 /// Where a rule looks. Home-relative roots make rules portable across Macs and user names.

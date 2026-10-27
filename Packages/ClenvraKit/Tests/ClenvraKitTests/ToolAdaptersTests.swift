@@ -883,6 +883,292 @@ struct ToolAdaptersTests {
         }
     }
 
+    // MARK: Android SDK and AVDs
+
+    private static let sdkmanagerList = """
+        Installed packages:===============================
+          Path                                           | Version      | Description                                | Location
+          -------                                        | -------      | -------                                    | -------
+          build-tools;30.0.3                             | 30.0.3       | Android SDK Build-Tools 30.0.3             | build-tools/30.0.3
+          build-tools;34.0.0                             | 34.0.0       | Android SDK Build-Tools 34.0.0             | build-tools/34.0.0
+          emulator                                       | 34.1.18      | Android Emulator                           | emulator
+          platforms;android-34                           | 3            | Android SDK Platform 34                    | platforms/android-34
+          system-images;android-34;google_apis;arm64-v8a  | 2            | Google APIs ARM 64 v8a System Image        | system-images/android-34/google_apis/arm64-v8a
+
+        Available Packages:
+        ...
+        """
+
+    @Test("Android SDK: inspects system-images, old build-tools, platforms, emulator with sdkmanager uninstall")
+    func androidSDKWithTools() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("sdkmanager")
+        let sysImg = try fixture.fill(
+            "Library/Android/sdk/system-images/android-34/google_apis/arm64-v8a", bytes: 40_000)
+        let oldBt = try fixture.fill("Library/Android/sdk/build-tools/30.0.3", bytes: 20_000)
+        _ = try fixture.fill("Library/Android/sdk/build-tools/34.0.0", bytes: 30_000)
+        let platform = try fixture.fill("Library/Android/sdk/platforms/android-34", bytes: 25_000)
+        let emulator = try fixture.fill("Library/Android/sdk/emulator", bytes: 35_000)
+
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("sdkmanager"), ["--list"], stdout: Self.sdkmanagerList)
+
+        let rows = try await inspect("android", fixture, runner)
+
+        // Only old build-tools (30.0.3) is offered for removal; 34.0.0 is latest and kept.
+        #expect(rows.contains { $0.id == "android.build-tools.30.0.3" })
+        #expect(!rows.contains { $0.id == "android.build-tools.34.0.0" })
+
+        let btRow = try #require(rows.first { $0.id == "android.build-tools.30.0.3" })
+        #expect(btRow.location == oldBt)
+        #expect(btRow.size == (try await fixture.measured(oldBt)))
+        #expect(btRow.cleanup?.summary == "sdkmanager --uninstall build-tools;30.0.3")
+        #expect(
+            btRow.cleanup?.command
+                == Command(
+                    executable: fixture.tool("sdkmanager"), arguments: ["--uninstall", "build-tools;30.0.3"],
+                    timeout: .seconds(600)))
+        #expect(btRow.cleanup?.risk == .review)
+
+        let emuRow = try #require(rows.first { $0.id == "android.emulator" })
+        #expect(emuRow.location == emulator)
+        #expect(emuRow.size == (try await fixture.measured(emulator)))
+        #expect(emuRow.cleanup?.summary == "sdkmanager --uninstall emulator")
+
+        let platRow = try #require(rows.first { $0.id == "android.platform.android-34" })
+        #expect(platRow.location == platform)
+        #expect(platRow.size == (try await fixture.measured(platform)))
+        #expect(platRow.cleanup?.summary == "sdkmanager --uninstall platforms;android-34")
+
+        let sysRow = try #require(rows.first { $0.id == "android.system-image.android-34.google_apis.arm64-v8a" })
+        #expect(sysRow.location == sysImg)
+        #expect(sysRow.size == (try await fixture.measured(sysImg)))
+        #expect(sysRow.cleanup?.summary == "sdkmanager --uninstall system-images;android-34;google_apis;arm64-v8a")
+    }
+
+    @Test("Android AVDs: lists .avd folders with .ini and offers avdmanager delete")
+    func androidAVDWithTools() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("avdmanager")
+        let avdDir = try fixture.fill(".android/avd/Pixel_7.avd", bytes: 50_000)
+        let iniPath = fixture.home + "/.android/avd/Pixel_7.ini"
+        #expect(FileManager.default.createFile(atPath: iniPath, contents: Data("target=android-34".utf8)))
+
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("avdmanager"), ["list", "avd", "-c"], stdout: "Pixel_7\n")
+
+        let rows = try await inspect("android", fixture, runner)
+
+        let avdRow = try #require(rows.first { $0.id == "android.avd.Pixel_7" })
+        #expect(avdRow.category == .simulators)
+        #expect(avdRow.location == avdDir)
+        #expect(avdRow.size == (try await fixture.measured(avdDir)))
+        #expect(avdRow.cleanup?.summary == "avdmanager delete avd -n Pixel_7")
+        #expect(
+            avdRow.cleanup?.command
+                == Command(
+                    executable: fixture.tool("avdmanager"), arguments: ["delete", "avd", "-n", "Pixel_7"],
+                    timeout: .seconds(600)))
+        #expect(avdRow.cleanup?.risk == .review)
+    }
+
+    @Test("Android tools not found: rows are size-only with cleanup nil")
+    func androidWithoutTools() async throws {
+        let fixture = try ToolFixture()
+        let oldBt = try fixture.fill("Library/Android/sdk/build-tools/30.0.3", bytes: 20_000)
+        _ = try fixture.fill("Library/Android/sdk/build-tools/34.0.0", bytes: 30_000)
+        let avdDir = try fixture.fill(".android/avd/Pixel_7.avd", bytes: 50_000)
+        let iniPath = fixture.home + "/.android/avd/Pixel_7.ini"
+        #expect(FileManager.default.createFile(atPath: iniPath, contents: Data()))
+
+        let runner = FakeCommandRunner()
+        let rows = try await inspect("android", fixture, runner)
+
+        #expect(!rows.isEmpty)
+        #expect(rows.allSatisfy { $0.cleanup == nil })
+
+        let btRow = try #require(rows.first { $0.id == "android.build-tools.30.0.3" })
+        #expect(btRow.size == (try await fixture.measured(oldBt)))
+
+        let avdRow = try #require(rows.first { $0.id == "android.avd.Pixel_7" })
+        #expect(avdRow.size == (try await fixture.measured(avdDir)))
+    }
+
+    @Test("Android SDK: custom environment variable ANDROID_HOME or ANDROID_SDK_ROOT")
+    func androidCustomEnvironment() async throws {
+        let fixture = try ToolFixture()
+        let customSDK = try fixture.fill("custom-sdk/emulator", bytes: 15_000)
+        let runner = FakeCommandRunner()
+
+        let adapter = AndroidAdapter(environment: ["ANDROID_HOME": fixture.home + "/custom-sdk"])
+        let rows = await adapter.inspect(locator: fixture.locator, runner: runner, home: fixture.home)
+
+        let emuRow = try #require(rows.first { $0.id == "android.emulator" })
+        #expect(emuRow.location == customSDK)
+        #expect(emuRow.size == (try await fixture.measured(customSDK)))
+        #expect(emuRow.cleanup == nil)
+    }
+
+    @Test("Android tools failing or producing garbage gives size unknown without crashing")
+    func androidGarbageOutput() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("sdkmanager", "avdmanager")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("sdkmanager"), ["--list"], stdout: "not a valid list\n=== random ===", status: 0)
+        runner.stub(fixture.tool("avdmanager"), ["list", "avd", "-c"], stderr: "error", status: 1)
+
+        let rows = try await inspect("android", fixture, runner)
+        #expect(rows.isEmpty)
+    }
+
+    // MARK: AI Model Stores (Ollama, LM Studio, Hugging Face)
+
+    private static let ollamaList = """
+        NAME               ID              SIZE      MODIFIED
+        llama3:latest      365c0bd3c000    4.7 GB    3 days ago
+        mistral:7b         61e88e88e88e    4.1 GB    2 weeks ago
+
+        """
+
+    @Test("Ollama: lists models with defensive parsing and offers ollama rm")
+    func ollamaModelsWithTool() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("ollama")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("ollama"), ["list"], stdout: Self.ollamaList)
+
+        let rows = try await inspect("ollama", fixture, runner)
+
+        #expect(rows.map(\.id) == ["ollama.llama3:latest", "ollama.mistral:7b"])
+        #expect(rows.allSatisfy { $0.category == .aiModels })
+
+        let llama = try #require(rows.first { $0.id == "ollama.llama3:latest" })
+        #expect(llama.size == 4_700_000_000)
+        #expect(llama.cleanup?.summary == "ollama rm llama3:latest")
+        #expect(
+            llama.cleanup?.command
+                == Command(
+                    executable: fixture.tool("ollama"), arguments: ["rm", "llama3:latest"], timeout: .seconds(600)))
+        #expect(llama.cleanup?.risk == .review)
+
+        let mistral = try #require(rows.first { $0.id == "ollama.mistral:7b" })
+        #expect(mistral.size == 4_100_000_000)
+        #expect(mistral.cleanup?.summary == "ollama rm mistral:7b")
+    }
+
+    @Test("Ollama: daemon down returns one row with unknown size and note")
+    func ollamaDaemonDown() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("ollama")
+        let runner = FakeCommandRunner()
+        runner.stub(fixture.tool("ollama"), ["list"], stderr: "Error: could not connect to ollama app", status: 1)
+
+        let rows = try await inspect("ollama", fixture, runner)
+
+        #expect(rows.count == 1)
+        let row = try #require(rows.first)
+        #expect(row.id == "ollama")
+        #expect(row.size == nil)
+        #expect(row.cleanup == nil)
+        #expect(row.category == .aiModels)
+        #expect(row.note?.key == "Ollama is not running.")
+    }
+
+    @Test("Ollama: garbage output and malformed sizes result in size unknown without crashing")
+    func ollamaGarbageOutput() async throws {
+        let fixture = try ToolFixture()
+        try fixture.install("ollama")
+        let runner = FakeCommandRunner()
+        runner.stub(
+            fixture.tool("ollama"), ["list"],
+            stdout: """
+                NAME               ID              SIZE      MODIFIED
+                llama3:latest      365c0bd3c000    huge_file 3 days ago
+                -invalid_flag      1234567890ab    2.0 GB    1 day ago
+                corrupted line here
+                \n
+                """)
+
+        let rows = try await inspect("ollama", fixture, runner)
+
+        #expect(rows.count == 1)
+        let row = try #require(rows.first)
+        #expect(row.id == "ollama.llama3:latest")
+        #expect(row.size == nil)
+        #expect(row.cleanup?.summary == "ollama rm llama3:latest")
+    }
+
+    @Test("Ollama: store directory measured when tool is not installed")
+    func ollamaWithoutTool() async throws {
+        let fixture = try ToolFixture()
+        let store = try fixture.fill(".ollama/models", bytes: 60_000)
+        let runner = FakeCommandRunner()
+
+        let rows = try await inspect("ollama", fixture, runner)
+
+        #expect(rows.count == 1)
+        let row = try #require(rows.first)
+        #expect(row.id == "ollama.models")
+        #expect(row.location == store)
+        #expect(row.size == (try await fixture.measured(store)))
+        #expect(row.cleanup == nil)
+        #expect(row.category == .aiModels)
+    }
+
+    @Test("LM Studio: measures per-model folders under ~/.lmstudio/models and legacy ~/.cache/lm-studio/models")
+    func lmStudioModels() async throws {
+        let fixture = try ToolFixture()
+        let model1 = try fixture.fill(".lmstudio/models/publisher/model-a", bytes: 45_000)
+        let model2 = try fixture.fill(".cache/lm-studio/models/legacy-model", bytes: 55_000)
+        let runner = FakeCommandRunner()
+
+        let rows = try await inspect("lmstudio", fixture, runner)
+
+        #expect(rows.count == 2)
+        #expect(rows.allSatisfy { $0.category == .aiModels && $0.cleanup == nil })
+
+        let row1 = try #require(rows.first { $0.id == "lmstudio.publisher.model-a" })
+        #expect(row1.location == model1)
+        #expect(row1.size == (try await fixture.measured(model1)))
+
+        let row2 = try #require(rows.first { $0.id == "lmstudio.legacy.legacy-model" })
+        #expect(row2.location == model2)
+        #expect(row2.size == (try await fixture.measured(model2)))
+    }
+
+    @Test("Hugging Face: measures models--org--name folders in cache")
+    func huggingFaceModels() async throws {
+        let fixture = try ToolFixture()
+        let modelPath = try fixture.fill(".cache/huggingface/hub/models--meta-llama--Llama-3-8B", bytes: 70_000)
+        let runner = FakeCommandRunner()
+
+        let rows = try await inspect("huggingface", fixture, runner)
+
+        #expect(rows.count == 1)
+        let row = try #require(rows.first)
+        #expect(row.id == "huggingface.models--meta-llama--Llama-3-8B")
+        #expect(row.location == modelPath)
+        #expect(row.size == (try await fixture.measured(modelPath)))
+        #expect(row.cleanup == nil)
+        #expect(row.category == .aiModels)
+    }
+
+    @Test("Hugging Face: custom HF_HOME environment variable")
+    func huggingFaceCustomEnvironment() async throws {
+        let fixture = try ToolFixture()
+        let customHub = try fixture.fill("custom-hf/hub/models--google--gemma-2-2b", bytes: 35_000)
+        let runner = FakeCommandRunner()
+
+        let adapter = HuggingFaceAdapter(environment: ["HF_HOME": fixture.home + "/custom-hf"])
+        let rows = await adapter.inspect(locator: fixture.locator, runner: runner, home: fixture.home)
+
+        #expect(rows.count == 1)
+        let row = try #require(rows.first)
+        #expect(row.id == "huggingface.models--google--gemma-2-2b")
+        #expect(row.location == customHub)
+        #expect(row.size == (try await fixture.measured(customHub)))
+    }
+
     // MARK: Running a cleanup
 
     @Test("ToolCleanupRunner runs the exact command, streams output and returns the result")

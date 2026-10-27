@@ -99,6 +99,10 @@ public enum ToolAdapters {
         ),
         ColimaAdapter(),
         LimaAdapter(),
+        AndroidAdapter(),
+        OllamaAdapter(),
+        LMStudioAdapter(),
+        HuggingFaceAdapter(),
     ]
 }
 
@@ -451,6 +455,590 @@ struct LimaAdapter: ToolAdapter {
                     id: "lima.\(name)", tool: "Lima (\(name))", category: .containers, location: directory,
                     size: await ToolProbe.allocatedSize(of: directory), cleanup: nil,
                     note: "A Lima virtual machine and its disk. Shown for information."))
+        }
+        return rows
+    }
+}
+
+/// Android SDK components and virtual devices.
+struct AndroidAdapter: ToolAdapter {
+    let id: String
+    private let environment: [String: String]?
+
+    init(id: String = "android", environment: [String: String]? = nil) {
+        self.id = id
+        self.environment = environment
+    }
+
+    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+        let sdkPath = resolveSDKPath(home: home)
+        let avdRoot = home + "/.android/avd"
+
+        var isDir: ObjCBool = false
+        let sdkExists = FileManager.default.fileExists(atPath: sdkPath, isDirectory: &isDir) && isDir.boolValue
+        let avdExists = FileManager.default.fileExists(atPath: avdRoot, isDirectory: &isDir) && isDir.boolValue
+
+        let sdkmanager = locateTool("sdkmanager", locator: locator, sdkPath: sdkPath)
+        let avdmanager = locateTool("avdmanager", locator: locator, sdkPath: sdkPath)
+
+        if !sdkExists && !avdExists && sdkmanager == nil && avdmanager == nil {
+            return []
+        }
+
+        var rows: [ToolStorage] = []
+        if sdkExists || sdkmanager != nil {
+            rows += await inspectSDK(sdkPath: sdkPath, sdkmanager: sdkmanager, runner: runner)
+        }
+        if avdExists || avdmanager != nil {
+            rows += await inspectAVDs(avdRoot: avdRoot, avdmanager: avdmanager, runner: runner)
+        }
+        return rows
+    }
+
+    private func resolveSDKPath(home: String) -> String {
+        if let custom = environment?["ANDROID_HOME"], !custom.isEmpty {
+            return custom.hasPrefix("/") ? custom : home + "/" + custom
+        }
+        if let custom = environment?["ANDROID_SDK_ROOT"], !custom.isEmpty {
+            return custom.hasPrefix("/") ? custom : home + "/" + custom
+        }
+        return home + "/Library/Android/sdk"
+    }
+
+    private func locateTool(_ name: String, locator: ToolLocator, sdkPath: String) -> String? {
+        if let found = locator.locate(name) { return found }
+        let candidates = [
+            sdkPath + "/cmdline-tools/latest/bin/" + name,
+            sdkPath + "/tools/bin/" + name,
+        ]
+        for candidate in candidates {
+            var info = stat()
+            if stat(candidate, &info) == 0, info.st_mode & S_IFMT == S_IFREG, access(candidate, X_OK) == 0 {
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    private func inspectSDK(sdkPath: String, sdkmanager: String?, runner: any CommandRunning) async -> [ToolStorage] {
+        var rows: [ToolStorage] = []
+        var listedPackages: Set<String>?
+        if let sdkmanager {
+            if let output = await ToolProbe.output(runner, sdkmanager, ["--list"]) {
+                listedPackages = Self.parseInstalledPackages(output)
+            }
+        }
+
+        if let listedPackages, !listedPackages.isEmpty, let sdkmanager {
+            if listedPackages.contains("emulator") {
+                let location = sdkPath + "/emulator"
+                rows.append(
+                    ToolStorage(
+                        id: "android.emulator",
+                        tool: LocalizedStringResource("Android Emulator"),
+                        category: .packageCaches,
+                        location: location,
+                        size: await ToolProbe.allocatedSize(of: location),
+                        cleanup: ToolCleanupAction(
+                            executable: sdkmanager, arguments: ["--uninstall", "emulator"], risk: .review),
+                        note: LocalizedStringResource("The Android Emulator application and support files.")
+                    ))
+            }
+
+            let platformPackages = listedPackages.filter { $0.hasPrefix("platforms;") }.sorted()
+            for pkg in platformPackages {
+                let name = String(pkg.dropFirst("platforms;".count))
+                let location = sdkPath + "/platforms/" + name
+                rows.append(
+                    ToolStorage(
+                        id: "android.platform.\(name)",
+                        tool: LocalizedStringResource("Android Platform (\(name))"),
+                        category: .packageCaches,
+                        location: location,
+                        size: await ToolProbe.allocatedSize(of: location),
+                        cleanup: ToolCleanupAction(
+                            executable: sdkmanager, arguments: ["--uninstall", pkg], risk: .review),
+                        note: LocalizedStringResource("Android SDK platform files and system headers.")
+                    ))
+            }
+
+            let sysImgPackages = listedPackages.filter { $0.hasPrefix("system-images;") }.sorted()
+            for pkg in sysImgPackages {
+                let name = String(pkg.dropFirst("system-images;".count))
+                let rel = pkg.replacingOccurrences(of: ";", with: "/")
+                let location = sdkPath + "/" + rel
+                let idSuffix = name.replacingOccurrences(of: ";", with: ".")
+                rows.append(
+                    ToolStorage(
+                        id: "android.system-image.\(idSuffix)",
+                        tool: LocalizedStringResource("Android System Image (\(name))"),
+                        category: .packageCaches,
+                        location: location,
+                        size: await ToolProbe.allocatedSize(of: location),
+                        cleanup: ToolCleanupAction(
+                            executable: sdkmanager, arguments: ["--uninstall", pkg], risk: .review),
+                        note: LocalizedStringResource("Android system image for emulator virtual devices.")
+                    ))
+            }
+
+            let btPackages = listedPackages.filter { $0.hasPrefix("build-tools;") }
+            let btVersions = btPackages.map { String($0.dropFirst("build-tools;".count)) }.sorted(by: Self.isVersion)
+            if btVersions.count > 1 {
+                for version in btVersions.dropLast() {
+                    let pkg = "build-tools;" + version
+                    let location = sdkPath + "/build-tools/" + version
+                    rows.append(
+                        ToolStorage(
+                            id: "android.build-tools.\(version)",
+                            tool: LocalizedStringResource("Android Build-Tools (\(version))"),
+                            category: .packageCaches,
+                            location: location,
+                            size: await ToolProbe.allocatedSize(of: location),
+                            cleanup: ToolCleanupAction(
+                                executable: sdkmanager, arguments: ["--uninstall", pkg], risk: .review),
+                            note: LocalizedStringResource(
+                                "An older version of Android build tools. Current projects usually use the latest version."
+                            )
+                        ))
+                }
+            }
+        } else {
+            let emulatorDir = sdkPath + "/emulator"
+            if let emuSize = await ToolProbe.allocatedSize(of: emulatorDir) {
+                rows.append(
+                    ToolStorage(
+                        id: "android.emulator",
+                        tool: LocalizedStringResource("Android Emulator"),
+                        category: .packageCaches,
+                        location: emulatorDir,
+                        size: emuSize,
+                        cleanup: nil,
+                        note: LocalizedStringResource("The Android Emulator application and support files.")
+                    ))
+            }
+
+            let platformsDir = sdkPath + "/platforms"
+            if let platformFolders = try? FileManager.default.contentsOfDirectory(atPath: platformsDir).filter({
+                !$0.hasPrefix(".")
+            }), !platformFolders.isEmpty {
+                for name in platformFolders.sorted() {
+                    let folder = platformsDir + "/" + name
+                    if let size = await ToolProbe.allocatedSize(of: folder) {
+                        rows.append(
+                            ToolStorage(
+                                id: "android.platform.\(name)",
+                                tool: LocalizedStringResource("Android Platform (\(name))"),
+                                category: .packageCaches,
+                                location: folder,
+                                size: size,
+                                cleanup: nil,
+                                note: LocalizedStringResource("Android SDK platform files and system headers.")
+                            ))
+                    }
+                }
+            }
+
+            let sysImgDir = sdkPath + "/system-images"
+            if let sysImgFolders = Self.findSystemImageFolders(root: sysImgDir), !sysImgFolders.isEmpty {
+                for folder in sysImgFolders.sorted() {
+                    let rel = String(folder.dropFirst(sysImgDir.count + 1))
+                    let idPart = rel.replacingOccurrences(of: "/", with: ".")
+                    rows.append(
+                        ToolStorage(
+                            id: "android.system-image.\(idPart)",
+                            tool: LocalizedStringResource("Android System Image (\(rel))"),
+                            category: .packageCaches,
+                            location: folder,
+                            size: await ToolProbe.allocatedSize(of: folder),
+                            cleanup: nil,
+                            note: LocalizedStringResource("Android system image for emulator virtual devices.")
+                        ))
+                }
+            }
+
+            let btDir = sdkPath + "/build-tools"
+            if let btFolders = try? FileManager.default.contentsOfDirectory(atPath: btDir).filter({
+                !$0.hasPrefix(".")
+            }), !btFolders.isEmpty {
+                let sorted = btFolders.sorted(by: Self.isVersion)
+                if sorted.count > 1 {
+                    for version in sorted.dropLast() {
+                        let folder = btDir + "/" + version
+                        rows.append(
+                            ToolStorage(
+                                id: "android.build-tools.\(version)",
+                                tool: LocalizedStringResource("Android Build-Tools (\(version))"),
+                                category: .packageCaches,
+                                location: folder,
+                                size: await ToolProbe.allocatedSize(of: folder),
+                                cleanup: nil,
+                                note: LocalizedStringResource(
+                                    "An older version of Android build tools. Current projects usually use the latest version."
+                                )
+                            ))
+                    }
+                }
+            }
+        }
+        return rows
+    }
+
+    private func inspectAVDs(avdRoot: String, avdmanager: String?, runner: any CommandRunning) async -> [ToolStorage] {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: avdRoot, isDirectory: &isDir), isDir.boolValue else {
+            return []
+        }
+
+        var listedAVDs: Set<String>?
+        if let avdmanager {
+            if let output = await ToolProbe.output(runner, avdmanager, ["list", "avd", "-c"]) {
+                listedAVDs = Set(
+                    output.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter(
+                        Self.isValidAVDName))
+            }
+        }
+
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: avdRoot) else { return [] }
+        var rows: [ToolStorage] = []
+        for entry in entries.sorted() where entry.hasSuffix(".avd") {
+            let name = String(entry.dropLast(".avd".count))
+            guard Self.isValidAVDName(name) else { continue }
+            let iniFile = avdRoot + "/" + name + ".ini"
+            guard FileManager.default.fileExists(atPath: iniFile) else { continue }
+            let avdDir = avdRoot + "/" + entry
+            let size = await ToolProbe.allocatedSize(of: avdDir)
+
+            let cleanup: ToolCleanupAction?
+            if let avdmanager {
+                if let listedAVDs, listedAVDs.contains(name) {
+                    cleanup = ToolCleanupAction(
+                        executable: avdmanager, arguments: ["delete", "avd", "-n", name], risk: .review)
+                } else {
+                    cleanup = nil
+                }
+            } else {
+                cleanup = nil
+            }
+
+            rows.append(
+                ToolStorage(
+                    id: "android.avd.\(name)",
+                    tool: LocalizedStringResource("Android AVD (\(name))"),
+                    category: .simulators,
+                    location: avdDir,
+                    size: size,
+                    cleanup: cleanup,
+                    note: LocalizedStringResource(
+                        "An Android Virtual Device and its storage. Deleting it removes its state and installed apps."
+                    )
+                ))
+        }
+        return rows
+    }
+
+    static func parseInstalledPackages(_ output: String) -> Set<String> {
+        var packages = Set<String>()
+        var inInstalled = false
+        for line in output.split(whereSeparator: \.isNewline) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.localizedCaseInsensitiveContains("Installed packages:") {
+                inInstalled = true
+                continue
+            }
+            if trimmed.localizedCaseInsensitiveContains("Available Packages:") {
+                break
+            }
+            guard inInstalled else { continue }
+            if trimmed.isEmpty || trimmed.hasPrefix("Path") || trimmed.hasPrefix("---") || trimmed.hasPrefix("===") {
+                continue
+            }
+            let token: String
+            if let barIndex = trimmed.firstIndex(of: "|") {
+                token = String(trimmed[..<barIndex]).trimmingCharacters(in: .whitespaces)
+            } else {
+                token = trimmed.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? ""
+            }
+            guard isValidPackageName(token) else { continue }
+            packages.insert(token)
+        }
+        return packages
+    }
+
+    static func isValidPackageName(_ name: String) -> Bool {
+        guard !name.isEmpty, !name.hasPrefix("-"), !name.hasPrefix(".") else { return false }
+        return name.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || ";_-.".contains($0)) }
+    }
+
+    static func isValidAVDName(_ name: String) -> Bool {
+        guard !name.isEmpty, !name.hasPrefix("-"), !name.hasPrefix(".") else { return false }
+        return name.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "_-.".contains($0)) }
+    }
+
+    static func isVersion(_ lhs: String, olderThan rhs: String) -> Bool {
+        let lParts = lhs.split(separator: ".").compactMap { Int($0.prefix(while: \.isNumber)) }
+        let rParts = rhs.split(separator: ".").compactMap { Int($0.prefix(while: \.isNumber)) }
+        for (l, r) in zip(lParts, rParts) {
+            if l != r { return l < r }
+        }
+        return lParts.count < rParts.count
+    }
+
+    static func findSystemImageFolders(root: String) -> [String]? {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: root, isDirectory: &isDir), isDir.boolValue else { return nil }
+        var leaves: [String] = []
+        var queue = [root]
+        while !queue.isEmpty {
+            let current = queue.removeFirst()
+            guard
+                let children = try? FileManager.default.contentsOfDirectory(atPath: current).filter({
+                    !$0.hasPrefix(".")
+                })
+            else { continue }
+            var hasSubdir = false
+            for child in children {
+                let childPath = current + "/" + child
+                var childIsDir: ObjCBool = false
+                if FileManager.default.fileExists(atPath: childPath, isDirectory: &childIsDir), childIsDir.boolValue {
+                    hasSubdir = true
+                    queue.append(childPath)
+                }
+            }
+            if !hasSubdir && current != root {
+                leaves.append(current)
+            }
+        }
+        return leaves.isEmpty ? nil : leaves
+    }
+}
+
+/// Ollama local model store: per-model rows with removal via ollama rm and store sizing.
+struct OllamaAdapter: ToolAdapter {
+    let id = "ollama"
+
+    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+        let storePath = home + "/.ollama/models"
+        var isDir: ObjCBool = false
+        let storeExists = FileManager.default.fileExists(atPath: storePath, isDirectory: &isDir) && isDir.boolValue
+        let ollamaPath = locator.locate("ollama")
+
+        if !storeExists && ollamaPath == nil {
+            return []
+        }
+
+        if let ollamaPath {
+            guard let output = await ToolProbe.output(runner, ollamaPath, ["list"]) else {
+                return [
+                    ToolStorage(
+                        id: "ollama",
+                        tool: LocalizedStringResource("Ollama"),
+                        category: .aiModels,
+                        location: storeExists ? storePath : nil,
+                        size: nil,
+                        cleanup: nil,
+                        note: LocalizedStringResource("Ollama is not running.")
+                    )
+                ]
+            }
+
+            let models = Self.parseModels(output)
+            return models.map { model in
+                ToolStorage(
+                    id: "ollama.\(model.name)",
+                    tool: LocalizedStringResource("Ollama (\(model.name))"),
+                    category: .aiModels,
+                    location: storeExists ? storePath : nil,
+                    size: model.size,
+                    cleanup: ToolCleanupAction(
+                        executable: ollamaPath,
+                        arguments: ["rm", model.name],
+                        risk: .review
+                    ),
+                    note: LocalizedStringResource("An Ollama model. It can be downloaded again with ollama pull.")
+                )
+            }
+        } else {
+            return [
+                ToolStorage(
+                    id: "ollama.models",
+                    tool: LocalizedStringResource("Ollama models"),
+                    category: .aiModels,
+                    location: storePath,
+                    size: await ToolProbe.allocatedSize(of: storePath),
+                    cleanup: nil,
+                    note: LocalizedStringResource("Ollama's local model store. Shown for information.")
+                )
+            ]
+        }
+    }
+
+    static func parseModels(_ output: String) -> [(name: String, size: Int64?)] {
+        var models: [(name: String, size: Int64?)] = []
+        for line in output.split(whereSeparator: \.isNewline) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty || trimmed.hasPrefix("NAME") { continue }
+            let tokens = trimmed.split(whereSeparator: \.isWhitespace).map(String.init)
+            guard tokens.count >= 2 else { continue }
+            let name = tokens[0]
+            guard isValidModelName(name), isValidID(tokens[1]) else { continue }
+            let size: Int64?
+            if tokens.count >= 4, let bytes = parseSize(tokens[2] + tokens[3]) {
+                size = bytes
+            } else if tokens.count >= 3, let bytes = parseSize(tokens[2]) {
+                size = bytes
+            } else {
+                size = nil
+            }
+            models.append((name: name, size: size))
+        }
+        return models
+    }
+
+    static func isValidModelName(_ name: String) -> Bool {
+        guard !name.isEmpty, !name.hasPrefix("-"), !name.hasPrefix(".") else { return false }
+        return name.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || ":/._-".contains($0)) }
+    }
+
+    static func isValidID(_ text: String) -> Bool {
+        guard !text.isEmpty else { return false }
+        if text.hasPrefix("sha256:") {
+            return text.dropFirst("sha256:".count).allSatisfy(\.isHexDigit)
+        }
+        return text.allSatisfy(\.isHexDigit)
+    }
+
+    static func parseSize(_ text: String) -> Int64? {
+        ContainerEngineAdapter.parseSize(text)
+    }
+}
+
+/// LM Studio local model stores: folder sizes under ~/.lmstudio/models and legacy ~/.cache/lm-studio/models.
+struct LMStudioAdapter: ToolAdapter {
+    let id = "lmstudio"
+
+    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+        let roots: [(path: String, isLegacy: Bool)] = [
+            (home + "/.lmstudio/models", false),
+            (home + "/.cache/lm-studio/models", true),
+        ]
+
+        var rows: [ToolStorage] = []
+        for (root, isLegacy) in roots {
+            var isDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: root, isDirectory: &isDir), isDir.boolValue else {
+                continue
+            }
+            guard
+                let children = try? FileManager.default.contentsOfDirectory(atPath: root).filter({
+                    !$0.hasPrefix(".")
+                })
+            else { continue }
+
+            for child in children.sorted() {
+                let childPath = root + "/" + child
+                var childIsDir: ObjCBool = false
+                guard FileManager.default.fileExists(atPath: childPath, isDirectory: &childIsDir), childIsDir.boolValue
+                else { continue }
+
+                let subchildren =
+                    (try? FileManager.default.contentsOfDirectory(atPath: childPath))?
+                    .filter { !$0.hasPrefix(".") } ?? []
+                var subdirs: [String] = []
+                for sub in subchildren {
+                    let subPath = childPath + "/" + sub
+                    var subIsDir: ObjCBool = false
+                    if FileManager.default.fileExists(atPath: subPath, isDirectory: &subIsDir), subIsDir.boolValue {
+                        subdirs.append(sub)
+                    }
+                }
+
+                if !subdirs.isEmpty {
+                    for sub in subdirs.sorted() {
+                        let modelFolder = childPath + "/" + sub
+                        let modelName = child + "/" + sub
+                        let idPrefix = isLegacy ? "lmstudio.legacy." : "lmstudio."
+                        let safeId = idPrefix + modelName.replacingOccurrences(of: "/", with: ".")
+                        rows.append(
+                            ToolStorage(
+                                id: safeId,
+                                tool: LocalizedStringResource("LM Studio (\(modelName))"),
+                                category: .aiModels,
+                                location: modelFolder,
+                                size: await ToolProbe.allocatedSize(of: modelFolder),
+                                cleanup: nil,
+                                note: LocalizedStringResource("An LM Studio model. Shown for information.")
+                            ))
+                    }
+                } else {
+                    let idPrefix = isLegacy ? "lmstudio.legacy." : "lmstudio."
+                    let safeId = idPrefix + child
+                    rows.append(
+                        ToolStorage(
+                            id: safeId,
+                            tool: LocalizedStringResource("LM Studio (\(child))"),
+                            category: .aiModels,
+                            location: childPath,
+                            size: await ToolProbe.allocatedSize(of: childPath),
+                            cleanup: nil,
+                            note: LocalizedStringResource("An LM Studio model. Shown for information.")
+                        ))
+                }
+            }
+        }
+        return rows
+    }
+}
+
+/// Hugging Face hub cache: model repository directories under $HF_HOME/hub or ~/.cache/huggingface/hub.
+struct HuggingFaceAdapter: ToolAdapter {
+    let id: String
+    private let environment: [String: String]?
+
+    init(id: String = "huggingface", environment: [String: String]? = nil) {
+        self.id = id
+        self.environment = environment
+    }
+
+    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+        let hubPath: String = {
+            if let custom = environment?["HF_HOME"], !custom.isEmpty {
+                let base = custom.hasPrefix("/") ? custom : home + "/" + custom
+                return base + "/hub"
+            }
+            return home + "/.cache/huggingface/hub"
+        }()
+
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: hubPath, isDirectory: &isDir), isDir.boolValue else {
+            return []
+        }
+
+        guard
+            let entries = try? FileManager.default.contentsOfDirectory(atPath: hubPath).filter({
+                $0.hasPrefix("models--")
+            })
+        else { return [] }
+
+        var rows: [ToolStorage] = []
+        for entry in entries.sorted() {
+            let folder = hubPath + "/" + entry
+            var entryIsDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: folder, isDirectory: &entryIsDir), entryIsDir.boolValue
+            else { continue }
+
+            let modelParts = entry.dropFirst("models--".count).components(separatedBy: "--")
+            let modelName = modelParts.joined(separator: "/")
+
+            rows.append(
+                ToolStorage(
+                    id: "huggingface.\(entry)",
+                    tool: LocalizedStringResource("Hugging Face (\(modelName))"),
+                    category: .aiModels,
+                    location: folder,
+                    size: await ToolProbe.allocatedSize(of: folder),
+                    cleanup: nil,
+                    note: LocalizedStringResource("A cached Hugging Face model. Shown for information.")
+                ))
         }
         return rows
     }
