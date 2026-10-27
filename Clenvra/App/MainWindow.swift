@@ -25,7 +25,7 @@ struct MainWindow: View {
         } detail: {
             switch selection {
             case .cleanup:
-                RuleReviewView(section: .cleanup, session: environment.cleanupSession)
+                CleanupView(environment: environment)
             case .developer:
                 RuleReviewView(section: .developer, session: environment.developerSession) {
                     if let tools = environment.toolSession { ToolStorageSection(session: tools) }

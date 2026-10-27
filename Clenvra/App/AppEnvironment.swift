@@ -48,6 +48,8 @@ final class AppEnvironment {
         reader: LaunchItemReader(), runner: ProcessCommandRunner(),
         deleter: makeDeleter { _ in .notRunning }, privileged: helper)
     @ObservationIgnored private(set) lazy var scheduler = ScanScheduler(environment: self)
+    /// Browser history, cookies, sessions and site data: explicit opt-in per type, never while the browser is open.
+    @ObservationIgnored private(set) lazy var browserDataSession = makeBrowserDataSession()
     @ObservationIgnored private(set) lazy var snapshotsSession = SnapshotsSession(
         runner: ProcessCommandRunner(), privileged: helper)
 
@@ -117,6 +119,12 @@ final class AppEnvironment {
             rules: rules, section: section, home: home, policy: policy, ownerState: ownerState,
             deleter: makeDeleter(ownerState: ownerState), privileged: helper,
             ownerBundlePath: { [ownership] in ownership.bundlePath(of: $0) })
+    }
+
+    private func makeBrowserDataSession() -> BrowserDataSession {
+        let ownerState: @Sendable (String) -> OwnerState = { [ownership] in ownership.state(of: $0) }
+        return BrowserDataSession(
+            home: home, policy: policy, ownerState: ownerState, deleter: makeDeleter(ownerState: ownerState))
     }
 
     private static func canonicalHome() -> String {
