@@ -33,7 +33,7 @@ struct MainWindow: View {
             case .overview:
                 OverviewView(environment: environment, navigate: { selection = $0 })
             case .storage:
-                StorageView(session: environment.storageSession)
+                StorageView(session: environment.storageSession, similarPhotos: environment.similarPhotosSession)
             case .duplicates:
                 DuplicatesView(session: environment.duplicatesSession)
             case .applications:

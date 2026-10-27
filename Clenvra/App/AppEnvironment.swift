@@ -28,6 +28,7 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var developerSession = makeSession(for: .developer)
     @ObservationIgnored private(set) lazy var storageSession = StorageView.makeSession(environment: self)
     @ObservationIgnored private(set) lazy var duplicatesSession = DuplicatesSession.live(environment: self)
+    @ObservationIgnored private(set) lazy var similarPhotosSession = SimilarPhotosSession.live(environment: self)
     @ObservationIgnored private(set) lazy var appsSession = ApplicationsServices.makeSession(environment: self)
     /// Homebrew, when installed; shared by uninstall (`brew uninstall`) and the update check (`brew outdated`).
     @ObservationIgnored private(set) lazy var homebrew = ApplicationsServices.locateHomebrew()
