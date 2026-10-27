@@ -290,6 +290,22 @@
         }
       }
     },
+    "%lld files checked · %lld photos found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فُحص %1$lld ملفًا · عُثر على %2$lld صورة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld files checked · %2$lld photos found"
+          }
+        }
+      }
+    },
     "%lld files could not be read.": {
       "localizations": {
         "ar": {
@@ -748,6 +764,16 @@
         }
       }
     },
+    "%lld items were not compared": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تُقارَن %lld من العناصر"
+          }
+        }
+      }
+    },
     "%lld items were skipped": {
       "localizations": {
         "ar": {
@@ -808,6 +834,42 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld items will be moved to the Trash. The app stays installed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستُنقل %lld من العناصر إلى سلة المهملات. يبقى التطبيق مثبّتًا."
+          }
+        }
+      }
+    },
+    "%lld of %lld photos compared": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قورنت %1$lld من أصل %2$lld صورة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld photos compared"
+          }
+        }
+      }
+    },
+    "%lld photos marked": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حُدِّدت %lld صورة"
           }
         }
       }
@@ -1132,6 +1194,16 @@
         }
       }
     },
+    "%lld similar photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld صورة متشابهة"
+          }
+        }
+      }
+    },
     "%lld simulators whose runtime is no longer installed. Deleting them also removes their apps and data.": {
       "localizations": {
         "ar": {
@@ -1192,6 +1264,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld smaller items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld عنصرًا أصغر"
           }
         }
       }
@@ -1388,6 +1470,16 @@
         }
       }
     },
+    "%lld updates available": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld تحديثًا متاحًا"
+          }
+        }
+      }
+    },
     "1 year": {
       "localizations": {
         "ar": {
@@ -1574,6 +1666,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "كل الأقسام"
+          }
+        }
+      }
+    },
+    "Also removes bookmarks, which Firefox stores in the same file.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل أيضًا الإشارات المرجعية، لأن Firefox يحفظها في الملف نفسه."
           }
         }
       }
@@ -1788,6 +1890,16 @@
         }
       }
     },
+    "App Updates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديثات التطبيقات"
+          }
+        }
+      }
+    },
     "App size: %@": {
       "localizations": {
         "ar": {
@@ -1845,6 +1957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الموافقة في إعدادات النظام…"
+          }
+        }
+      }
+    },
+    "Apps with a newer version appear here after you check for updates.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تظهر هنا التطبيقات التي لها إصدار أحدث بعد التحقق من التحديثات."
           }
         }
       }
@@ -2029,6 +2151,16 @@
         }
       }
     },
+    "Browser History & Cookies": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجل المتصفح وملفات تعريف الارتباط"
+          }
+        }
+      }
+    },
     "Build data and device support files. Xcode recreates them; the next build is slower.": {
       "localizations": {
         "ar": {
@@ -2172,12 +2304,58 @@
         }
       }
     },
+    "Check for Updates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحقق من التحديثات"
+          }
+        }
+      }
+    },
+    "Check for app updates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحقق من تحديثات التطبيقات"
+          }
+        }
+      }
+    },
     "Check that the disk is connected and that Clenvra has Full Disk Access.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تحقق من أن القرص متصل وأن Clenvra لديه وصول كامل إلى القرص."
+          }
+        }
+      }
+    },
+    "Checked %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر تحقق %@"
+          }
+        }
+      }
+    },
+    "Checking %lld of %lld apps for updates…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ التحقق من تحديثات %1$lld من أصل %2$lld تطبيقًا…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Checking %1$lld of %2$lld apps for updates…"
           }
         }
       }
@@ -2202,12 +2380,32 @@
         }
       }
     },
+    "Choose Photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختيار الصور"
+          }
+        }
+      }
+    },
     "Choose an app in the list, or drag one from Finder onto this window.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "اختر تطبيقًا من القائمة، أو اسحب تطبيقًا من Finder إلى هذه النافذة."
+          }
+        }
+      }
+    },
+    "Choose exactly what to remove from each browser. Nothing is selected for you.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر بدقة ما تريد إزالته من كل متصفح. لا يُحدَّد أي شيء نيابةً عنك."
           }
         }
       }
@@ -2275,12 +2473,42 @@
     "Clenvra": {
       "shouldTranslate": false
     },
+    "Clenvra can't check this app for updates. It has no update feed Clenvra can read.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يستطيع Clenvra التحقق من تحديثات هذا التطبيق، فليس له مصدر تحديثات يمكن قراءته."
+          }
+        }
+      }
+    },
+    "Clenvra can't tell whether %@ is open, so its data is left alone.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يستطيع Clenvra معرفة ما إذا كان %@ مفتوحًا، لذا تُترك بياناته كما هي."
+          }
+        }
+      }
+    },
     "Clenvra could not read this app. It may have been moved.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر على Clenvra قراءة هذا التطبيق. ربما تم نقله."
+          }
+        }
+      }
+    },
+    "Clenvra couldn't read this app's version.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على Clenvra قراءة إصدار هذا التطبيق."
           }
         }
       }
@@ -2335,6 +2563,16 @@
         }
       }
     },
+    "Closes the tabs you had open and loses the restore list.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يغلق علامات التبويب التي كانت مفتوحة ويفقد قائمة الاستعادة."
+          }
+        }
+      }
+    },
     "CocoaPods": {
       "shouldTranslate": false
     },
@@ -2357,6 +2595,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ مقارنة أحجام الملفات…"
+          }
+        }
+      }
+    },
+    "Comparing photos…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ مقارنة الصور…"
           }
         }
       }
@@ -2421,12 +2669,32 @@
         }
       }
     },
+    "Cookies": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات تعريف الارتباط"
+          }
+        }
+      }
+    },
     "Copies of attachments Mail downloaded when you opened them. Your mail and the attachments in it are kept.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "نُسخ المرفقات التي نزّلها البريد عند فتحها. يبقى بريدك والمرفقات التي فيه."
+          }
+        }
+      }
+    },
+    "Copy Command": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ الأمر"
           }
         }
       }
@@ -2974,6 +3242,16 @@
         }
       }
     },
+    "Files in %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات في %@"
+          }
+        }
+      }
+    },
     "Files outside your home folder are not removed.": {
       "localizations": {
         "ar": {
@@ -3000,6 +3278,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "البحث عن الملفات المكررة"
+          }
+        }
+      }
+    },
+    "Find Similar Photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث عن صور متشابهة"
           }
         }
       }
@@ -3317,6 +3605,16 @@
         }
       }
     },
+    "Grouping similar photos…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تجميع الصور المتشابهة…"
+          }
+        }
+      }
+    },
     "Health": {
       "localizations": {
         "ar": {
@@ -3377,12 +3675,42 @@
         }
       }
     },
+    "Hidden files and the Photos library are not searched.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يُبحث في الملفات المخفية ولا في مكتبة الصور."
+          }
+        }
+      }
+    },
     "Hidden files, apps and photo libraries are not searched.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "لا يتم البحث في الملفات المخفية والتطبيقات ومكتبات الصور."
+          }
+        }
+      }
+    },
+    "History": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السجل"
+          }
+        }
+      }
+    },
+    "History & Cookies…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السجل وملفات تعريف الارتباط…"
           }
         }
       }
@@ -3558,6 +3886,16 @@
         }
       }
     },
+    "Installed with Homebrew. Run this command in Terminal to update it:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثبّت عبر Homebrew. نفّذ هذا الأمر في Terminal لتحديثه:"
+          }
+        }
+      }
+    },
     "Installers & Disk Images": {
       "localizations": {
         "ar": {
@@ -3598,6 +3936,26 @@
         }
       }
     },
+    "It could not be compared.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت مقارنتها."
+          }
+        }
+      }
+    },
+    "It could not be read.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت قراءتها."
+          }
+        }
+      }
+    },
     "It is enabled again.": {
       "localizations": {
         "ar": {
@@ -3608,12 +3966,32 @@
         }
       }
     },
+    "It is inside a Photos library. Use Photos to manage it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنها داخل مكتبة الصور. استخدم تطبيق الصور لإدارتها."
+          }
+        }
+      }
+    },
     "It is locked or protected by macOS.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "مقفل أو محمي بواسطة macOS."
+          }
+        }
+      }
+    },
+    "It is not an image Clenvra can read.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنها ليست صورة يستطيع Clenvra قراءتها."
           }
         }
       }
@@ -3644,6 +4022,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سيتوقف الآن ولن يبدأ مرة أخرى. ينتقل ملفه إلى سلة المهملات، لذا يمكنك إرجاعه."
+          }
+        }
+      }
+    },
+    "It is too large to compare.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنها أكبر من أن تُقارَن."
           }
         }
       }
@@ -3718,6 +4106,16 @@
         }
       }
     },
+    "Keep All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بالكل"
+          }
+        }
+      }
+    },
     "Keep Copies in Folder": {
       "localizations": {
         "ar": {
@@ -3748,12 +4146,32 @@
         }
       }
     },
+    "Keep Only This Photo": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بهذه الصورة فقط"
+          }
+        }
+      }
+    },
     "Keep only this copy": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الاحتفاظ بهذه النسخة فقط"
+          }
+        }
+      }
+    },
+    "Keeping only the best frees about %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بالأفضل فقط يحرر حوالي %@"
           }
         }
       }
@@ -4038,6 +4456,16 @@
         }
       }
     },
+    "Looking for photos…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن الصور…"
+          }
+        }
+      }
+    },
     "Looking for snapshots…": {
       "localizations": {
         "ar": {
@@ -4094,6 +4522,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "تديره مؤسستك"
+          }
+        }
+      }
+    },
+    "Map Style": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمط الخريطة"
+          }
+        }
+      }
+    },
+    "Mark All but the Best": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد الكل عدا الأفضل"
+          }
+        }
+      }
+    },
+    "Mark All but the Best in Every Group": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد الكل عدا الأفضل في كل مجموعة"
+          }
+        }
+      }
+    },
+    "Marked for the Trash, %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محدّدة للنقل إلى سلة المهملات، %@"
+          }
+        }
+      }
+    },
+    "Marks every photo in this group except the one suggested to keep.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحدّد كل صورة في هذه المجموعة عدا الصورة المقترح الاحتفاظ بها."
           }
         }
       }
@@ -4208,6 +4686,16 @@
         }
       }
     },
+    "Move %@ to the Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقل %@ إلى سلة المهملات"
+          }
+        }
+      }
+    },
     "Move %lld items to the Trash?": {
       "localizations": {
         "ar": {
@@ -4282,6 +4770,16 @@
         }
       }
     },
+    "Move to Trash…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقل إلى سلة المهملات…"
+          }
+        }
+      }
+    },
     "Moved %lld items to the Trash": {
       "localizations": {
         "ar": {
@@ -4352,6 +4850,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "نُقل إلى سلة المهملات"
+          }
+        }
+      }
+    },
+    "Moves %lld items (about %@) to the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ينقل %1$lld من العناصر (حوالي %2$@) إلى سلة المهملات."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Moves %1$lld items (about %2$@) to the Trash."
           }
         }
       }
@@ -4486,6 +5000,16 @@
         }
       }
     },
+    "No browser data found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على بيانات متصفح"
+          }
+        }
+      }
+    },
     "No developer tool data found": {
       "localizations": {
         "ar": {
@@ -4616,6 +5140,56 @@
         }
       }
     },
+    "No photos that look alike were found in the folders you chose.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على صور متشابهة في المجلدات التي اخترتها."
+          }
+        }
+      }
+    },
+    "No settings, caches or saved state were found for this app.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على إعدادات أو ذاكرات مؤقتة أو حالة محفوظة لهذا التطبيق."
+          }
+        }
+      }
+    },
+    "No similar photos found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على صور متشابهة"
+          }
+        }
+      }
+    },
+    "No supported browser keeps history, cookies or site data on this Mac.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يحتفظ أي متصفح مدعوم بسجل أو ملفات تعريف ارتباط أو بيانات مواقع على جهاز Mac هذا."
+          }
+        }
+      }
+    },
+    "No updates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد تحديثات"
+          }
+        }
+      }
+    },
     "Normal": {
       "localizations": {
         "ar": {
@@ -4686,6 +5260,16 @@
         }
       }
     },
+    "Nothing is marked for you. One photo in every group is always kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يُحدَّد أي شيء نيابةً عنك. يُحتفظ دائمًا بصورة واحدة من كل مجموعة."
+          }
+        }
+      }
+    },
     "Nothing needs your attention right now.": {
       "localizations": {
         "ar": {
@@ -4712,6 +5296,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يوجد ما يمكن تنظيفه"
+          }
+        }
+      }
+    },
+    "Nothing to reset": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء لإعادة تعيينه"
           }
         }
       }
@@ -4852,6 +5446,16 @@
         }
       }
     },
+    "One photo in every group is always kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُحتفظ دائمًا بصورة واحدة من كل مجموعة."
+          }
+        }
+      }
+    },
     "Only %@ is free. See what uses the most space.": {
       "localizations": {
         "ar": {
@@ -4892,12 +5496,42 @@
         }
       }
     },
+    "Open App": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح التطبيق"
+          }
+        }
+      }
+    },
+    "Open App Store": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح App Store"
+          }
+        }
+      }
+    },
     "Open Clenvra": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "فتح Clenvra"
+          }
+        }
+      }
+    },
+    "Open Privacy & Security": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح الخصوصية والأمن"
           }
         }
       }
@@ -4938,6 +5572,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح إعدادات النظام"
+          }
+        }
+      }
+    },
+    "Open Tabs & Sessions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علامات التبويب والجلسات المفتوحة"
+          }
+        }
+      }
+    },
+    "Open the app and choose Check for Updates from its menu.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح التطبيق واختر التحقق من التحديثات من قائمته."
           }
         }
       }
@@ -5282,6 +5936,26 @@
         }
       }
     },
+    "Quit %@ first": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنهِ %@ أولًا"
+          }
+        }
+      }
+    },
+    "Quit %@ to reset it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنهِ %@ لإعادة تعيينه."
+          }
+        }
+      }
+    },
     "Quit %@ to uninstall it.": {
       "localizations": {
         "ar": {
@@ -5348,6 +6022,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إزالة القاعدة"
+          }
+        }
+      }
+    },
+    "Remove browser data?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد إزالة بيانات المتصفح؟"
           }
         }
       }
@@ -5512,12 +6196,32 @@
         }
       }
     },
+    "Removes the app's settings, caches and saved state. The app stays installed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل إعدادات التطبيق وذاكراته المؤقتة وحالته المحفوظة. يبقى التطبيق مثبّتًا."
+          }
+        }
+      }
+    },
     "Removes the build cache. Later builds may take longer.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "يزيل ذاكرة التخزين المؤقت للبناء. قد تستغرق عمليات البناء اللاحقة وقتًا أطول."
+          }
+        }
+      }
+    },
+    "Removes the list of pages you visited.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل قائمة الصفحات التي زرتها."
           }
         }
       }
@@ -5538,6 +6242,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إزالة…"
+          }
+        }
+      }
+    },
+    "Removing cookies or site data signs you out of websites.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة ملفات تعريف الارتباط أو بيانات المواقع تسجّل خروجك من المواقع."
           }
         }
       }
@@ -5572,6 +6286,36 @@
         }
       }
     },
+    "Reset": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة تعيين"
+          }
+        }
+      }
+    },
+    "Reset %@?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد إعادة تعيين %@؟"
+          }
+        }
+      }
+    },
+    "Reset…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة تعيين…"
+          }
+        }
+      }
+    },
     "Restored": {
       "localizations": {
         "ar": {
@@ -5588,6 +6332,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يحتاج إلى مراجعة"
+          }
+        }
+      }
+    },
+    "Review browser history, cookies, open tabs and site data. Removing cookies signs you out of websites.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع سجل المتصفح وملفات تعريف الارتباط وعلامات التبويب المفتوحة وبيانات المواقع. إزالة ملفات تعريف الارتباط تسجّل خروجك من المواقع."
           }
         }
       }
@@ -6096,6 +6850,26 @@
         }
       }
     },
+    "Signs you out of websites.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يسجّل خروجك من المواقع."
+          }
+        }
+      }
+    },
+    "Similar Photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور المتشابهة"
+          }
+        }
+      }
+    },
     "Simulator caches and devices that no longer have a runtime.": {
       "localizations": {
         "ar": {
@@ -6126,6 +6900,16 @@
         }
       }
     },
+    "Site Data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات المواقع"
+          }
+        }
+      }
+    },
     "Size": {
       "localizations": {
         "ar": {
@@ -6152,6 +6936,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "اللقطات"
+          }
+        }
+      }
+    },
+    "Some %@ data is in a folder you excluded in Settings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعض بيانات %@ موجودة في مجلد استثنيته في الإعدادات."
+          }
+        }
+      }
+    },
+    "Some %@ files could not be read, so they are not listed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت قراءة بعض ملفات %@، لذا لا تظهر في القائمة."
           }
         }
       }
@@ -6332,6 +7136,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "التخزين"
+          }
+        }
+      }
+    },
+    "Suggested to keep, %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقترح الاحتفاظ بها، %@"
+          }
+        }
+      }
+    },
+    "Suggested to keep: the most pixels, then the newest.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقترح الاحتفاظ بها: الأعلى دقة، ثم الأحدث."
+          }
+        }
+      }
+    },
+    "Sunburst": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دائري"
           }
         }
       }
@@ -6573,6 +7407,16 @@
         }
       }
     },
+    "The app starts as if it were opened for the first time. Every item is checked again just before it is moved. You can put items back from Activity.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبدأ التطبيق كما لو فُتح لأول مرة. يُتحقق من كل عنصر مرة أخرى قبل نقله مباشرة. يمكنك إعادة العناصر من النشاط."
+          }
+        }
+      }
+    },
     "The app that uses it is open.": {
       "localizations": {
         "ar": {
@@ -6733,6 +7577,26 @@
         }
       }
     },
+    "The update check for this app didn't finish. Check your connection and try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يكتمل التحقق من تحديثات هذا التطبيق. تحقق من اتصالك وحاول مرة أخرى."
+          }
+        }
+      }
+    },
+    "The update source answered in a way Clenvra doesn't understand.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أجاب مصدر التحديثات بطريقة لا يفهمها Clenvra."
+          }
+        }
+      }
+    },
     "Thermal State": {
       "localizations": {
         "ar": {
@@ -6769,6 +7633,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا التطبيق جزء من macOS أو من Clenvra، لذا لا يمكن إزالته."
+          }
+        }
+      }
+    },
+    "This app is up to date.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا التطبيق محدّث."
+          }
+        }
+      }
+    },
+    "This app's update feed doesn't use a secure connection, so Clenvra didn't contact it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مصدر تحديثات هذا التطبيق لا يستخدم اتصالًا آمنًا، لذا لم يتصل به Clenvra."
           }
         }
       }
@@ -6883,6 +7767,16 @@
         }
       }
     },
+    "Treemap": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خريطة شجرية"
+          }
+        }
+      }
+    },
     "Try Again": {
       "localizations": {
         "ar": {
@@ -6919,6 +7813,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فعّل «إظهار عناصر Apple» لرؤية العناصر المضمّنة في macOS."
+          }
+        }
+      }
+    },
+    "Turn on update checks in Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعّل التحقق من التحديثات في الإعدادات"
           }
         }
       }
@@ -7009,6 +7913,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "غير مستخدمة منذ 6 أشهر"
+          }
+        }
+      }
+    },
+    "Update available %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتوفر تحديث %@"
+          }
+        }
+      }
+    },
+    "Update checks are off. Nothing was contacted.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحقق من التحديثات متوقف. لم يُتصل بأي جهة."
+          }
+        }
+      }
+    },
+    "Update it from the App Store.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّثه من App Store."
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحديثات"
           }
         }
       }
@@ -7159,12 +8103,32 @@
         }
       }
     },
+    "Websites forget your settings and offline data.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنسى المواقع إعداداتك وبياناتك المحفوظة دون اتصال."
+          }
+        }
+      }
+    },
     "When needed": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "عند الحاجة"
+          }
+        }
+      }
+    },
+    "When you check for updates in Applications, Clenvra contacts the apps' update feeds, Apple's App Store and Homebrew. Nothing is contacted while this is off, and nothing is downloaded or installed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند التحقق من التحديثات في التطبيقات، يتصل Clenvra بمصادر تحديثات التطبيقات وApp Store من Apple وHomebrew. لا يُتصل بأي جهة ما دام هذا الخيار متوقفًا، ولا يُنزَّل أو يُثبَّت أي شيء."
           }
         }
       }
@@ -7405,6 +8369,16 @@
         }
       }
     },
+    "macOS did not allow access to some %@ data.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يسمح macOS بالوصول إلى بعض بيانات %@."
+          }
+        }
+      }
+    },
     "macOS did not allow access.": {
       "localizations": {
         "ar": {
@@ -7445,12 +8419,32 @@
         }
       }
     },
+    "macOS does not allow removing this.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يسمح macOS بإزالة هذا."
+          }
+        }
+      }
+    },
     "macOS manages memory dynamically. High used memory is normal and keeps the system responsive; memory pressure is the true indicator of memory constraint.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "يدير macOS الذاكرة تلقائيًا. الذاكرة المستهلكة العالية أمر طبيعي وتبقي النظام سريع الاستجابة؛ ضغط الذاكرة هو المقياس الفعلي لنقص الذاكرة."
+          }
+        }
+      }
+    },
+    "macOS protects Safari's data. Allow Full Disk Access for Clenvra, then rescan.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحمي macOS بيانات Safari. اسمح لـClenvra بالوصول الكامل إلى القرص، ثم أعد الفحص."
           }
         }
       }
