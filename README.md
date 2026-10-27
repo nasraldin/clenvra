@@ -17,25 +17,27 @@
 
 Clenvra finds what fills your Mac: caches, logs, developer build data, duplicates, leftovers from removed apps, forgotten startup items. You choose what to remove. Everything goes to the Trash first, every action is recorded, and anything moved can be put back.
 
-> **Status:** in active development. All main sections work end to end. Signed and notarised builds come later; for now, build from source. See [`docs/STATUS.md`](docs/STATUS.md).
+> **Status:** 1.0. Signed and notarised builds are on the Releases page; you can also build from source. See [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Features
 
 | Section | What it does |
 |---|---|
 | **Overview** | Free space on every disk, one read-only *Scan Everything*, the five most useful recommendations, and a health line |
-| **Storage** | Folder browser and treemap for any disk, large and old files, Downloads and screenshots |
+| **Storage** | Folder browser with treemap or sunburst for any disk, large and old files, Downloads (by kind, age or website) and screenshots, and **similar photos** found with Vision |
 | **Duplicates** | Finds identical files (size, then partial hash, full hash, then byte-by-byte compare). One copy is always kept |
-| **Cleanup** | App caches, logs, crash reports, installers and disk images, iPhone/iPad backups, browser caches, Trash |
-| **Developer** | Xcode data, simulators, package caches, editor caches (VS Code family, JetBrains, Zed), build folders in your projects (`node_modules`, `target`, `.build`…), plus the tools' own clean commands (npm, pnpm, Yarn, Bun, Homebrew, pip, Go, NuGet, conda, SwiftPM, Docker, Podman and more) |
-| **Applications** | Every installed app with size and last use; complete uninstall including leftovers, with evidence for why each file belongs to the app; Homebrew casks; orphaned files from apps already removed; extensions and plug-ins |
-| **Startup** | Launch agents, daemons and login items in one list; flags items whose app is gone and removes them safely |
-| **System** | Memory pressure, swap, CPU, battery, apps using the most resources (with Quit), and security checks (FileVault, firewall, Gatekeeper, SIP) |
+| **Cleanup** | App caches, logs, crash reports, installers and disk images, iPhone/iPad backups, browser caches, mail attachment copies, temporary files, empty folders, Trash, your own review-only rules; browser history, cookies and sessions (opt-in per type); system caches and logs through the optional System Helper |
+| **Developer** | Xcode data, simulators, package caches, editor caches (VS Code family, JetBrains, Zed), build folders in your projects (`node_modules`, `target`, `.build`…), Android SDK and emulators, AI models (Ollama, LM Studio, Hugging Face), plus the tools' own clean commands (npm, pnpm, Yarn, Bun, Homebrew, pip, Go, NuGet, conda, SwiftPM, Docker, Podman and more) |
+| **Applications** | Every installed app with size and last use; complete uninstall including leftovers, with evidence for why each file belongs to the app; **reset** an app; Homebrew casks; orphaned files from apps already removed; extensions and plug-ins; opt-in update check |
+| **Startup** | Launch agents, daemons and login items in one list; flags items whose app is gone and removes them safely (system items through the System Helper) |
+| **System** | Memory pressure, swap, CPU, battery, apps using the most resources (with Quit), security checks (FileVault, firewall, Gatekeeper, SIP), and local Time Machine snapshots |
 | **Activity** | A record of everything Clenvra did, with **Put Back** for items moved to the Trash, re-enabling of startup items, and CSV or Markdown export |
 
 Also:
 
 - **Excluded folders** that Clenvra never lists or touches. You can export them to a file and import them on your other Macs.
+- **Optional System Helper** for system-wide caches, logs, startup items and snapshots. It runs only while working, acts only on a short list of system folders, checks every item again itself, and accepts only Clenvra signed by the developer.
+- **Scheduled scans** that only report, and an optional **menu bar** extra.
 - **Full English and Arabic** with a mirrored right-to-left layout.
 - **Light and dark mode**, VoiceOver labels, and keyboard shortcuts.
 
@@ -127,7 +129,7 @@ Start with [`docs/README.md`](docs/README.md) for the reading order of the desig
 
 ## Privacy
 
-Clenvra has no analytics, no telemetry and no network calls. Everything it scans stays on your Mac. The activity log is a local file in `~/Library/Application Support/Clenvra`.
+Clenvra has no analytics and no telemetry. It makes no network calls unless you turn on **Check for app updates** in Settings; then, only when you press Check for Updates, it asks the apps' own update feeds, Apple's App Store and Homebrew for version numbers. Everything it scans stays on your Mac. The activity log is a local file in `~/Library/Application Support/Clenvra`.
 
 ## Acknowledgements
 
