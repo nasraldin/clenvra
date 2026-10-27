@@ -68,6 +68,8 @@ public final class StorageSession {
     private let now: @Sendable () -> Date
     private var scanTask: Task<StorageSnapshot, any Error>?
     private var scanGeneration = 0
+    /// Reads one folder tree; replaced in tests to observe which folders are scanned.
+    var scanFunction: StorageScanner.ScanFunction = StorageScanner.defaultScan
 
     /// - Parameters:
     ///   - home: canonical home folder, the default scan target.
@@ -127,15 +129,38 @@ public final class StorageSession {
 
     /// Scans the current target, showing progress; cancelling (or `cancelScan()`) keeps a partial snapshot.
     public func scan() async {
+        let root = target.root
+        let options = options
+        let executor = executor
+        let scan = scanFunction
+        await runScan { progress in try await scan(root, options, executor, progress) }
+    }
+
+    /// Updates the snapshot after items moved out of (or into) `changedFolders`, reading only those folders.
+    private func rescan(changedFolders: [String]) async {
+        guard let snapshot else { return await scan() }
+        let options = options
+        let executor = executor
+        let scan = scanFunction
+        await runScan { progress in
+            try await StorageScanner.rescan(
+                snapshot, changedFolders: changedFolders, options: options, executor: executor, scan: scan,
+                progress: progress)
+        }
+    }
+
+    /// Runs `work` as the current scan, showing its progress, and installs the snapshot it returns.
+    private func runScan(
+        _ work:
+            @escaping @Sendable (_ progress: @escaping @Sendable (ScanProgress) -> Void) async throws ->
+            StorageSnapshot
+    ) async {
         scanTask?.cancel()
         scanGeneration += 1
         let generation = scanGeneration
         phase = .scanning(nil)
-        let root = target.root
-        let options = options
-        let executor = executor
         let task = Task<StorageSnapshot, any Error> {
-            try await StorageScanner.scan(root: root, options: options, executor: executor) { progress in
+            try await work { progress in
                 Task { @MainActor in self.report(progress, generation: generation) }
             }
         }
@@ -315,21 +340,27 @@ public final class StorageSession {
         let downloads = Self.join(home, "Downloads")
         let shots = Self.screenshotsFolder(configured: screenshotsLocation, home: home)
         let read = try? await executor.run {
-            let entries = (try? OpenDirectory(path: downloads).entries()) ?? []
+            let entries = ((try? OpenDirectory(path: downloads).entries()) ?? []).filter { $0.kind == .file }
+            var hosts: [String: String] = [:]
+            for entry in entries {
+                hosts[entry.name] = DownloadSource.host(atPath: Self.join(downloads, entry.name))
+            }
             let canonical = Self.canonical(shots)
             let shotEntries = canonical.flatMap { try? OpenDirectory(path: $0).entries() } ?? []
-            return ClutterRead(downloads: entries, screenshotsFolder: canonical, screenshots: shotEntries)
+            return ClutterRead(
+                downloads: entries, downloadHosts: hosts, screenshotsFolder: canonical, screenshots: shotEntries)
         }
         let downloadEntries = read?.downloads ?? []
+        let downloadHosts = read?.downloadHosts ?? [:]
         let shotsFolder = read?.screenshotsFolder
         let shotEntries = read?.screenshots ?? []
         let date = now()
         var items: [String: ClutterItem] = [:]
-        for entry in downloadEntries where entry.kind == .file {
+        for entry in downloadEntries {
             let item = fileItem(entry, in: downloads, ruleRoot: downloads)
             items[item.path] = ClutterItem(
                 item: item, kind: ClutterKind.classify(name: entry.name), age: .of(entry.modificationDate, now: date),
-                source: .downloads)
+                source: .downloads, sourceHost: downloadHosts[entry.name])
         }
         if let shotsFolder {
             for entry in shotEntries where entry.kind == .file {
@@ -337,7 +368,8 @@ public final class StorageSession {
                 let item = fileItem(entry, in: shotsFolder, ruleRoot: shotsFolder)
                 if items[item.path] != nil { continue }
                 items[item.path] = ClutterItem(
-                    item: item, kind: kind, age: .of(entry.modificationDate, now: date), source: .screenshots)
+                    item: item, kind: kind, age: .of(entry.modificationDate, now: date), source: .screenshots,
+                    sourceHost: nil)
             }
         }
         screenshotsPath = shotsFolder
@@ -348,7 +380,8 @@ public final class StorageSession {
         pruneSelection()
     }
 
-    /// Downloads & Screenshots grouped by kind or by age, in a fixed order; empty groups are left out.
+    /// Downloads & Screenshots grouped by kind or by age (fixed order) or by website (largest first, unknown last);
+    /// empty groups are left out.
     public func clutterGroups(by grouping: ClutterGrouping) -> [ClutterGroup] {
         switch grouping {
         case .kind:
@@ -361,7 +394,29 @@ public final class StorageSession {
                 let items = clutter.filter { $0.age == age }
                 return items.isEmpty ? nil : ClutterGroup(key: .age(age), items: items)
             }
+        case .sourceHost:
+            Self.groupedBySourceHost(clutter)
         }
+    }
+
+    /// One group per website, largest total first (ties by host name), then the files of unknown origin.
+    private static func groupedBySourceHost(_ items: [ClutterItem]) -> [ClutterGroup] {
+        var byHost: [String: [ClutterItem]] = [:]
+        var unknown: [ClutterItem] = []
+        for item in items {
+            if let host = item.sourceHost {
+                byHost[host, default: []].append(item)
+            } else {
+                unknown.append(item)
+            }
+        }
+        var groups = byHost.map { ClutterGroup(key: .sourceHost($0.key), items: $0.value) }
+            .sorted { lhs, rhs in
+                if lhs.totalBytes != rhs.totalBytes { return lhs.totalBytes > rhs.totalBytes }
+                return lhs.hostName < rhs.hostName
+            }
+        if !unknown.isEmpty { groups.append(ClutterGroup(key: .sourceHost(nil), items: unknown)) }
+        return groups
     }
 
     private nonisolated static func canonical(_ path: String) -> String? {
@@ -404,7 +459,15 @@ public final class StorageSession {
 
     // MARK: - Deleting
 
-    /// Moves the selection to the Trash through the deletion gate, then rescans what changed.
+    /// The folders an item left and the Trash folders it arrived in; only moved items changed anything.
+    private nonisolated static func changedFolders(after results: [DeletionResult]) -> [String] {
+        results.flatMap { result -> [String] in
+            guard case .movedToTrash(let trashPath) = result.outcome else { return [] }
+            return [StorageScanner.parent(of: result.item.path), StorageScanner.parent(of: trashPath)]
+        }
+    }
+
+    /// Moves the selection to the Trash through the deletion gate, then rescans only the folders that changed.
     @discardableResult
     public func moveSelectionToTrash() async -> CleanupSummary {
         let visible = visibleItems
@@ -420,7 +483,7 @@ public final class StorageSession {
         if !clutter.isEmpty || list == .clutter { await loadClutter() }
         if snapshot != nil, summary.movedToTrashCount > 0 {
             isStale = true
-            await scan()
+            await rescan(changedFolders: Self.changedFolders(after: results))
         } else {
             phase = previousPhase
         }
@@ -430,7 +493,18 @@ public final class StorageSession {
 
 /// What `loadClutter` read on the executor.
 private struct ClutterRead: Sendable {
+    /// Regular files only.
     let downloads: [FileEntry]
+    /// Website of each download, by file name; read only for the files listed.
+    let downloadHosts: [String: String]
     let screenshotsFolder: String?
     let screenshots: [FileEntry]
+}
+
+extension ClutterGroup {
+    /// Sort key of a website group.
+    fileprivate var hostName: String {
+        if case .sourceHost(let host) = key { return host ?? "" }
+        return ""
+    }
 }

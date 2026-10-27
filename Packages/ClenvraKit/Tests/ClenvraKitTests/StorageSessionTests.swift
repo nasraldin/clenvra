@@ -53,6 +53,10 @@ struct StorageSessionTests {
             [.modificationDate: now.addingTimeInterval(-daysAgo * 86_400)], ofItemAtPath: path(relative))
     }
 
+    private var sessionOptions: ScanOptions {
+        ScanOptions(largeFileThreshold: 1_000_000, excludedPaths: [path("log"), path(".Trash")])
+    }
+
     private func session(volumes: [Volume] = [], screenshotsLocation: String? = nil) -> StorageSession {
         let policy = ProtectionPolicy(home: home)
         let ownerState: @Sendable (String) -> OwnerState = { _ in .notRunning }
@@ -63,7 +67,7 @@ struct StorageSessionTests {
                 log: ActivityLog(directory: fixture.url("log")),
                 trash: StorageScratchTrash(directory: path(".Trash"))),
             screenshotsLocation: screenshotsLocation,
-            options: ScanOptions(largeFileThreshold: 1_000_000, excludedPaths: [path("log"), path(".Trash")]),
+            options: sessionOptions,
             volumes: { volumes }, now: { [now] in now })
     }
 
@@ -155,6 +159,12 @@ struct StorageSessionTests {
     @Test("cancelling a scan keeps a partial snapshot and says so")
     func cancellation() async {
         let session = session()
+        // The fixture is tiny, so a real scan can finish before the cancel arrives. Hold the scan until it is
+        // cancelled, then let the real scanner run under cancellation.
+        session.scanFunction = { root, options, executor, progress in
+            while !Task.isCancelled { try? await Task.sleep(for: .milliseconds(5)) }
+            return try await StorageScanner.defaultScan(root, options, executor, progress)
+        }
 
         let running = Task { await session.scan() }
         while session.phase == .idle { await Task.yield() }
@@ -265,6 +275,47 @@ struct StorageSessionTests {
         #expect(byAge[1].items.map(\.item.name) == ["photos.zip"])
     }
 
+    private func setWhereFroms(_ relative: String, _ urls: [String]) throws {
+        let data = try PropertyListSerialization.data(fromPropertyList: urls, format: .binary, options: 0)
+        let result = data.withUnsafeBytes { buffer in
+            setxattr(
+                path(relative), DownloadSource.whereFromsAttribute, buffer.baseAddress, buffer.count, 0,
+                XATTR_NOFOLLOW)
+        }
+        guard result == 0 else { throw POSIXError(.EIO) }
+    }
+
+    @Test("downloads carry the website they came from and group by it, largest first, unknown last")
+    func clutterBySource() async throws {
+        try setWhereFroms(
+            "Downloads/Installer.dmg", ["https://www.github.com/x/Installer.dmg", "https://github.com/x"])
+        try setWhereFroms("Downloads/photos.zip", ["https://dropbox.com/s/photos.zip"])
+        try fixture.file("Downloads/zeta.txt", bytes: 3_000)
+        try setWhereFroms("Downloads/zeta.txt", ["https://zeta.example/z"])
+        try fixture.file("Downloads/alpha.txt", bytes: 3_000)
+        try setWhereFroms("Downloads/alpha.txt", ["https://alpha.example/a"])
+        let session = session()
+
+        await session.loadClutter()
+
+        let installer = try #require(session.clutter.first { $0.item.name == "Installer.dmg" })
+        #expect(installer.sourceHost == "github.com")
+        #expect(session.clutter.first { $0.item.name == "Screenshot 2026-02-01 at 09.00.00.png" }?.sourceHost == nil)
+
+        let groups = session.clutterGroups(by: .sourceHost)
+        #expect(
+            groups.map(\.key) == [
+                .sourceHost("github.com"), .sourceHost("alpha.example"), .sourceHost("dropbox.com"),
+                .sourceHost("zeta.example"), .sourceHost(nil),
+            ])
+        // The three middle groups each hold one block-sized file, so they tie and fall back to host order.
+        #expect(Set(groups[1...3].map(\.totalBytes)).count == 1)
+        #expect(groups[0].totalBytes > groups[1].totalBytes)
+        #expect(groups.last?.items.count == 4)
+        #expect(groups.last.map { $0.totalBytes > groups[0].totalBytes } == true)
+        #expect(groups.flatMap(\.items).count == session.clutter.count)
+    }
+
     @Test("a configured screenshots location is used")
     func configuredScreenshots() async throws {
         try fixture.file("Shots/Screenshot 1.png", bytes: 10)
@@ -336,6 +387,35 @@ struct StorageSessionTests {
         try FileManager.default.removeItem(atPath: path("Projects/big"))
         await session.scan()
         #expect(session.currentPath == path("Projects"))
+    }
+
+    @Test("after a partial deletion only the folder that changed is rescanned, and totals match a full rescan")
+    func rescanOnlyAffectedFolder() async throws {
+        let session = session()
+        let recorder = ScanRecorder()
+        session.scanFunction = recorder.scan
+        await session.scan()
+        #expect(recorder.all == [home])
+        await session.open(path("Projects"))
+        session.setSelection([path("Projects/notes.txt"), path("Projects/small")])
+        try FileManager.default.removeItem(atPath: path("Projects/small"))
+        try fixture.file("Projects/small/b.txt", bytes: 3_000)
+        recorder.reset()
+
+        let summary = await session.moveSelectionToTrash()
+
+        #expect(summary.movedToTrashCount == 1)
+        #expect(summary.problems.map(\.path) == [path("Projects/small")])
+        #expect(recorder.all == [path("Projects")])
+        #expect(session.phase == .ready)
+        #expect(!session.isStale)
+        #expect(session.children.map(\.name) == ["big", "small", ".env"])
+        let full = try await StorageScanner.scan(root: home, options: sessionOptions)
+        let snapshot = try #require(session.snapshot)
+        #expect(snapshot.directories[home] == full.directories[home])
+        #expect(snapshot.directories[path("Projects")] == full.directories[path("Projects")])
+        #expect(snapshot.directories == full.directories)
+        #expect(Set(snapshot.largeFiles) == Set(full.largeFiles))
     }
 
     @Test("an item changed after the scan is skipped with a reason, not deleted")
