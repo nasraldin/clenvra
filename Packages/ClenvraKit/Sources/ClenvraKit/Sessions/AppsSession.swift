@@ -506,6 +506,36 @@ public final class AppsSession {
         return results
     }
 
+    // MARK: - Resetting
+
+    /// Reset candidates reuse uninstall's ownership evidence without including the bundle, launch helpers or guesses.
+    public func resetItems(for app: InstalledApp) async -> [OwnedItem] {
+        await resolver.resetItems(for: app, installedApps: apps, inventoryIsComplete: phase == .ready)
+    }
+
+    /// Moves only the reviewed reset items to the Trash, leaving the app itself installed and launch configuration intact.
+    @discardableResult
+    public func reset(_ app: InstalledApp, items: [OwnedItem], dryRun: Bool = false) async -> CleanupSummary? {
+        guard !isWorking else { return nil }
+        isWorking = true
+        defer { isWorking = false }
+        guard await currentAvailability(of: app) == .available else { return nil }
+
+        // Re-resolve ownership to prevent items reviewed for another app being sent through this operation. Keep the
+        // reviewed snapshots, so anything changed since review is still refused by the deletion gate.
+        let eligiblePaths = Set(await resetItems(for: app).map(\.path))
+        let owner = app.bundleIdentifier
+        // Reset only ever touches the user's own files; system files are left to uninstall.
+        let deletionItems = items.filter {
+            eligiblePaths.contains($0.path) && $0.handling == .removable && isSelectable($0)
+        }
+        .map { $0.deletionItem(owner: owner, section: .applications) }
+        let results = await deleter.run(deletionItems, mode: .moveToTrash, dryRun: dryRun)
+        let summary = CleanupSummary(results: results)
+        if !dryRun, detail?.app.id == app.id { await select(app.id) }
+        return summary
+    }
+
     // MARK: - Homebrew
 
     /// The exact command offered for a Homebrew-managed app, shown before it runs.

@@ -28,7 +28,16 @@ public enum RuleScanner {
                 let cutoff = minimumAge.map { now.addingTimeInterval(-$0.seconds) }
                 let lowercased = Set(extensions.map { $0.lowercased() })
                 found = try await executor.run {
-                    try files(below: rootPath, extensions: lowercased, cutoff: cutoff, maximumDepth: maximumDepth)
+                    try files(below: rootPath, cutoff: cutoff, maximumDepth: maximumDepth) { name in
+                        lowercased.contains((name as NSString).pathExtension.lowercased())
+                    }
+                }
+            case .matchingFiles(let pattern, let minimumAge, let maximumDepth):
+                let cutoff = minimumAge.map { now.addingTimeInterval(-$0.seconds) }
+                found = try await executor.run {
+                    try files(below: rootPath, cutoff: cutoff, maximumDepth: maximumDepth) { name in
+                        fnmatch(pattern, name, 0) == 0
+                    }
                 }
             case .emptyFolders(let maximumDepth):
                 found = try await executor.run {
@@ -128,20 +137,20 @@ public enum RuleScanner {
 
     /// Matching files below the root, never following links or crossing into another volume.
     private static func files(
-        below rootPath: String, extensions: Set<String>, cutoff: Date?, maximumDepth: Int
+        below rootPath: String, cutoff: Date?, maximumDepth: Int, matching isMatch: (String) -> Bool
     ) throws(FileSystemError) -> FoundItems {
         var found = FoundItems()
         let root = try OpenDirectory(path: rootPath)
         let device = try root.identity().device
         collect(
-            in: root, path: rootPath, depth: 0, device: device, extensions: extensions, cutoff: cutoff,
-            maximumDepth: maximumDepth, into: &found)
+            in: root, path: rootPath, depth: 0, device: device, cutoff: cutoff, maximumDepth: maximumDepth,
+            matching: isMatch, into: &found)
         return found
     }
 
     private static func collect(
-        in directory: borrowing OpenDirectory, path: String, depth: Int, device: Int32, extensions: Set<String>,
-        cutoff: Date?, maximumDepth: Int, into found: inout FoundItems
+        in directory: borrowing OpenDirectory, path: String, depth: Int, device: Int32,
+        cutoff: Date?, maximumDepth: Int, matching isMatch: (String) -> Bool, into found: inout FoundItems
     ) {
         let entries: [FileEntry]
         do {
@@ -158,14 +167,13 @@ public enum RuleScanner {
                 do {
                     let child = try directory.openChild(named: entry.name)
                     collect(
-                        in: child, path: childPath, depth: depth + 1, device: device, extensions: extensions,
-                        cutoff: cutoff, maximumDepth: maximumDepth, into: &found)
+                        in: child, path: childPath, depth: depth + 1, device: device, cutoff: cutoff,
+                        maximumDepth: maximumDepth, matching: isMatch, into: &found)
                 } catch {
                     found.skipped.append(SkippedPath(path: childPath, reason: StorageScanner.reason(for: error)))
                 }
             case .file:
-                let ext = (entry.name as NSString).pathExtension.lowercased()
-                guard extensions.contains(ext) else { continue }
+                guard isMatch(entry.name) else { continue }
                 if let cutoff, entry.modificationDate > cutoff { continue }
                 found.items.append(item(entry, at: childPath))
             case .symlink, .other:

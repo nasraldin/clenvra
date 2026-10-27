@@ -10,6 +10,8 @@ public struct UserSettings: Codable, Equatable, Sendable {
     public var checksForAppUpdates = false
     /// When the last scheduled scan ran on this Mac; local state, never exported.
     public var lastScheduledScan: Date?
+    /// User-defined review-only cleanup locations (SA-8), revalidated whenever settings cross a persistence boundary.
+    public var customRules: [CustomCleanupRule] = []
 
     public init() {}
 
@@ -20,6 +22,7 @@ public struct UserSettings: Codable, Equatable, Sendable {
         scanSchedule = (try? container.decodeIfPresent(ScanSchedule.self, forKey: .scanSchedule)) ?? ScanSchedule()
         checksForAppUpdates = (try? container.decodeIfPresent(Bool.self, forKey: .checksForAppUpdates)) ?? false
         lastScheduledScan = try? container.decodeIfPresent(Date.self, forKey: .lastScheduledScan)
+        customRules = (try? container.decodeIfPresent([CustomCleanupRule].self, forKey: .customRules)) ?? []
     }
 }
 
@@ -36,6 +39,13 @@ public struct SettingsStore: Sendable {
         public let rejectedEntries: [String]
     }
 
+    private struct PortableCustomRule: Codable {
+        var id: UUID
+        var folder: String
+        var minimumAge: Age
+        var namePattern: String
+    }
+
     /// The portable file format; paths inside the home folder are written as `~/…`. Fields added later are
     /// optional and the version stays 1, so older Clenvra builds still import the exclusions of newer files.
     private struct Portable: Codable {
@@ -43,6 +53,28 @@ public struct SettingsStore: Sendable {
         var exclusions: [String]
         var scanSchedule: ScanSchedule?
         var checksForAppUpdates: Bool?
+        var customRules: [PortableCustomRule]
+
+        private enum CodingKeys: String, CodingKey {
+            case version, exclusions, scanSchedule, checksForAppUpdates, customRules
+        }
+
+        init(version: Int, exclusions: [String], scanSchedule: ScanSchedule?, customRules: [PortableCustomRule]) {
+            self.version = version
+            self.exclusions = exclusions
+            self.scanSchedule = scanSchedule
+            self.checksForAppUpdates = nil
+            self.customRules = customRules
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            version = try container.decode(Int.self, forKey: .version)
+            exclusions = try container.decodeIfPresent([String].self, forKey: .exclusions) ?? []
+            scanSchedule = try? container.decodeIfPresent(ScanSchedule.self, forKey: .scanSchedule)
+            checksForAppUpdates = try? container.decodeIfPresent(Bool.self, forKey: .checksForAppUpdates)
+            customRules = (try? container.decodeIfPresent([PortableCustomRule].self, forKey: .customRules)) ?? []
+        }
     }
 
     private static let formatVersion = 1
@@ -57,8 +89,10 @@ public struct SettingsStore: Sendable {
     /// The saved settings, or the defaults when there are none or the file is unreadable.
     public func load() -> UserSettings {
         guard let data = try? Data(contentsOf: file),
-            let settings = try? JSONDecoder().decode(UserSettings.self, from: data)
+            var settings = try? JSONDecoder().decode(UserSettings.self, from: data)
         else { return UserSettings() }
+        let policy = ProtectionPolicy(home: home, exclusions: settings.exclusions)
+        settings.customRules = settings.customRules.compactMap { try? $0.validated(home: home, policy: policy) }
         return settings
     }
 
@@ -73,10 +107,14 @@ public struct SettingsStore: Sendable {
     public func export(_ settings: UserSettings) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        let customRules = settings.customRules.map {
+            PortableCustomRule(
+                id: $0.id, folder: homeRelative($0.folder), minimumAge: $0.minimumAge, namePattern: $0.namePattern)
+        }
         return try encoder.encode(
             Portable(
                 version: Self.formatVersion, exclusions: settings.exclusions.map(homeRelative),
-                scanSchedule: settings.scanSchedule, checksForAppUpdates: nil))
+                scanSchedule: settings.scanSchedule, customRules: customRules))
     }
 
     public func importSettings(from data: Data) throws -> ImportResult {
@@ -94,6 +132,17 @@ public struct SettingsStore: Sendable {
                 continue
             }
             if !settings.exclusions.contains(path) { settings.exclusions.append(path) }
+        }
+        let policy = ProtectionPolicy(home: home, exclusions: settings.exclusions)
+        for entry in portable.customRules {
+            do {
+                let rule = try CustomCleanupRule(
+                    id: entry.id, folder: absolute(entry.folder), minimumAge: entry.minimumAge,
+                    namePattern: entry.namePattern, home: home, policy: policy)
+                settings.customRules.append(rule)
+            } catch {
+                rejected.append(entry.folder)
+            }
         }
         return ImportResult(settings: settings, rejectedEntries: rejected)
     }

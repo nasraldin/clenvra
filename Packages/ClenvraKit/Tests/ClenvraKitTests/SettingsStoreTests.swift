@@ -17,6 +17,11 @@ struct SettingsStoreTests {
         let store = SettingsStore(file: file, home: "/Users/a")
         var settings = UserSettings()
         settings.exclusions = ["/Users/a/Library/Caches/com.keep", "/Volumes/Work/Projects"]
+        settings.customRules = [
+            try CustomCleanupRule(
+                folder: "/Users/a/Work/Logs", minimumAge: .days(7), namePattern: "*.log", home: "/Users/a",
+                policy: ProtectionPolicy(home: "/Users/a"))
+        ]
 
         try store.save(settings)
 
@@ -39,11 +44,17 @@ struct SettingsStoreTests {
         let store = SettingsStore(file: file, home: "/Users/a")
         var settings = UserSettings()
         settings.exclusions = ["/Users/a/Sources/keep", "/Volumes/Work/Projects"]
+        settings.customRules = [
+            try CustomCleanupRule(
+                folder: "/Users/a/Sources/Logs", minimumAge: .days(2), namePattern: "*.log", home: "/Users/a",
+                policy: ProtectionPolicy(home: "/Users/a"))
+        ]
 
         let exported = try store.export(settings)
         let text = String(decoding: exported, as: UTF8.self)
 
         #expect(text.contains("~/Sources/keep"))
+        #expect(text.contains("~/Sources/Logs"))
         #expect(!text.contains("/Users/a"))
         #expect(text.contains("/Volumes/Work/Projects"))
     }
@@ -53,11 +64,18 @@ struct SettingsStoreTests {
         let exporter = SettingsStore(file: file, home: "/Users/a")
         var settings = UserSettings()
         settings.exclusions = ["/Users/a/Sources/keep"]
+        settings.customRules = [
+            try CustomCleanupRule(
+                folder: "/Users/a/Sources/Logs", minimumAge: .days(2), namePattern: "*.log", home: "/Users/a",
+                policy: ProtectionPolicy(home: "/Users/a"))
+        ]
         let data = try exporter.export(settings)
 
         let result = try SettingsStore(file: file, home: "/Users/b").importSettings(from: data)
 
         #expect(result.settings.exclusions == ["/Users/b/Sources/keep"])
+        #expect(result.settings.customRules.map(\.folder) == ["/Users/b/Sources/Logs"])
+        #expect(result.settings.customRules.first?.id == settings.customRules.first?.id)
         #expect(result.rejectedEntries.isEmpty)
     }
 
@@ -70,6 +88,72 @@ struct SettingsStoreTests {
 
         #expect(result.settings.exclusions == ["/Users/b/ok"])
         #expect(result.rejectedEntries.count == 3)
+    }
+
+    @Test("old local settings and exports without custom rules keep loading")
+    func oldFilesWithoutCustomRules() throws {
+        let store = SettingsStore(file: file, home: "/Users/a")
+        try Data(#"{"exclusions":["/Users/a/keep"]}"#.utf8).write(to: file)
+
+        #expect(store.load().exclusions == ["/Users/a/keep"])
+        #expect(store.load().customRules.isEmpty)
+
+        let result = try store.importSettings(from: Data(#"{"version":1,"exclusions":["~/keep"]}"#.utf8))
+        #expect(result.settings.exclusions == ["/Users/a/keep"])
+        #expect(result.settings.customRules.isEmpty)
+    }
+
+    @Test("import rejects protected custom-rule roots and keeps valid rules (safety case S28)")
+    func importRejectsProtectedCustomRules() throws {
+        let json = """
+            {
+              "version": 1,
+              "exclusions": [],
+              "customRules": [
+                {
+                  "id": "6B6B6B6B-6B6B-4B6B-8B6B-6B6B6B6B6B6B",
+                  "folder": "~",
+                  "minimumAge": {"seconds": 86400},
+                  "namePattern": "*.log"
+                },
+                {
+                  "id": "7C7C7C7C-7C7C-4C7C-8C7C-7C7C7C7C7C7C",
+                  "folder": "/System",
+                  "minimumAge": {"seconds": 86400},
+                  "namePattern": "*.log"
+                },
+                {
+                  "id": "8D8D8D8D-8D8D-4D8D-8D8D-8D8D8D8D8D8D",
+                  "folder": "~/Work/Logs",
+                  "minimumAge": {"seconds": 86400},
+                  "namePattern": "*.log"
+                }
+              ]
+            }
+            """
+
+        let result = try SettingsStore(file: file, home: "/Users/b").importSettings(from: Data(json.utf8))
+
+        #expect(result.settings.customRules.map(\.folder) == ["/Users/b/Work/Logs"])
+        #expect(result.rejectedEntries == ["~", "/System"])
+    }
+
+    @Test("loading an edited local settings file drops protected custom rules instead of trusting them")
+    func loadRejectsProtectedCustomRules() throws {
+        let json = """
+            {
+              "exclusions": [],
+              "customRules": [{
+                "id": "6B6B6B6B-6B6B-4B6B-8B6B-6B6B6B6B6B6B",
+                "folder": "/Users/a",
+                "minimumAge": {"seconds": 86400},
+                "namePattern": "*"
+              }]
+            }
+            """
+        try Data(json.utf8).write(to: file)
+
+        #expect(SettingsStore(file: file, home: "/Users/a").load().customRules.isEmpty)
     }
 
     @Test("a file from a newer, unknown format version is refused")

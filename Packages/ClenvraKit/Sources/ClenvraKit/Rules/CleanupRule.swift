@@ -16,6 +16,8 @@ public enum CleanupCategory: String, Sendable, Hashable, Codable, CaseIterable {
     case mailAttachments, temporaryFiles, emptyFolders
     case xcode, simulators, packageCaches, projectArtifacts, ideCaches, containers
     case aiModels
+    /// The user's own review-only rules (SA-8).
+    case custom
 }
 
 extension CleanupCategory {
@@ -25,7 +27,7 @@ extension CleanupCategory {
         case .xcode, .simulators, .packageCaches, .projectArtifacts, .ideCaches, .containers, .aiModels:
             .developer
         case .appCaches, .logs, .crashReports, .installers, .deviceBackups, .trash, .browserCaches,
-            .systemCaches, .systemLogs, .mailAttachments, .temporaryFiles, .emptyFolders:
+            .systemCaches, .systemLogs, .mailAttachments, .temporaryFiles, .emptyFolders, .custom:
             .cleanup
         }
     }
@@ -45,8 +47,13 @@ public enum RuleRoot: Sendable, Hashable {
 }
 
 /// A minimum age, so recently used items are left alone.
-public struct Age: Sendable, Hashable {
+public struct Age: Sendable, Hashable, Codable {
     public let seconds: TimeInterval
+
+    /// Explicit seconds keep persisted custom rules independent of a UI's chosen time unit.
+    public init(seconds: TimeInterval) {
+        self.seconds = seconds
+    }
 
     public static func days(_ days: Int) -> Age { Age(seconds: TimeInterval(days) * 86_400) }
 }
@@ -61,6 +68,8 @@ public enum Selection: Sendable, Hashable {
     /// Files anywhere below the root (up to `maximumDepth` folders deep) with one of the extensions,
     /// not modified for at least `minimumAge`.
     case files(extensions: Set<String>, minimumAge: Age?, maximumDepth: Int)
+    /// Files whose names match a glob (`*`, `?` and character classes), with the same age and depth limits.
+    case matchingFiles(pattern: String, minimumAge: Age?, maximumDepth: Int)
     /// Build-output folders inside code projects (up to `maximumDepth` folders deep). A folder is offered only when
     /// one of its kind's marker files sits next to it; projects active within `inactivity` are offered for review only.
     case projectArtifacts([ArtifactKind], inactivity: Age, maximumDepth: Int)

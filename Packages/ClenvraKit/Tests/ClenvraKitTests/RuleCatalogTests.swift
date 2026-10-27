@@ -23,6 +23,7 @@ struct RuleCatalogTests {
                 case .children: [root + "/com.vendor.sample"]
                 case .named(let names): names.map { root + "/" + $0 }
                 case .files(let extensions, _, _): extensions.map { root + "/sample." + $0 }
+                case .matchingFiles: [root + "/sample.log"]
                 case .projectArtifacts(let kinds, _, _): kinds.map { root + "/project/" + $0.folder }
                 case .emptyFolders: [root + "/sample"]
                 }

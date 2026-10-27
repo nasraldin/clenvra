@@ -122,6 +122,45 @@ struct RuleScannerTests {
         #expect(result.candidates.map(\.name) == ["old.log"])
     }
 
+    @Test("glob rules match nested file names and minimum age, and are never pre-selected")
+    func filesByGlobAndAge() async throws {
+        let old = now.addingTimeInterval(-10 * 86_400)
+        let recent = now.addingTimeInterval(-1 * 86_400)
+        try fixture.file("Custom/old.log", bytes: 100)
+        try fixture.setModificationDate("Custom/old.log", old)
+        try fixture.file("Custom/new.log", bytes: 100)
+        try fixture.setModificationDate("Custom/new.log", recent)
+        try fixture.file("Custom/old.txt", bytes: 100)
+        try fixture.setModificationDate("Custom/old.txt", old)
+        try fixture.file("Custom/nested/archive.log", bytes: 100)
+        try fixture.setModificationDate("Custom/nested/archive.log", old)
+        try fixture.directory("Custom/folder.log")
+        let rule = CleanupRule(
+            id: "custom.test", category: .custom, root: .home("Custom"),
+            selection: .matchingFiles(pattern: "*.log", minimumAge: .days(7), maximumDepth: 4), risk: .review,
+            action: .moveToTrash, ownership: .none)
+
+        let result = await scan(rule)
+
+        #expect(Set(result.candidates.map(\.name)) == ["old.log", "archive.log"])
+        #expect(result.candidates.allSatisfy { $0.risk == .review && !$0.isSelectedByDefault })
+    }
+
+    @Test("glob selection supports question marks and character classes")
+    func globSyntax() async throws {
+        try fixture.file("Custom/error-a.log", bytes: 100)
+        try fixture.file("Custom/error-ab.log", bytes: 100)
+        try fixture.file("Custom/error-a.txt", bytes: 100)
+        let rule = CleanupRule(
+            id: "custom.test", category: .custom, root: .home("Custom"),
+            selection: .matchingFiles(pattern: "error-?.[lg]og", minimumAge: nil, maximumDepth: 4), risk: .review,
+            action: .moveToTrash, ownership: .none)
+
+        let result = await scan(rule)
+
+        #expect(result.candidates.map(\.name) == ["error-a.log"])
+    }
+
     @Test("a candidate converts to a deletion item bound to its rule root")
     func toDeletionItem() async throws {
         try fixture.file("Library/Caches/com.example.one/a", bytes: 1)
