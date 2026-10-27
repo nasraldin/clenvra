@@ -91,6 +91,25 @@ struct SettingsView: View {
             }
 
             Section {
+                Toggle(
+                    isOn: Binding(
+                        get: { environment.settings.checksForAppUpdates },
+                        set: { newValue in update { $0.checksForAppUpdates = newValue } }
+                    )
+                ) {
+                    Text("Check for app updates")
+                }
+                .accessibilityIdentifier("settings.checksForAppUpdates")
+            } header: {
+                Text("App Updates")
+            } footer: {
+                Text(
+                    "When you check for updates in Applications, Clenvra contacts the apps' update feeds, Apple's App Store and Homebrew. Nothing is contacted while this is off, and nothing is downloaded or installed."
+                )
+                .foregroundStyle(.secondary)
+            }
+
+            Section {
                 HStack {
                     Button {
                         exportSettings()

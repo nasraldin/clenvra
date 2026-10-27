@@ -29,6 +29,12 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var storageSession = StorageView.makeSession(environment: self)
     @ObservationIgnored private(set) lazy var duplicatesSession = DuplicatesSession.live(environment: self)
     @ObservationIgnored private(set) lazy var appsSession = ApplicationsServices.makeSession(environment: self)
+    /// Homebrew, when installed; shared by uninstall (`brew uninstall`) and the update check (`brew outdated`).
+    @ObservationIgnored private(set) lazy var homebrew = ApplicationsServices.locateHomebrew()
+    /// Contacts the network only while "Check for app updates" is on (D5); the setting is read before every step.
+    @ObservationIgnored private(set) lazy var updateSession = UpdateCheckSession(
+        isEnabled: { [weak self] in self?.settings.checksForAppUpdates ?? false }, fetcher: URLSessionFetcher(),
+        homebrew: homebrew)
     /// Quitting goes through `NSRunningApplication` only, so it can affect regular apps but never system processes.
     @ObservationIgnored private(set) lazy var systemSession = SystemSession(
         politeTerminator: { pid in NSRunningApplication(processIdentifier: pid)?.terminate() ?? false },
