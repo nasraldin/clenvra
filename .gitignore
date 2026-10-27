@@ -1,0 +1,17 @@
+# Build output
+.build/
+DerivedData/
+*.xcresult
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
+# macOS
+.DS_Store
+
+# Session notes (local only)
+.remember/
+
+# Coverage data
+*.profraw

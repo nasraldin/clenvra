@@ -1,0 +1,31 @@
+{
+  "configurations" : [
+    {
+      "id" : "8F1C2A64-6B3E-4E7B-9C51-6E0B7E1D2A01",
+      "name" : "Default",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Packages\/ClenvraKit",
+        "identifier" : "ClenvraKitTests",
+        "name" : "ClenvraKitTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Clenvra.xcodeproj",
+        "identifier" : "C1E0000000000000000000D1",
+        "name" : "ClenvraUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
