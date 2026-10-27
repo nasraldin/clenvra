@@ -27,11 +27,11 @@ Clenvra finds what fills your Mac: caches, logs, developer build data, duplicate
 | **Storage** | Folder browser and treemap for any disk, large and old files, Downloads and screenshots |
 | **Duplicates** | Finds identical files (size, then partial hash, full hash, then byte-by-byte compare). One copy is always kept |
 | **Cleanup** | App caches, logs, crash reports, installers and disk images, iPhone/iPad backups, browser caches, Trash |
-| **Developer** | Xcode data, simulators, package caches, editor caches, build folders in your projects (`node_modules`, `target`, `.build`…), plus the tools' own clean commands (npm, pnpm, Yarn, Bun, Homebrew, pip, Go, Docker and more) |
-| **Applications** | Every installed app with size and last use; complete uninstall including leftovers, with evidence for why each file belongs to the app; Homebrew casks; orphaned files from apps already removed |
+| **Developer** | Xcode data, simulators, package caches, editor caches (VS Code family, JetBrains, Zed), build folders in your projects (`node_modules`, `target`, `.build`…), plus the tools' own clean commands (npm, pnpm, Yarn, Bun, Homebrew, pip, Go, NuGet, conda, SwiftPM, Docker, Podman and more) |
+| **Applications** | Every installed app with size and last use; complete uninstall including leftovers, with evidence for why each file belongs to the app; Homebrew casks; orphaned files from apps already removed; extensions and plug-ins |
 | **Startup** | Launch agents, daemons and login items in one list; flags items whose app is gone and removes them safely |
 | **System** | Memory pressure, swap, CPU, battery, apps using the most resources (with Quit), and security checks (FileVault, firewall, Gatekeeper, SIP) |
-| **Activity** | A record of everything Clenvra did, with **Put Back** for items moved to the Trash, and CSV export |
+| **Activity** | A record of everything Clenvra did, with **Put Back** for items moved to the Trash, re-enabling of startup items, and CSV or Markdown export |
 
 Also:
 
@@ -43,7 +43,7 @@ Also:
 
 Cleanup apps can do real damage. Clenvra treats deletion as the most dangerous thing it does, and every removal passes through one **deletion gate** (12 checks):
 
-- **Trash first.** Items are moved to the Trash, never deleted outright. The only exceptions are the tools' own commands (for example `npm cache clean`), and those show the exact command before it runs.
+- **Trash first.** Items are moved to the Trash, never deleted outright. The only exceptions are emptying items already in the Trash, which is never pre-selected and says it cannot be undone, and the tools' own commands (for example `npm cache clean`), which show the exact command before it runs.
 - **Identity checked again.** An item must be the same file (device, inode, type) at deletion time as it was at scan time. Otherwise it is skipped.
 - **No following links.** Symbolic links are never followed, and directories are walked by file descriptor with `O_NOFOLLOW`. Hard links and APFS clones are counted honestly, so the space shown is space actually freed.
 - **Protected by default.** Credentials, SSH and GPG keys, keychains, browser profiles, databases, documents, system paths and your excluded folders are refused, whatever a rule says.
@@ -97,11 +97,11 @@ Clenvra.xcworkspace
 - **Data over code:** cleanup categories, browsers, developer tools and leftover locations are rows in tables, not separate code paths.
 - **Sessions in the kit, views in the app:** each section's workflow lives in ClenvraKit and is tested there; SwiftUI views only display it.
 
-More: [`docs/architecture/technical-architecture.md`](docs/architecture/technical-architecture.md).
+Benchmarks: [`docs/testing/benchmarks.md`](docs/testing/benchmarks.md). More: [`docs/architecture/technical-architecture.md`](docs/architecture/technical-architecture.md).
 
 ## Testing
 
-- About **445 unit tests** (Swift Testing) cover the filesystem core, every safety rule, every cleanup rule and every section's workflow. They run against temporary fixture trees, never your real files.
+- About **520 unit tests** (Swift Testing) cover the filesystem core, every safety rule, every cleanup rule and every section's workflow. They run against temporary fixture trees, never your real files.
 - **UI tests** go through every section in English and Arabic.
 - **String catalog tests** fail the build if an Arabic translation is missing or a string is no longer used.
 - **Opt-in benchmarks:**
