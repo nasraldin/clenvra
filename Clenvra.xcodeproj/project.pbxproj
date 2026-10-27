@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		C1E0000000000000000000F4 /* ClenvraKit in Frameworks */ = {isa = PBXBuildFile; productRef = C1E0000000000000000000F3 /* ClenvraKit */; };
+		C1E000000000000000000104 /* ClenvraKit in Frameworks */ = {isa = PBXBuildFile; productRef = C1E000000000000000000105 /* ClenvraKit */; };
+		C1E000000000000000000106 /* ClenvraHelper in Embed Helper */ = {isa = PBXBuildFile; fileRef = C1E000000000000000000100 /* ClenvraHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C1E000000000000000000107 /* com.nasraldin.clenvra.helper.plist in Embed Launch Daemon */ = {isa = PBXBuildFile; fileRef = C1E000000000000000000101 /* com.nasraldin.clenvra.helper.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,11 +21,45 @@
 			remoteGlobalIDString = C1E0000000000000000000D0;
 			remoteInfo = Clenvra;
 		};
+		C1E000000000000000000119 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C1E0000000000000000000A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C1E000000000000000000110;
+			remoteInfo = ClenvraHelper;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C1E000000000000000000116 /* Embed Helper */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				C1E000000000000000000106 /* ClenvraHelper in Embed Helper */,
+			);
+			name = "Embed Helper";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1E000000000000000000117 /* Embed Launch Daemon */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchDaemons;
+			dstSubfolderSpec = 1;
+			files = (
+				C1E000000000000000000107 /* com.nasraldin.clenvra.helper.plist in Embed Launch Daemon */,
+			);
+			name = "Embed Launch Daemon";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		C1E0000000000000000000C0 /* Clenvra.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clenvra.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1E0000000000000000000C1 /* ClenvraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClenvraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1E000000000000000000100 /* ClenvraHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ClenvraHelper; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1E000000000000000000101 /* com.nasraldin.clenvra.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.nasraldin.clenvra.helper.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -34,6 +71,11 @@
 		C1E0000000000000000000B1 /* ClenvraUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ClenvraUITests;
+			sourceTree = "<group>";
+		};
+		C1E000000000000000000103 /* ClenvraHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ClenvraHelper;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -54,6 +96,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1E000000000000000000112 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1E000000000000000000104 /* ClenvraKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -62,6 +112,8 @@
 			children = (
 				C1E0000000000000000000B0 /* Clenvra */,
 				C1E0000000000000000000B1 /* ClenvraUITests */,
+				C1E000000000000000000103 /* ClenvraHelper */,
+				C1E000000000000000000102 /* HelperSupport */,
 				C1E0000000000000000000A2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -71,8 +123,17 @@
 			children = (
 				C1E0000000000000000000C0 /* Clenvra.app */,
 				C1E0000000000000000000C1 /* ClenvraUITests.xctest */,
+				C1E000000000000000000100 /* ClenvraHelper */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C1E000000000000000000102 /* HelperSupport */ = {
+			isa = PBXGroup;
+			children = (
+				C1E000000000000000000101 /* com.nasraldin.clenvra.helper.plist */,
+			);
+			path = HelperSupport;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -85,10 +146,13 @@
 				C1E0000000000000000000E0 /* Sources */,
 				C1E0000000000000000000E1 /* Frameworks */,
 				C1E0000000000000000000E2 /* Resources */,
+				C1E000000000000000000116 /* Embed Helper */,
+				C1E000000000000000000117 /* Embed Launch Daemon */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C1E000000000000000000118 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C1E0000000000000000000B0 /* Clenvra */,
@@ -122,6 +186,28 @@
 			productReference = C1E0000000000000000000C1 /* ClenvraUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		C1E000000000000000000110 /* ClenvraHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1E000000000000000000113 /* Build configuration list for PBXNativeTarget "ClenvraHelper" */;
+			buildPhases = (
+				C1E000000000000000000111 /* Sources */,
+				C1E000000000000000000112 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C1E000000000000000000103 /* ClenvraHelper */,
+			);
+			name = ClenvraHelper;
+			packageProductDependencies = (
+				C1E000000000000000000105 /* ClenvraKit */,
+			);
+			productName = ClenvraHelper;
+			productReference = C1E000000000000000000100 /* ClenvraHelper */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -138,6 +224,9 @@
 					C1E0000000000000000000D1 = {
 						CreatedOnToolsVersion = 27.1;
 						TestTargetID = C1E0000000000000000000D0;
+					};
+					C1E000000000000000000110 = {
+						CreatedOnToolsVersion = 27.1;
 					};
 				};
 			};
@@ -161,6 +250,7 @@
 			targets = (
 				C1E0000000000000000000D0 /* Clenvra */,
 				C1E0000000000000000000D1 /* ClenvraUITests */,
+				C1E000000000000000000110 /* ClenvraHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -197,6 +287,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1E000000000000000000111 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -204,6 +301,11 @@
 			isa = PBXTargetDependency;
 			target = C1E0000000000000000000D0 /* Clenvra */;
 			targetProxy = C1E0000000000000000000F0 /* PBXContainerItemProxy */;
+		};
+		C1E000000000000000000118 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C1E000000000000000000110 /* ClenvraHelper */;
+			targetProxy = C1E000000000000000000119 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -215,11 +317,12 @@
 				ARCHS = arm64;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = CZU6ZC4LYQ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -244,11 +347,12 @@
 				ARCHS = arm64;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = CZU6ZC4LYQ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -337,6 +441,36 @@
 			};
 			name = Release;
 		};
+		C1E000000000000000000114 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nasraldin.clenvra.helper;
+				PRODUCT_NAME = ClenvraHelper;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		C1E000000000000000000115 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nasraldin.clenvra.helper;
+				PRODUCT_NAME = ClenvraHelper;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -367,6 +501,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C1E000000000000000000113 /* Build configuration list for PBXNativeTarget "ClenvraHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1E000000000000000000114 /* Debug */,
+				C1E000000000000000000115 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -378,6 +521,11 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		C1E0000000000000000000F3 /* ClenvraKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1E0000000000000000000F2 /* XCLocalSwiftPackageReference "Packages/ClenvraKit" */;
+			productName = ClenvraKit;
+		};
+		C1E000000000000000000105 /* ClenvraKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C1E0000000000000000000F2 /* XCLocalSwiftPackageReference "Packages/ClenvraKit" */;
 			productName = ClenvraKit;

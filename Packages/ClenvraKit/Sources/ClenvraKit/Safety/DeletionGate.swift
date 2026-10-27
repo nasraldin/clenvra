@@ -9,7 +9,7 @@ public enum OwnerState: Sendable, Equatable {
 }
 
 /// One item the user reviewed and confirmed, exactly as the scanner saw it.
-public struct DeletionItem: Sendable, Equatable {
+public struct DeletionItem: Sendable, Equatable, Codable {
     /// Canonical absolute path.
     public let path: String
     /// The folder the producing rule is allowed to clean inside of; the item must be strictly below it.

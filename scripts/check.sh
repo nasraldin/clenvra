@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-SOURCES=(Clenvra ClenvraUITests Packages/ClenvraKit/Sources Packages/ClenvraKit/Tests Packages/ClenvraKit/Package.swift)
+SOURCES=(Clenvra ClenvraHelper ClenvraUITests Packages/ClenvraKit/Sources Packages/ClenvraKit/Tests Packages/ClenvraKit/Package.swift)
 XCB=(xcodebuild -workspace Clenvra.xcworkspace -scheme Clenvra -derivedDataPath .build/DerivedData -destination 'platform=macOS,arch=arm64' -quiet)
 
 echo "▸ Format"

@@ -5,7 +5,7 @@ public import Foundation
 ///
 /// Directories compare by identity only: their modification date and size change whenever their contents do,
 /// which is normal for caches. Files, symlinks and other items also compare content size and modification date.
-public struct FileSnapshot: Sendable, Hashable {
+public struct FileSnapshot: Sendable, Hashable, Codable {
     public let identity: FileIdentity
     public let kind: FileKind
     /// `nil` for directories.

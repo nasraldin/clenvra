@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var selectedExclusion: String?
     @State private var message: Message?
     @State private var fullDiskAccess = FullDiskAccess.Status.unknown
+    @State private var isShowingGuide = false
 
     private enum Message {
         case text(LocalizedStringResource)
@@ -36,6 +37,12 @@ struct SettingsView: View {
                             .foregroundStyle(fullDiskAccess == .granted ? .green : .orange)
                     }
                 }
+                Button {
+                    isShowingGuide = true
+                } label: {
+                    Text("About macOS Permission Prompts…")
+                }
+                .accessibilityIdentifier("settings.permissionsGuide")
             } header: {
                 Text("Full Disk Access")
             } footer: {
@@ -102,10 +109,13 @@ struct SettingsView: View {
                 Text("Folders in your home folder are saved relative to it, so they work for any user name.")
                     .foregroundStyle(.secondary)
             }
+
+            HelperSettingsSection()
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 560)
+        .frame(width: 520, height: 640)
         .task { await refreshFullDiskAccess() }
+        .sheet(isPresented: $isShowingGuide) { PermissionsGuideView(home: environment.home) }
         // The user may grant access in System Settings and come back.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { await refreshFullDiskAccess() }
