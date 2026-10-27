@@ -172,7 +172,7 @@ struct DuplicatesView: View {
                 Text("Moving to the Trash…")
             } else {
                 Text("\(session.markedCount) copies marked")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.markedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()

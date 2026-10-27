@@ -92,6 +92,7 @@ struct RuleReviewView<Leading: View>: View {
                 }
             }
         }
+        .accessibilityLabel(Text(section.title))
         .disabled(session.phase == .cleaning)
     }
 
@@ -153,7 +154,7 @@ struct RuleReviewView<Leading: View>: View {
                     .accessibilityIdentifier("review.scanning")
             } else {
                 Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()

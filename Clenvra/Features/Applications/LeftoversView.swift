@@ -125,7 +125,7 @@ struct LeftoversView: View {
                 Text("Moving to the Trash…")
             } else {
                 Text("\(session.leftoverSelection.count) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.leftoverSelectedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()

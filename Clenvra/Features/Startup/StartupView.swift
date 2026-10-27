@@ -82,6 +82,7 @@ struct StartupView: View {
             section(Text("System Agents"), items: present(.systemAgent))
             section(Text("System Daemons"), items: present(.systemDaemon))
         }
+        .accessibilityLabel(Text(AppSection.startup.title))
         .accessibilityIdentifier("review.results")
     }
 

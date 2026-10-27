@@ -78,6 +78,7 @@ struct SystemView: View {
             }
         }
         .pickerStyle(.segmented)
+        .labelsHidden()
         .padding(.horizontal)
         .padding(.vertical, 8)
     }
@@ -141,13 +142,14 @@ private struct SystemHealthView: View {
             }
         }()
 
+        // Only the symbol carries the status color: green or yellow text is unreadable on a light background.
         Label {
             Text(title)
                 .fontWeight(.medium)
         } icon: {
             Image(systemName: icon)
+                .foregroundStyle(color)
         }
-        .foregroundStyle(color)
     }
 
     @ViewBuilder
@@ -249,8 +251,8 @@ private struct SystemHealthView: View {
             Text(title)
         } icon: {
             Image(systemName: icon)
+                .foregroundStyle(color)
         }
-        .foregroundStyle(color)
     }
 
     @ViewBuilder

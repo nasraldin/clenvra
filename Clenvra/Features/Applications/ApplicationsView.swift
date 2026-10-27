@@ -165,6 +165,7 @@ private struct AppListView: View {
                     .tag(app.id)
                     .task { await session.measure(app) }
                 }
+                .accessibilityLabel(Text(AppSection.applications.title))
                 .accessibilityIdentifier("review.results")
             }
         }

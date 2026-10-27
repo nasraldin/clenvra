@@ -76,7 +76,7 @@ struct StorageBrowserView: View {
                     .disabled(crumb.path == session.currentPath)
                 }
                 if let aggregate = session.currentAggregate {
-                    Text(verbatim: "·").foregroundStyle(.tertiary)
+                    Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                     SizeText(bytes: aggregate.allocated)
                         .foregroundStyle(.secondary)
                 }

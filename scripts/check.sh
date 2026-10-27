@@ -17,7 +17,7 @@ echo "▸ App build (Release)"
 "${XCB[@]}" -configuration Release build
 
 if [[ "${1:-}" == "--ui" ]]; then
-  echo "▸ UI tests (en/ar)"
+  echo "▸ UI tests (en/ar × light/dark, accessibility audit)"
   "${XCB[@]}" test -only-testing:ClenvraUITests
 fi
 

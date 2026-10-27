@@ -29,6 +29,7 @@ struct ClenvraApp: App {
                 ) {
                     PermissionsGuideView(home: environment.home)
                 }
+                .preferredColorScheme(Self.forcedColorScheme)
         }
         .defaultSize(width: 1100, height: 720)
         .commands {
@@ -57,5 +58,19 @@ struct ClenvraApp: App {
         Settings {
             SettingsView(environment: environment)
         }
+    }
+
+    /// UI tests pass `-ClenvraUITestAppearance light|dark` to run in either appearance whatever the Mac uses.
+    /// Debug builds only; release builds always follow the system.
+    private static var forcedColorScheme: ColorScheme? {
+        #if DEBUG
+            switch UserDefaults.standard.string(forKey: "ClenvraUITestAppearance") {
+            case "light": .light
+            case "dark": .dark
+            default: nil
+            }
+        #else
+            nil
+        #endif
     }
 }

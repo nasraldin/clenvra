@@ -180,7 +180,7 @@ struct AppDetailView: View {
                 Text("Moving to the Trash…")
             } else {
                 Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()

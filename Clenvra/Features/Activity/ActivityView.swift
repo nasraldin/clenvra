@@ -237,7 +237,7 @@ private struct OperationHeader: View {
             Spacer()
             HStack(spacing: 6) {
                 Text("\(operation.items.count) items")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Freed \(operation.freedBytes.formatted(.byteCount(style: .file)))")
             }
             .foregroundStyle(.secondary)

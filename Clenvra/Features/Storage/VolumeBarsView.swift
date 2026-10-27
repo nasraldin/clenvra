@@ -76,8 +76,11 @@ private struct VolumeRow: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
             }
+            .accessibilityElement(children: .combine)
+            // The legend below states the same numbers; the bar itself is decorative for assistive technologies.
             CapacityBar(volume: volume)
                 .frame(height: 10)
+                .accessibilityHidden(true)
             HStack(spacing: 14) {
                 legend(color: .accentColor) {
                     Text("Used \(volume.usedExcludingPurgeable.formatted(.byteCount(style: .file)))")
@@ -93,8 +96,8 @@ private struct VolumeRow: View {
             }
             .font(.caption)
             .foregroundStyle(.secondary)
+            .accessibilityElement(children: .combine)
         }
-        .accessibilityElement(children: .combine)
     }
 
     private func legend(color: Color, @ViewBuilder text: () -> Text) -> some View {
