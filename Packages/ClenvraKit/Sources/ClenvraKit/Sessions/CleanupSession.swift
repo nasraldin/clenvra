@@ -9,9 +9,11 @@ public struct CleanupSummary: Sendable, Equatable {
     }
 
     public var movedToTrashCount = 0
+    /// Items deleted for good (emptying the Trash).
+    public var removedPermanentlyCount = 0
     /// Dry run only: items that passed every check.
     public var wouldRemoveCount = 0
-    /// Estimated bytes freed by items actually moved (what the user reviewed, clone- and hard-link-aware).
+    /// Estimated bytes freed by items actually moved or removed (what the user reviewed, clone- and hard-link-aware).
     public var freedBytes: Int64 = 0
     /// Items skipped, failed or not attempted, each with its reason.
     public var problems: [Problem] = []
@@ -33,7 +35,10 @@ public struct CleanupSummary: Sendable, Equatable {
                 freedBytes += result.item.freedBytes
             case .wouldDelete:
                 wouldRemoveCount += 1
-            case .intent, .removedPermanently, .restored:
+            case .removedPermanently:
+                removedPermanentlyCount += 1
+                freedBytes += result.item.freedBytes
+            case .intent, .restored:
                 break
             case .skipped, .failed, .anomaly, .notAttempted:
                 problems.append(Problem(path: result.item.path, reason: result.outcome))
@@ -69,6 +74,7 @@ public final class CleanupSession {
     public private(set) var lastSummary: CleanupSummary?
 
     private let rules: [CleanupRule]
+    private let actionsByRule: [String: CleanupAction]
     private let section: ActivityRecord.Section
     private let home: String
     private let policy: ProtectionPolicy
@@ -85,6 +91,7 @@ public final class CleanupSession {
         executor: FSExecutor = .shared
     ) {
         self.rules = rules
+        actionsByRule = Dictionary(rules.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
         self.section = section
         self.home = home
         self.policy = policy
@@ -165,12 +172,32 @@ public final class CleanupSession {
 
     // MARK: - Cleaning
 
-    /// Moves the selection to the Trash (or checks it, when `dryRun`), then rescans.
+    /// True when the selection holds items that are deleted for good (Trash contents), so the confirmation must
+    /// say it cannot be undone.
+    public var selectionIncludesPermanentRemoval: Bool {
+        selection.contains { action(for: $0) == .removePermanently }
+    }
+
+    private func action(for path: String) -> CleanupAction? {
+        candidatesByPath[path].flatMap { actionsByRule[$0.ruleID] }
+    }
+
+    /// Moves the selection to the Trash and empties selected Trash items (or checks both, when `dryRun`), then
+    /// rescans. Reveal-only items are never acted on.
     @discardableResult
     public func clean(dryRun: Bool = false) async -> CleanupSummary {
-        let items = selection.sorted().compactMap { candidatesByPath[$0]?.deletionItem(section: section) }
+        let paths = selection.sorted()
+        func items(_ action: CleanupAction) -> [DeletionItem] {
+            paths.filter { self.action(for: $0) == action }
+                .compactMap { candidatesByPath[$0]?.deletionItem(section: section) }
+        }
+        let toTrash = items(.moveToTrash)
+        let toRemove = items(.removePermanently)
         phase = .cleaning
-        let results = await deleter.run(items, mode: .moveToTrash, dryRun: dryRun)
+        var results = await deleter.run(toTrash, mode: .moveToTrash, dryRun: dryRun)
+        if !toRemove.isEmpty {
+            results += await deleter.run(toRemove, mode: .irreversible, dryRun: dryRun)
+        }
 
         let summary = CleanupSummary(results: results)
         lastSummary = summary

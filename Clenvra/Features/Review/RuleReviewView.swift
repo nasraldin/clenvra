@@ -19,7 +19,10 @@ struct RuleReviewView<Leading: View>: View {
                 if !session.groups.isEmpty { statusBar }
             }
             .sheet(isPresented: $isConfirming) {
-                ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
+                ConfirmCleanupSheet(
+                    count: session.selectedCount, bytes: session.selectedBytes,
+                    includesPermanentRemoval: session.selectionIncludesPermanentRemoval
+                ) {
                     isConfirming = false
                     Task { shownSummary = ShownSummary(summary: await session.clean(), isPreview: false) }
                 }

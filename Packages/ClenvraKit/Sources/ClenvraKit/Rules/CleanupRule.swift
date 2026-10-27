@@ -62,6 +62,8 @@ public struct ArtifactKind: Sendable, Hashable {
 
 public enum CleanupAction: Sendable, Hashable {
     case moveToTrash
+    /// Deleted for good, after a confirmation that says so. Only for items already in the Trash.
+    case removePermanently
     /// Shown for information; the user acts in Finder (e.g. items that need an administrator).
     case revealOnly
 }
@@ -72,6 +74,28 @@ public enum OwnershipHint: Sendable, Hashable {
     /// The item's name is the owner's bundle identifier (e.g. `~/Library/Caches/com.vendor.app`).
     case bundleIdentifierFromName
     case fixed(String)
+    /// The item's name starts with a product name (e.g. `PyCharm2026.2` → PyCharm); the longest matching prefix
+    /// wins. Names matching no prefix get `fallback`.
+    case namePrefix([NamePrefixOwner], fallback: String?)
+}
+
+/// One product-name prefix and the bundle identifier of the app that owns items named that way.
+public struct NamePrefixOwner: Sendable, Hashable {
+    public let prefix: String
+    public let bundleIdentifier: String
+
+    public init(_ prefix: String, _ bundleIdentifier: String) {
+        self.prefix = prefix
+        self.bundleIdentifier = bundleIdentifier
+    }
+}
+
+/// How an item is named in the review list.
+public enum ItemLabel: Sendable, Hashable {
+    /// Its file name.
+    case fileName
+    /// The device name stored in an iPhone/iPad backup's `Info.plist`; backup folders are named by an opaque ID.
+    case deviceBackup
 }
 
 /// One cleanup category as data. All categories run through the same scanner, gate and review UI.
@@ -83,10 +107,11 @@ public struct CleanupRule: Sendable, Hashable, Identifiable {
     public let risk: Risk
     public let action: CleanupAction
     public let ownership: OwnershipHint
+    public let label: ItemLabel
 
     public init(
         id: String, category: CleanupCategory, root: RuleRoot, selection: Selection, risk: Risk,
-        action: CleanupAction, ownership: OwnershipHint
+        action: CleanupAction, ownership: OwnershipHint, label: ItemLabel = .fileName
     ) {
         self.id = id
         self.category = category
@@ -95,5 +120,6 @@ public struct CleanupRule: Sendable, Hashable, Identifiable {
         self.risk = risk
         self.action = action
         self.ownership = ownership
+        self.label = label
     }
 }

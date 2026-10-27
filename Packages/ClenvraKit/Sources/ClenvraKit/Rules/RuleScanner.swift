@@ -43,7 +43,8 @@ public enum RuleScanner {
         let candidates = found.items.map { item in
             let owner = owner(of: item, hint: rule.ownership)
             return CleanupCandidate(
-                ruleID: rule.id, name: item.name, path: item.path, ruleRoot: rootPath, kind: item.entry.kind,
+                ruleID: rule.id, name: displayName(of: item, label: rule.label), path: item.path, ruleRoot: rootPath,
+                kind: item.entry.kind,
                 logicalSize: item.logical, allocatedSize: item.allocated, reclaimableSize: item.reclaimable,
                 modificationDate: item.entry.modificationDate, snapshot: FileSnapshot(item.entry),
                 ownerBundleID: owner,
@@ -226,6 +227,28 @@ public enum RuleScanner {
             reclaimable: reclaimable)
     }
 
+    // MARK: - Naming
+
+    private static func displayName(of item: FoundItem, label: ItemLabel) -> String {
+        switch label {
+        case .fileName: item.name
+        case .deviceBackup: deviceName(inBackup: item.path) ?? item.name
+        }
+    }
+
+    /// The device name from a backup's `Info.plist`, read only when it is a small regular file (never a link).
+    static func deviceName(inBackup path: String) -> String? {
+        let plistPath = path + "/Info.plist"
+        var info = stat()
+        guard lstat(plistPath, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size < 4_000_000,
+            let data = FileManager.default.contents(atPath: plistPath),
+            let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+            let name = plist["Device Name"] as? String,
+            !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return nil }
+        return name
+    }
+
     // MARK: - Status
 
     private static func owner(of item: FoundItem, hint: OwnershipHint) -> String? {
@@ -233,6 +256,9 @@ public enum RuleScanner {
         case .none: nil
         case .fixed(let identifier): identifier
         case .bundleIdentifierFromName: isBundleIdentifierLike(item.name) ? item.name : nil
+        case .namePrefix(let owners, let fallback):
+            owners.filter { item.name.hasPrefix($0.prefix) }.max { $0.prefix.count < $1.prefix.count }?
+                .bundleIdentifier ?? fallback
         }
     }
 

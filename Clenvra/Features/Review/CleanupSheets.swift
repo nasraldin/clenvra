@@ -1,10 +1,12 @@
 import ClenvraKit
 import SwiftUI
 
-/// Confirmation before moving items to the Trash.
+/// Confirmation before moving items to the Trash, or deleting Trash items for good.
 struct ConfirmCleanupSheet: View {
     let count: Int
     let bytes: Int64
+    /// The selection includes Trash items, which are deleted for good.
+    var includesPermanentRemoval = false
     let confirm: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -12,13 +14,22 @@ struct ConfirmCleanupSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Label {
-                Text("Move \(count) items to the Trash?")
+                Text(includesPermanentRemoval ? "Clean up \(count) items?" : "Move \(count) items to the Trash?")
                     .font(.title3.bold())
             } icon: {
                 Image(systemName: "trash")
                     .foregroundStyle(.secondary)
             }
             Text("This frees about \(bytes.formatted(.byteCount(style: .file))).")
+            if includesPermanentRemoval {
+                Label {
+                    Text("Items already in the Trash are deleted permanently. This cannot be undone.")
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
+                .font(.callout.weight(.semibold))
+            }
             Text("Every item is checked again just before it is moved. You can put items back from Activity.")
                 .foregroundStyle(.secondary)
             HStack {
@@ -30,7 +41,11 @@ struct ConfirmCleanupSheet: View {
                 }
                 .keyboardShortcut(.cancelAction)
                 Button(role: .destructive, action: confirm) {
-                    Text("Move to Trash")
+                    if includesPermanentRemoval {
+                        Text("Clean Up")
+                    } else {
+                        Text("Move to Trash")
+                    }
                 }
                 .keyboardShortcut(.defaultAction)
             }
@@ -57,6 +72,9 @@ struct CleanupResultSheet: View {
             } else {
                 Text("Moved \(summary.movedToTrashCount) items to the Trash")
                     .font(.title3.bold())
+                if summary.removedPermanentlyCount > 0 {
+                    Text("Deleted \(summary.removedPermanentlyCount) items from the Trash permanently.")
+                }
                 Text("Freed about \(summary.freedBytes.formatted(.byteCount(style: .file))).")
             }
 
