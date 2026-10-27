@@ -79,4 +79,67 @@ struct SettingsStoreTests {
             try SettingsStore(file: file, home: "/Users/b").importSettings(from: Data(json.utf8))
         }
     }
+
+    @Test("new settings default to off: no schedule and no network update check (D5)")
+    func newDefaults() {
+        let settings = UserSettings()
+        #expect(!settings.scanSchedule.isEnabled)
+        #expect(!settings.checksForAppUpdates)
+        #expect(settings.lastScheduledScan == nil)
+    }
+
+    @Test("a settings file written before schedules existed still loads its exclusions")
+    func oldFileLoads() throws {
+        try Data(#"{"exclusions": ["/Users/a/keep"]}"#.utf8).write(to: file)
+
+        let settings = SettingsStore(file: file, home: "/Users/a").load()
+
+        #expect(settings.exclusions == ["/Users/a/keep"])
+        #expect(settings.scanSchedule == ScanSchedule())
+        #expect(!settings.checksForAppUpdates)
+    }
+
+    @Test("the schedule, update-check choice and last run are saved and loaded back")
+    func newFieldsRoundTrip() throws {
+        let store = SettingsStore(file: file, home: "/Users/a")
+        var settings = UserSettings()
+        settings.scanSchedule.isEnabled = true
+        settings.scanSchedule.frequency = .daily
+        settings.scanSchedule.hour = 7
+        settings.checksForAppUpdates = true
+        settings.lastScheduledScan = Date(timeIntervalSince1970: 1_800_000_000)
+
+        try store.save(settings)
+
+        #expect(store.load() == settings)
+    }
+
+    @Test("export and import carry the schedule and update-check choice, but not this Mac's last run")
+    func exportImportNewFields() throws {
+        let store = SettingsStore(file: file, home: "/Users/a")
+        var settings = UserSettings()
+        settings.scanSchedule.isEnabled = true
+        settings.scanSchedule.weekday = 6
+        settings.checksForAppUpdates = true
+        settings.lastScheduledScan = Date()
+
+        let exported = try store.export(settings)
+        let result = try SettingsStore(file: file, home: "/Users/b").importSettings(from: exported)
+
+        #expect(result.settings.scanSchedule == settings.scanSchedule)
+        // Network access is never switched on by a file; the user turns it on on each Mac (decision D5).
+        #expect(!result.settings.checksForAppUpdates)
+        #expect(result.settings.lastScheduledScan == nil)
+        #expect(!String(decoding: exported, as: UTF8.self).contains("lastScheduledScan"))
+    }
+
+    @Test("an exported file from before schedules existed imports with everything off")
+    func oldExportImports() throws {
+        let json = #"{"version": 1, "exclusions": ["~/ok"]}"#
+        let result = try SettingsStore(file: file, home: "/Users/b").importSettings(from: Data(json.utf8))
+
+        #expect(result.settings.exclusions == ["/Users/b/ok"])
+        #expect(result.settings.scanSchedule == ScanSchedule())
+        #expect(!result.settings.checksForAppUpdates)
+    }
 }
