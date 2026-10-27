@@ -1900,6 +1900,16 @@
         }
       }
     },
+    "Caches shared by all users, outside your home folder. Removed through the System Helper, into your Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرات مؤقتة مشتركة بين كل المستخدمين، خارج مجلد المستخدم. تُزال عبر مساعد النظام إلى سلة المهملات."
+          }
+        }
+      }
+    },
     "Caches, logs and other junk": {
       "localizations": {
         "ar": {
@@ -2276,12 +2286,42 @@
         }
       }
     },
+    "Delete Snapshot": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف اللقطة"
+          }
+        }
+      }
+    },
+    "Delete this snapshot?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد حذف هذه اللقطة؟"
+          }
+        }
+      }
+    },
     "Deleted %lld items from the Trash permanently.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "حُذف %lld من العناصر من سلة المهملات نهائيًا."
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف…"
           }
         }
       }
@@ -3143,6 +3183,16 @@
         }
       }
     },
+    "Install the System Helper in Settings to remove it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثبّت مساعد النظام من الإعدادات لإزالته"
+          }
+        }
+      }
+    },
     "Installed": {
       "localizations": {
         "ar": {
@@ -3299,6 +3349,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عناصر موجودة في سلة المهملات. لا يمكن التراجع عن إفراغها."
+          }
+        }
+      }
+    },
+    "Its program is still installed, so it is not left over.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامجه ما زال مثبّتًا، لذا فهو ليس من البقايا."
           }
         }
       }
@@ -3543,6 +3603,16 @@
         }
       }
     },
+    "Local Time Machine Snapshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقطات Time Machine المحلية"
+          }
+        }
+      }
+    },
     "Local backups of iPhone and iPad. Removing one deletes that backup.": {
       "localizations": {
         "ar": {
@@ -3619,6 +3689,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ البحث عن البقايا…"
+          }
+        }
+      }
+    },
+    "Looking for snapshots…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن اللقطات…"
           }
         }
       }
@@ -3961,6 +4041,16 @@
         }
       }
     },
+    "Needs System Helper": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتاج إلى مساعد النظام"
+          }
+        }
+      }
+    },
     "No Activity Yet": {
       "localizations": {
         "ar": {
@@ -4107,6 +4197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُعثر على بقايا"
+          }
+        }
+      }
+    },
+    "No local snapshots on this Mac.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد لقطات محلية على جهاز Mac هذا."
           }
         }
       }
@@ -5528,6 +5628,16 @@
         }
       }
     },
+    "Snapshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللقطات"
+          }
+        }
+      }
+    },
     "Some extensions could not be listed, so this list may be incomplete.": {
       "localizations": {
         "ar": {
@@ -5741,6 +5851,16 @@
         }
       }
     },
+    "System Caches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرات النظام المؤقتة"
+          }
+        }
+      }
+    },
     "System Daemons": {
       "localizations": {
         "ar": {
@@ -5791,6 +5911,16 @@
         }
       }
     },
+    "System Logs": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجلات النظام"
+          }
+        }
+      }
+    },
     "System Performance": {
       "localizations": {
         "ar": {
@@ -5807,6 +5937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عرض النظام"
+          }
+        }
+      }
+    },
+    "System-wide logs older than a week. Removed through the System Helper; old compressed logs are deleted for good.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجلات النظام الأقدم من أسبوع. تُزال عبر مساعد النظام؛ وتُحذف السجلات القديمة المضغوطة نهائيًا."
           }
         }
       }
@@ -6021,6 +6161,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر حفظ الإعدادات."
+          }
+        }
+      }
+    },
+    "The snapshot could not be deleted.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حذف اللقطة."
           }
         }
       }
@@ -6544,6 +6694,16 @@
         }
       }
     },
+    "You can no longer restore your Mac to this point. This cannot be undone.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لن تتمكن بعد ذلك من استعادة جهاز Mac إلى هذه النقطة. لا يمكن التراجع عن ذلك."
+          }
+        }
+      }
+    },
     "You excluded this folder in Settings.": {
       "localizations": {
         "ar": {
@@ -6673,6 +6833,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "يدير macOS الذاكرة تلقائيًا. الذاكرة المستهلكة العالية أمر طبيعي وتبقي النظام سريع الاستجابة؛ ضغط الذاكرة هو المقياس الفعلي لنقص الذاكرة."
+          }
+        }
+      }
+    },
+    "macOS removes these by itself when space runs low. Deleting one frees space now, but you can no longer restore from it. This cannot be undone.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل macOS هذه اللقطات تلقائيًا عند قلة المساحة. حذف إحداها يحرر المساحة الآن، لكن لن تتمكن من الاستعادة منها. لا يمكن التراجع عن ذلك."
+          }
+        }
+      }
+    },
+    "macOS removes these by itself when space runs low. To delete one now, install the System Helper in Settings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل macOS هذه اللقطات تلقائيًا عند قلة المساحة. لحذف إحداها الآن، ثبّت مساعد النظام من الإعدادات."
           }
         }
       }

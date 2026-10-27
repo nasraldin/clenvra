@@ -61,6 +61,28 @@ public struct HelperAllowlist: Sendable {
         return roots.first { $0.components == rootParts }?.shape == .logArchive
     }
 
+    /// Whether `item` is a launch property list directly inside `/Library/LaunchDaemons` or `/Library/LaunchAgents`.
+    public func isSystemLaunchItem(_ item: DeletionItem) -> Bool {
+        guard permits(item), let rootParts = try? PathPolicy.components(of: item.ruleRoot) else { return false }
+        return roots.first { $0.components == rootParts }?.shape == .directPlist
+    }
+
+    /// The plan item the helper would accept for a system file found elsewhere (uninstall leftovers): its rule root
+    /// is the allowlisted folder that holds it. `nil` when no allowlisted folder fits.
+    public func helperItem(
+        path: String, expected: FileSnapshot, owner: String?, freedBytes: Int64, section: ActivityRecord.Section
+    ) -> DeletionItem? {
+        guard let parts = try? PathPolicy.components(of: path) else { return nil }
+        for root in roots where parts.count > root.components.count && parts.starts(with: root.components) {
+            guard fits(path, root: root, kind: expected.kind) else { continue }
+            let item = DeletionItem(
+                path: path, ruleRoot: "/" + root.components.joined(separator: "/"), expected: expected,
+                ownerBundleID: owner, freedBytes: freedBytes, section: section)
+            return permits(item) ? item : nil
+        }
+        return nil
+    }
+
     /// Whether putting an item of `kind` back at `originalPath` would land inside an allowlisted folder.
     public func permitsRestore(originalPath: String, kind: FileKind) -> Bool {
         guard let parts = try? PathPolicy.components(of: originalPath) else { return false }

@@ -127,6 +127,8 @@ public final class AppsSession {
     private let deleter: DeletionExecutor
     private let log: ActivityLog
     private let resolver: OwnershipResolver
+    private let privileged: (any PrivilegedOperations)?
+    private let systemAllowlist: HelperAllowlist
     private let discover: @Sendable () async -> [InstalledApp]
     private let ownerState: @Sendable (InstalledApp) -> OwnerState
     private let requestQuit: @Sendable (InstalledApp) async -> Void
@@ -143,7 +145,8 @@ public final class AppsSession {
     ///   - homebrew: enables `brew uninstall --cask`; `nil` when Homebrew is not installed.
     public init(
         home: String, policy: ProtectionPolicy, deleter: DeletionExecutor, log: ActivityLog,
-        resolver: OwnershipResolver,
+        resolver: OwnershipResolver, privileged: (any PrivilegedOperations)? = nil,
+        systemAllowlist: HelperAllowlist = HelperAllowlist(),
         discover: @escaping @Sendable () async -> [InstalledApp],
         ownerState: @escaping @Sendable (InstalledApp) -> OwnerState,
         requestQuit: @escaping @Sendable (InstalledApp) async -> Void = { _ in },
@@ -157,6 +160,8 @@ public final class AppsSession {
         self.deleter = deleter
         self.log = log
         self.resolver = resolver
+        self.privileged = privileged
+        self.systemAllowlist = systemAllowlist
         self.discover = discover
         self.ownerState = ownerState
         self.requestQuit = requestQuit
@@ -376,9 +381,23 @@ public final class AppsSession {
 
     // MARK: - Owned item selection
 
-    /// Items that can be removed by this version: not reveal-only, nothing protected inside.
+    /// Whether the privileged helper is installed and answering; system leftovers can be selected only then.
+    public var helperAvailable = false
+
+    /// Items that can be removed: the user's own files, or system files the helper accepts; nothing protected inside.
     public func isSelectable(_ item: OwnedItem) -> Bool {
-        item.handling == .removable && !item.containsProtectedItem
+        guard !item.containsProtectedItem else { return false }
+        return item.handling == .removable || helperItem(for: item, owner: nil) != nil
+    }
+
+    /// Whether removing `item` needs administrator rights (it goes through the helper).
+    public func needsHelper(_ item: OwnedItem) -> Bool { item.handling == .revealOnly }
+
+    private func helperItem(for item: OwnedItem, owner: String?) -> DeletionItem? {
+        guard item.handling == .revealOnly, helperAvailable, privileged != nil else { return nil }
+        return systemAllowlist.helperItem(
+            path: item.path, expected: item.snapshot, owner: owner, freedBytes: item.reclaimableSize,
+            section: .applications)
     }
 
     public func toggle(_ path: String) {
@@ -418,8 +437,12 @@ public final class AppsSession {
         let bundleItem = DeletionItem(
             path: app.id, ruleRoot: (app.id as NSString).deletingLastPathComponent, expected: bundle.snapshot,
             ownerBundleID: owner, freedBytes: bundle.reclaimableSize, section: .applications)
-        let owned = detail.items.filter { selection.contains($0.path) && isSelectable($0) }
-            .map { $0.deletionItem(owner: owner, section: .applications) }
+        let chosen = detail.items.filter { selection.contains($0.path) && isSelectable($0) }
+        let owned = chosen.filter { $0.handling == .removable }.map {
+            $0.deletionItem(owner: owner, section: .applications)
+        }
+        // The app is quit and its bundle goes first, so its launch daemons are orphans by the time the helper looks.
+        let system = chosen.compactMap { helperItem(for: $0, owner: nil) }
 
         isWorking = true
         let operation = UUID()
@@ -432,9 +455,10 @@ public final class AppsSession {
         }
         if bundleDone {
             results += await deleter.run(owned, mode: .moveToTrash, dryRun: dryRun, operationID: operation)
+            results += await removeThroughHelper(system, dryRun: dryRun, operationID: operation)
         } else {
             // Data without its app is worse than an app without its data: keep everything if the bundle stays.
-            results += owned.map { DeletionResult(item: $0, outcome: .notAttempted) }
+            results += (owned + system).map { DeletionResult(item: $0, outcome: .notAttempted) }
         }
         isWorking = false
 
@@ -448,6 +472,38 @@ public final class AppsSession {
             }
         }
         return summary
+    }
+
+    /// System leftovers go through the helper, which checks each one again. Launch items use its orphan check.
+    private func removeThroughHelper(_ items: [DeletionItem], dryRun: Bool, operationID: UUID) async
+        -> [DeletionResult]
+    {
+        guard !items.isEmpty else { return [] }
+        guard let privileged, helperAvailable else {
+            return items.map { DeletionResult(item: $0, outcome: .notAttempted) }
+        }
+        let isLaunchItem = { (item: DeletionItem) in
+            ["LaunchDaemons", "LaunchAgents"].contains((item.ruleRoot as NSString).lastPathComponent)
+        }
+        var results: [DeletionResult] = []
+        let files = items.filter { !isLaunchItem($0) }
+        if !files.isEmpty {
+            let request = HelperRequest(
+                operationID: operationID, mode: dryRun ? .dryRun : .moveToTrash, items: files, ownerBundlePaths: [:])
+            let outcomes =
+                (try? await privileged.perform(request).outcomes)
+                ?? Array(repeating: .notAttempted, count: files.count)
+            results += zip(files, outcomes).map { DeletionResult(item: $0, outcome: $1) }
+        }
+        for item in items where isLaunchItem(item) {
+            let outcome: ActivityRecord.Outcome =
+                dryRun
+                ? .wouldDelete
+                : (try? await privileged.removeOrphanedLaunchItem(item, operationID: operationID)) ?? .notAttempted
+            results.append(DeletionResult(item: item, outcome: outcome))
+        }
+        if !dryRun { await deleter.recordPrivileged(results, operationID: operationID) }
+        return results
     }
 
     // MARK: - Homebrew

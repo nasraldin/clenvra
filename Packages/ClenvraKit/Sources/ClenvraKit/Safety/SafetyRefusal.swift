@@ -25,6 +25,8 @@ public enum SafetyRefusal: Error, Sendable, Equatable, Codable {
     case flagged
     /// The app that owns this item is running, or Clenvra could not tell whether it is.
     case inUse
+    /// A startup item whose program is still installed, so it is not orphaned.
+    case programStillInstalled
     /// Any other filesystem error, with its errno.
     case ioError(Int32)
 }

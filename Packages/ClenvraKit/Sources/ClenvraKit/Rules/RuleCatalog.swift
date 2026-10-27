@@ -35,6 +35,30 @@ public enum RuleCatalog {
             ownership: .namePrefix([NamePrefixOwner("AndroidStudio", "com.google.android.studio")], fallback: nil)),
     ]
 
+    // MARK: - System (through the privileged helper)
+
+    /// System caches and logs (CL-8). Not part of `standard`: they live outside the home folder and are removed by
+    /// the helper. Never pre-selected: anything needing administrator rights is the user's explicit choice.
+    /// `root` is "/" in the app and a test folder in tests.
+    public static func system(root: String) -> [CleanupRule] {
+        let base = root.hasSuffix("/") ? String(root.dropLast()) : root
+        return [
+            CleanupRule(
+                id: "system.caches", category: .systemCaches, root: .absolute(base + "/Library/Caches"),
+                selection: .children(), risk: .review, action: .moveToTrash, ownership: .bundleIdentifierFromName,
+                elevation: .helper),
+            CleanupRule(
+                id: "system.logs", category: .systemLogs, root: .absolute(base + "/Library/Logs"),
+                selection: .files(extensions: ["log", "gz"], minimumAge: .days(7), maximumDepth: 6), risk: .review,
+                action: .moveToTrash, ownership: .none, elevation: .helper),
+            // Rotated, compressed system logs; the helper deletes these for good (they are only ever archives).
+            CleanupRule(
+                id: "system.logArchives", category: .systemLogs, root: .absolute(base + "/private/var/log"),
+                selection: .files(extensions: ["gz", "bz2", "xz"], minimumAge: .days(7), maximumDepth: 1),
+                risk: .review, action: .removePermanently, ownership: .none, elevation: .helper),
+        ]
+    }
+
     // MARK: - Trash
 
     /// Moving Trash items to the Trash frees nothing, so this is the one rule that deletes for good. Never

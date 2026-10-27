@@ -58,6 +58,7 @@ public struct HelperService: Sendable {
     private let ownPaths: [String]
     private let processPaths: @Sendable () -> [String]?
     private let fileSystem: FSExecutor
+    private let runner: any CommandRunning
 
     /// - Parameters:
     ///   - clientHome: home folder of the user whose app connected (from the connection's user ID, never from the
@@ -70,7 +71,7 @@ public struct HelperService: Sendable {
         allowlist: HelperAllowlist, clientHome: String, clientUID: uid_t, log: ActivityLog, staging: String,
         ownPaths: [String] = [],
         processPaths: @escaping @Sendable () -> [String]? = OwnerActivity.currentProcessPaths,
-        fileSystem: FSExecutor = .shared
+        fileSystem: FSExecutor = .shared, runner: any CommandRunning = ProcessCommandRunner()
     ) {
         self.allowlist = allowlist
         self.clientHome = clientHome
@@ -80,6 +81,7 @@ public struct HelperService: Sendable {
         self.ownPaths = ownPaths
         self.processPaths = processPaths
         self.fileSystem = fileSystem
+        self.runner = runner
     }
 
     public func perform(_ request: HelperRequest) async -> HelperResponse {
@@ -199,6 +201,69 @@ public struct HelperService: Sendable {
         case S_IFREG: return .file
         default: return nil
         }
+    }
+
+    // MARK: - Orphaned system launch items (SB-4)
+
+    /// Unloads an orphaned launch daemon or agent and moves its plist to the user's Trash. The label and program
+    /// come from the plist itself, and only items whose program no longer exists are touched.
+    public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async -> ActivityRecord.Outcome {
+        guard allowlist.isSystemLaunchItem(item) else { return .skipped(.outsideRoot) }
+        guard !Self.belongsToManagedSoftware(item),
+            let plist = Self.launchPlist(at: item.path), let label = Self.validLabel(plist["Label"]),
+            !ManagedAgents.isManaged(identifier: label)
+        else { return .skipped(.protected(.custom)) }
+        let arguments = plist["ProgramArguments"] as? [String]
+        guard let program = (plist["Program"] as? String) ?? arguments?.first, program.hasPrefix("/"),
+            (try? PathPolicy.components(of: program)) != nil
+        else { return .skipped(.protected(.custom)) }
+        var info = stat()
+        guard lstat(program, &info) != 0, errno == ENOENT else { return .skipped(.programStillInstalled) }
+
+        let isDaemon = (item.ruleRoot as NSString).lastPathComponent == "LaunchDaemons"
+        let target = isDaemon ? "system/\(label)" : "gui/\(clientUID)/\(label)"
+        // A failure here usually means it was not loaded; the plist is removed either way, through the gate.
+        _ = try? await runner.run(Command(executable: "/bin/launchctl", arguments: ["bootout", target]))
+        let response = await perform(
+            HelperRequest(operationID: operationID, mode: .moveToTrash, items: [item], ownerBundlePaths: [:]))
+        return response.outcomes.first ?? .notAttempted
+    }
+
+    /// A small, regular property list file, read without following links.
+    private static func launchPlist(at path: String) -> [String: Any]? {
+        var info = stat()
+        guard lstat(path, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_size < 1_000_000,
+            let data = FileManager.default.contents(atPath: path)
+        else { return nil }
+        return try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+    }
+
+    /// A launchd label safe to pass as one argument: letters, digits, ".", "_" and "-", never Apple's own.
+    private static func validLabel(_ value: Any?) -> String? {
+        guard let label = value as? String, (1...255).contains(label.count), !label.hasPrefix("-"),
+            !label.lowercased().hasPrefix("com.apple."),
+            label.unicodeScalars.allSatisfy({
+                $0.isASCII
+                    && ($0.properties.isAlphabetic || ("0"..."9").contains($0) || "._-".unicodeScalars.contains($0))
+            })
+        else { return nil }
+        return label
+    }
+
+    // MARK: - Local Time Machine snapshots (SY-4)
+
+    /// Deletes one local snapshot by date, only if the date is well formed and currently listed.
+    public func deleteLocalSnapshot(date: String) async -> SnapshotDeletion {
+        guard LocalSnapshots.isValidDate(date) else { return .invalid }
+        let list = try? await runner.run(
+            Command(executable: "/usr/bin/tmutil", arguments: ["listlocalsnapshotdates", "/"]))
+        guard let list, list.terminationReason == .exited, list.exitStatus == 0 else { return .failed }
+        guard LocalSnapshots.dates(fromListOutput: list.standardOutput).contains(date) else { return .notFound }
+        let result = try? await runner.run(
+            Command(
+                executable: "/usr/bin/tmutil", arguments: ["deletelocalsnapshots", date], timeout: .seconds(300)))
+        guard let result, result.terminationReason == .exited, result.exitStatus == 0 else { return .failed }
+        return .deleted
     }
 
     /// Security, VPN and management agents are never touched, even when their files sit in allowlisted folders.

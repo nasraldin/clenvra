@@ -80,6 +80,17 @@ public actor DeletionExecutor {
         return results
     }
 
+    /// Logs outcomes of work the privileged helper did, so Activity shows them and Put Back can find them.
+    public func recordPrivileged(_ results: [DeletionResult], operationID: UUID) async {
+        for result in results {
+            let entry = ActivityRecord(
+                operationID: operationID, date: now(), section: result.item.section, itemPath: result.item.path,
+                bytes: result.item.freedBytes, outcome: result.outcome, identity: result.item.expected.identity,
+                privileged: true)
+            try? await log.append(entry)
+        }
+    }
+
     // MARK: - Private
 
     private func perform(_ item: DeletionItem, mode: DeletionMode, dryRun: Bool) async -> ActivityRecord.Outcome {

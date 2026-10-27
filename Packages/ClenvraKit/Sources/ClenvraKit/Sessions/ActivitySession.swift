@@ -91,6 +91,7 @@ public final class ActivitySession {
 
     private let activityLog: ActivityLog
     private let reenabler: LaunchAgentReenabler?
+    private let privileged: (any PrivilegedOperations)?
     /// Items put back from the Trash, keyed by operation ID and path; rebuilt from `.restored` log records.
     private var restoredKeys: Set<String> = []
     /// Startup items loaded again after Put Back during this run, keyed like `restoredKeys`.
@@ -102,9 +103,13 @@ public final class ActivitySession {
     }()
 
     /// - Parameter reenabler: offers loading a put-back startup agent again; `nil` never offers it.
-    public init(activityLog: ActivityLog, reenabler: LaunchAgentReenabler? = nil) {
+    public init(
+        activityLog: ActivityLog, reenabler: LaunchAgentReenabler? = nil,
+        privileged: (any PrivilegedOperations)? = nil
+    ) {
         self.activityLog = activityLog
         self.reenabler = reenabler
+        self.privileged = privileged
     }
 
     /// Loads every record the log holds and rebuilds the operations. A read failure leaves the
@@ -137,16 +142,30 @@ public final class ActivitySession {
             let operation = operations.first(where: { $0.id == operationID }),
             let item = operation.items.first(where: { $0.path == itemPath })
         else { return .notRestorable }
+        if let failure = await putBack(item.record) { return RestoreReason(failure) }
+        restoredKeys.insert(Self.restoredKey(itemPath: itemPath, operationID: operationID))
+        try? await activityLog.append(
+            ActivityRecord(
+                operationID: operationID, date: Date(), section: item.record.section, itemPath: itemPath,
+                bytes: item.record.bytes, outcome: .restored, identity: item.record.identity))
+        return nil
+    }
+
+    /// Items the helper moved are put back by the helper (it checks its own log, not this one); others locally.
+    private func putBack(_ record: ActivityRecord) async -> RestoreError? {
+        guard record.privileged == true else {
+            do {
+                try RestoreService.restore(record)
+                return nil
+            } catch {
+                return error
+            }
+        }
+        guard let privileged else { return .notRestorable }
         do {
-            try RestoreService.restore(item.record)
-            restoredKeys.insert(Self.restoredKey(itemPath: itemPath, operationID: operationID))
-            try? await activityLog.append(
-                ActivityRecord(
-                    operationID: operationID, date: Date(), section: item.record.section, itemPath: itemPath,
-                    bytes: item.record.bytes, outcome: .restored, identity: item.record.identity))
-            return nil
+            return try await privileged.restore(record)
         } catch {
-            return RestoreReason(error)
+            return .notRestorable
         }
     }
 

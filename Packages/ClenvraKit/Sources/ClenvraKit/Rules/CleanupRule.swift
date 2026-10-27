@@ -11,6 +11,8 @@ public enum Risk: Sendable, Hashable, Codable {
 /// User-facing grouping of rules; drives section and sidebar grouping in the UI.
 public enum CleanupCategory: String, Sendable, Hashable, Codable, CaseIterable {
     case appCaches, logs, crashReports, installers, deviceBackups, trash, browserCaches
+    /// Outside the home folder; removed through the privileged helper (M13).
+    case systemCaches, systemLogs
     case xcode, simulators, packageCaches, projectArtifacts, ideCaches, containers
 }
 
@@ -90,6 +92,14 @@ public struct NamePrefixOwner: Sendable, Hashable {
     }
 }
 
+/// Who performs the removal.
+public enum Elevation: Sendable, Hashable {
+    /// The app itself, as the user.
+    case none
+    /// The optional privileged helper; without it the items are shown but cannot be selected.
+    case helper
+}
+
 /// How an item is named in the review list.
 public enum ItemLabel: Sendable, Hashable {
     /// Its file name.
@@ -108,10 +118,11 @@ public struct CleanupRule: Sendable, Hashable, Identifiable {
     public let action: CleanupAction
     public let ownership: OwnershipHint
     public let label: ItemLabel
+    public let elevation: Elevation
 
     public init(
         id: String, category: CleanupCategory, root: RuleRoot, selection: Selection, risk: Risk,
-        action: CleanupAction, ownership: OwnershipHint, label: ItemLabel = .fileName
+        action: CleanupAction, ownership: OwnershipHint, label: ItemLabel = .fileName, elevation: Elevation = .none
     ) {
         self.id = id
         self.category = category
@@ -121,5 +132,6 @@ public struct CleanupRule: Sendable, Hashable, Identifiable {
         self.action = action
         self.ownership = ownership
         self.label = label
+        self.elevation = elevation
     }
 }

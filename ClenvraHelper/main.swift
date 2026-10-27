@@ -88,6 +88,31 @@ final class HelperEndpoint: NSObject, ClenvraHelperProtocol, Sendable {
             idleWatch.end()
         }
     }
+
+    func removeOrphanedLaunchItem(_ item: Data, operationID: String, reply: @escaping @Sendable (Data?) -> Void) {
+        guard let decoded = try? JSONDecoder().decode(DeletionItem.self, from: item),
+            let operation = UUID(uuidString: operationID)
+        else {
+            reply(nil)
+            return
+        }
+        idleWatch.begin()
+        let service = service
+        Task {
+            let outcome = await service.removeOrphanedLaunchItem(decoded, operationID: operation)
+            reply(try? JSONEncoder().encode(outcome))
+            idleWatch.end()
+        }
+    }
+
+    func deleteLocalSnapshot(_ date: String, reply: @escaping @Sendable (String?) -> Void) {
+        idleWatch.begin()
+        let service = service
+        Task {
+            reply(await service.deleteLocalSnapshot(date: date).rawValue)
+            idleWatch.end()
+        }
+    }
 }
 
 final class ListenerDelegate: NSObject, NSXPCListenerDelegate {

@@ -1,0 +1,20 @@
+{
+  "Caches shared by all users, outside your home folder. Removed through the System Helper, into your Trash.": {"ar": "ذاكرات مؤقتة مشتركة بين كل المستخدمين، خارج مجلد المستخدم. تُزال عبر مساعد النظام إلى سلة المهملات."},
+  "Delete Snapshot": {"ar": "حذف اللقطة"},
+  "Delete this snapshot?": {"ar": "هل تريد حذف هذه اللقطة؟"},
+  "Delete…": {"ar": "حذف…"},
+  "Install the System Helper in Settings to remove it": {"ar": "ثبّت مساعد النظام من الإعدادات لإزالته"},
+  "Its program is still installed, so it is not left over.": {"ar": "برنامجه ما زال مثبّتًا، لذا فهو ليس من البقايا."},
+  "Local Time Machine Snapshots": {"ar": "لقطات Time Machine المحلية"},
+  "Looking for snapshots…": {"ar": "جارٍ البحث عن اللقطات…"},
+  "Needs System Helper": {"ar": "يحتاج إلى مساعد النظام"},
+  "No local snapshots on this Mac.": {"ar": "لا توجد لقطات محلية على جهاز Mac هذا."},
+  "Snapshots": {"ar": "اللقطات"},
+  "System Caches": {"ar": "ذاكرات النظام المؤقتة"},
+  "System Logs": {"ar": "سجلات النظام"},
+  "System-wide logs older than a week. Removed through the System Helper; old compressed logs are deleted for good.": {"ar": "سجلات النظام الأقدم من أسبوع. تُزال عبر مساعد النظام؛ وتُحذف السجلات القديمة المضغوطة نهائيًا."},
+  "The snapshot could not be deleted.": {"ar": "تعذّر حذف اللقطة."},
+  "You can no longer restore your Mac to this point. This cannot be undone.": {"ar": "لن تتمكن بعد ذلك من استعادة جهاز Mac إلى هذه النقطة. لا يمكن التراجع عن ذلك."},
+  "macOS removes these by itself when space runs low. Deleting one frees space now, but you can no longer restore from it. This cannot be undone.": {"ar": "يزيل macOS هذه اللقطات تلقائيًا عند قلة المساحة. حذف إحداها يحرر المساحة الآن، لكن لن تتمكن من الاستعادة منها. لا يمكن التراجع عن ذلك."},
+  "macOS removes these by itself when space runs low. To delete one now, install the System Helper in Settings.": {"ar": "يزيل macOS هذه اللقطات تلقائيًا عند قلة المساحة. لحذف إحداها الآن، ثبّت مساعد النظام من الإعدادات."}
+}

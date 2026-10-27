@@ -13,7 +13,7 @@ public enum HelperIdentity {
     /// The launchd property list inside `Contents/Library/LaunchDaemons`, registered with `SMAppService.daemon`.
     public static let daemonPlistName = helperIdentifier + ".plist"
     /// Bumped whenever the XPC protocol changes, so an old installed helper is noticed and replaced.
-    public static let protocolVersion = 1
+    public static let protocolVersion = 2
 
     /// What the helper requires of a client: Clenvra, signed by the team, through an Apple-issued certificate.
     public static let clientRequirement = requirement(for: appIdentifier)

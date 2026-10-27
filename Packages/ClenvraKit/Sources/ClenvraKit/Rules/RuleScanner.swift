@@ -48,7 +48,8 @@ public enum RuleScanner {
                 logicalSize: item.logical, allocatedSize: item.allocated, reclaimableSize: item.reclaimable,
                 modificationDate: item.entry.modificationDate, snapshot: FileSnapshot(item.entry),
                 ownerBundleID: owner,
-                status: status(of: item, owner: owner, policy: policy, ownerState: ownerState),
+                status: status(
+                    of: item, owner: owner, policy: policy, ownerState: ownerState, elevated: rule.elevation == .helper),
                 risk: item.isRecentlyActive ? .review : rule.risk)
         }
         .filter { $0.allocatedSize > 0 }  // empty items are noise, never worth a decision
@@ -275,10 +276,15 @@ public enum RuleScanner {
 
     private static func status(
         of item: FoundItem, owner: String?, policy: ProtectionPolicy,
-        ownerState: @Sendable (String) -> OwnerState
+        ownerState: @Sendable (String) -> OwnerState, elevated: Bool
     ) -> CandidateStatus {
         if let reason = policy.protection(for: item.path) { return .protected(reason) }
-        if !isRemovableByCurrentUser(item) { return .systemManaged }
+        // The helper acts as root, so folder permissions don't apply; protective flags and SIP still do.
+        if elevated {
+            if item.entry.flags & DeletionGate.protectiveFlags != 0 { return .systemManaged }
+        } else if !isRemovableByCurrentUser(item) {
+            return .systemManaged
+        }
         if let owner, ownerState(owner) != .notRunning { return .inUse }
         return .available
     }

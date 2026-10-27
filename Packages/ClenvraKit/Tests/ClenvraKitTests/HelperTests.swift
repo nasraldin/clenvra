@@ -106,6 +106,24 @@ struct HelperTests {
         #expect(!allowlist.permits(try item("Library/Preferences/com.vendor.plist", root: "Library/Caches")))
     }
 
+    @Test("a system leftover found during uninstall maps to the allowlisted folder that holds it")
+    func helperItemForLeftovers() throws {
+        try fixture.file("system/Library/Application Support/Vendor/data", bytes: 10)
+        try fixture.file("system/Library/LaunchDaemons/com.vendor.helper.plist", bytes: 10)
+        try fixture.file("system/Library/Preferences/com.vendor.plist", bytes: 10)
+        func mapped(_ relative: String) throws -> DeletionItem? {
+            let full = path("system/" + relative)
+            return allowlist.helperItem(
+                path: full, expected: try SafeWalk.resolve(full).snapshot, owner: "com.vendor.app", freedBytes: 10,
+                section: .applications)
+        }
+
+        #expect(try mapped("Library/Application Support/Vendor")?.ruleRoot == system + "/Library/Application Support")
+        #expect(
+            try mapped("Library/LaunchDaemons/com.vendor.helper.plist")?.ruleRoot == system + "/Library/LaunchDaemons")
+        #expect(try mapped("Library/Preferences/com.vendor.plist") == nil)
+    }
+
     // MARK: - Performing requests
 
     @Test("a path outside the allowlist is refused by the helper even though the app sent it (safety case S24)")

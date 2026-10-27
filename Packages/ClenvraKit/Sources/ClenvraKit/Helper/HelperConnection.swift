@@ -9,6 +9,11 @@ import Synchronization
     func perform(_ request: Data, reply: @escaping @Sendable (Data?) -> Void)
     /// A JSON `ActivityRecord` in; `nil` when it was put back, otherwise a JSON `RestoreError`.
     func restore(_ record: Data, reply: @escaping @Sendable (Data?) -> Void)
+    /// A JSON `DeletionItem` for a plist in /Library/LaunchDaemons or /Library/LaunchAgents and an operation ID in;
+    /// a JSON `ActivityRecord.Outcome` out.
+    func removeOrphanedLaunchItem(_ item: Data, operationID: String, reply: @escaping @Sendable (Data?) -> Void)
+    /// A snapshot date in; a `SnapshotDeletion` raw value out.
+    func deleteLocalSnapshot(_ date: String, reply: @escaping @Sendable (String?) -> Void)
 }
 
 /// Why a call to the helper did not get an answer.
@@ -44,6 +49,26 @@ public struct HelperClient: Sendable {
         guard let data else { return nil }
         guard let error = try? JSONDecoder().decode(RestoreError.self, from: data) else { throw .badReply }
         return error
+    }
+
+    public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async throws(HelperClientError)
+        -> ActivityRecord.Outcome
+    {
+        guard let payload = try? JSONEncoder().encode(item) else { throw .badReply }
+        let id = operationID.uuidString
+        let data: Data? = try await call { proxy, finish in
+            proxy.removeOrphanedLaunchItem(payload, operationID: id) { finish(.success($0)) }
+        }
+        guard let data, let outcome = try? JSONDecoder().decode(ActivityRecord.Outcome.self, from: data) else {
+            throw .badReply
+        }
+        return outcome
+    }
+
+    public func deleteLocalSnapshot(date: String) async throws(HelperClientError) -> SnapshotDeletion {
+        let raw: String? = try await call { proxy, finish in proxy.deleteLocalSnapshot(date) { finish(.success($0)) } }
+        guard let raw, let result = SnapshotDeletion(rawValue: raw) else { throw .badReply }
+        return result
     }
 
     private func call<Value: Sendable>(

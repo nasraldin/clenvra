@@ -29,6 +29,8 @@ struct PathText: View {
 /// Risk or status, always as icon + text + colour (never colour alone).
 struct StatusBadge: View {
     let candidate: CleanupCandidate
+    /// A system item that only the System Helper can remove, and the helper is not installed.
+    var needsHelper = false
 
     var body: some View {
         Label {
@@ -42,7 +44,8 @@ struct StatusBadge: View {
     }
 
     private var title: LocalizedStringResource {
-        switch candidate.status {
+        if needsHelper { return "Needs System Helper" }
+        return switch candidate.status {
         case .available: candidate.risk == .safe ? "Safe" : "Review"
         case .inUse: "In use"
         case .systemManaged: "Managed by macOS"
@@ -51,7 +54,8 @@ struct StatusBadge: View {
     }
 
     private var symbol: String {
-        switch candidate.status {
+        if needsHelper { return "lock.shield" }
+        return switch candidate.status {
         case .available: candidate.risk == .safe ? "checkmark.shield" : "exclamationmark.triangle"
         case .inUse: "app.badge.clock"
         case .systemManaged, .protected: "lock"
@@ -59,7 +63,8 @@ struct StatusBadge: View {
     }
 
     private var tint: Color {
-        switch candidate.status {
+        if needsHelper { return .secondary }
+        return switch candidate.status {
         case .available: candidate.risk == .safe ? .green : .orange
         case .inUse, .systemManaged, .protected: .secondary
         }
@@ -76,6 +81,8 @@ extension CleanupCategory {
         case .deviceBackups: "iPhone & iPad Backups"
         case .trash: "Trash"
         case .browserCaches: "Browser Caches"
+        case .systemCaches: "System Caches"
+        case .systemLogs: "System Logs"
         case .xcode: "Xcode"
         case .simulators: "Simulators"
         case .packageCaches: "Package Caches"
@@ -95,6 +102,10 @@ extension CleanupCategory {
         case .deviceBackups: "Local backups of iPhone and iPad. Removing one deletes that backup."
         case .trash: "Items already in the Trash. Emptying it cannot be undone."
         case .browserCaches: "Cached web content. History, passwords and sign-ins are kept."
+        case .systemCaches:
+            "Caches shared by all users, outside your home folder. Removed through the System Helper, into your Trash."
+        case .systemLogs:
+            "System-wide logs older than a week. Removed through the System Helper; old compressed logs are deleted for good."
         case .xcode: "Build data and device support files. Xcode recreates them; the next build is slower."
         case .simulators: "Simulator caches and devices that no longer have a runtime."
         case .packageCaches: "Downloaded packages kept by package managers. They are downloaded again when needed."
@@ -114,6 +125,8 @@ extension CleanupCategory {
         case .deviceBackups: "iphone"
         case .trash: "trash"
         case .browserCaches: "globe"
+        case .systemCaches: "internaldrive"
+        case .systemLogs: "doc.text.magnifyingglass"
         case .xcode: "hammer"
         case .simulators: "ipad.and.iphone"
         case .packageCaches: "archivebox"

@@ -17,6 +17,10 @@ final class AppEnvironment {
     private(set) var settings: UserSettings
     let settingsStore: SettingsStore
     private(set) var installedApps: [InstalledApp] = []
+    /// The optional privileged helper. Every call is pinned to its signature; sessions use it only when available.
+    let helper = HelperClient()
+    /// Installed, approved, and answering with this version's protocol.
+    private(set) var helperAvailable = false
     /// Available once the login-shell PATH is known (tools from Homebrew, nvm, volta… live there).
     private(set) var toolSession: ToolStorageSession?
 
@@ -33,10 +37,12 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var pluginsSession = PluginsSession(
         reader: PluginReader(home: home), deleter: makeDeleter { _ in .notRunning })
     @ObservationIgnored private(set) lazy var activitySession = ActivitySession(
-        activityLog: activityLog, reenabler: LaunchAgentReenabler(runner: ProcessCommandRunner()))
+        activityLog: activityLog, reenabler: LaunchAgentReenabler(runner: ProcessCommandRunner()), privileged: helper)
     @ObservationIgnored private(set) lazy var startupSession = StartupSession(
         reader: LaunchItemReader(), runner: ProcessCommandRunner(),
-        deleter: makeDeleter { _ in .notRunning })
+        deleter: makeDeleter { _ in .notRunning }, privileged: helper)
+    @ObservationIgnored private(set) lazy var snapshotsSession = SnapshotsSession(
+        runner: ProcessCommandRunner(), privileged: helper)
 
     init() {
         home = Self.canonicalHome()
@@ -77,15 +83,27 @@ final class AppEnvironment {
             log: activityLog)
     }
 
+    /// Asks the helper for its protocol version and tells every section whether system items can be removed.
+    func refreshHelper() async {
+        let available = (try? await helper.protocolVersion()) == HelperIdentity.protocolVersion
+        helperAvailable = available
+        cleanupSession.helperAvailable = available
+        startupSession.helperAvailable = available
+        appsSession.helperAvailable = available
+        snapshotsSession.helperAvailable = available
+    }
+
     private func makeSession(for section: ActivityRecord.Section) -> CleanupSession {
-        let rules = RuleCatalog.standard.filter {
-            section == .developer ? $0.category.isDeveloper : !$0.category.isDeveloper
-        }
+        let rules =
+            RuleCatalog.standard.filter {
+                section == .developer ? $0.category.isDeveloper : !$0.category.isDeveloper
+            } + (section == .cleanup ? RuleCatalog.system(root: "/") : [])
         let policy = policy
         let ownerState: @Sendable (String) -> OwnerState = { [ownership] in ownership.state(of: $0) }
         return CleanupSession(
             rules: rules, section: section, home: home, policy: policy, ownerState: ownerState,
-            deleter: makeDeleter(ownerState: ownerState))
+            deleter: makeDeleter(ownerState: ownerState), privileged: helper,
+            ownerBundlePath: { [ownership] in ownership.bundlePath(of: $0) })
     }
 
     private static func canonicalHome() -> String {
@@ -100,6 +118,7 @@ final class AppEnvironment {
 /// "unknown", which the deletion gate treats as running — nothing owned by an app is removed before we can tell.
 nonisolated final class OwnershipProvider: Sendable {
     private let activity = Mutex<OwnerActivity?>(nil)
+    private let paths = Mutex<[String: String]>([:])
 
     func update(apps: [InstalledApp]) {
         var paths: [String: String] = [:]
@@ -109,6 +128,12 @@ nonisolated final class OwnershipProvider: Sendable {
             }
         }
         activity.withLock { $0 = OwnerActivity(bundlePaths: paths) }
+        self.paths.withLock { $0 = paths }
+    }
+
+    /// Where an app with this bundle identifier is installed, so the helper can check it is not running.
+    func bundlePath(of bundleIdentifier: String) -> String? {
+        paths.withLock { $0[bundleIdentifier] }
     }
 
     func state(of bundleIdentifier: String) -> OwnerState {
@@ -121,7 +146,9 @@ extension CleanupCategory {
     var isDeveloper: Bool {
         switch self {
         case .xcode, .simulators, .packageCaches, .projectArtifacts, .ideCaches, .containers: true
-        case .appCaches, .logs, .crashReports, .installers, .deviceBackups, .trash, .browserCaches: false
+        case .appCaches, .logs, .crashReports, .installers, .deviceBackups, .trash, .browserCaches, .systemCaches,
+            .systemLogs:
+            false
         }
     }
 }

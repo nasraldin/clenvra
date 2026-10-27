@@ -14,6 +14,7 @@ struct ClenvraApp: App {
                 .frame(minWidth: 900, minHeight: 560)
                 .task { await environment.loadInstalledApps() }
                 .task { await environment.prepareTools() }
+                .task { await environment.refreshHelper() }
                 .sheet(
                     isPresented: Binding(
                         get: { !hasSeenPermissionsGuide && !dismissedPermissionsGuide },

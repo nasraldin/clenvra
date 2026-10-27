@@ -217,6 +217,7 @@ enum ApplicationsServices {
             resolver: OwnershipResolver(
                 home: environment.home, policy: policy,
                 receipts: OwnershipResolver.pkgutilReceipts(runner: ProcessCommandRunner())),
+            privileged: environment.helper,
             discover: { @MainActor in
                 await environment.loadInstalledApps()
                 return environment.installedApps

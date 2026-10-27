@@ -5,6 +5,8 @@ import SwiftUI
 /// Installs and removes the optional administrator helper. Off by default; Clenvra works fully without it and shows
 /// system items in Finder instead.
 struct HelperSettingsSection: View {
+    /// Tells the rest of the app the helper's state changed.
+    var onChange: () async -> Void = {}
     @State private var status = SMAppService.Status.notRegistered
     @State private var connection: ConnectionState = .unknown
     @State private var isWorking = false
@@ -102,6 +104,7 @@ struct HelperSettingsSection: View {
     private func refresh() async {
         status = service.status
         if status == .enabled { await checkConnection() }
+        await onChange()
     }
 
     private func checkConnection() async {
@@ -110,6 +113,7 @@ struct HelperSettingsSection: View {
         } catch {
             connection = .unavailable
         }
+        await onChange()
     }
 
     private func install() {
@@ -124,6 +128,7 @@ struct HelperSettingsSection: View {
         }
         status = service.status
         if status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+        Task { await refresh() }
     }
 
     private func uninstall() async {
@@ -137,5 +142,6 @@ struct HelperSettingsSection: View {
         }
         status = service.status
         connection = .unknown
+        await onChange()
     }
 }

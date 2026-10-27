@@ -130,6 +130,7 @@ extension SafetyRefusal {
         case .differentVolume: "It is on another disk."
         case .flagged: "It is locked or protected by macOS."
         case .inUse: "The app that uses it is open."
+        case .programStillInstalled: "Its program is still installed, so it is not left over."
         case .ioError: "macOS reported an error."
         }
     }

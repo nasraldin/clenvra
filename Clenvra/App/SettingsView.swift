@@ -110,7 +110,7 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            HelperSettingsSection()
+            HelperSettingsSection(onChange: { await environment.refreshHelper() })
         }
         .formStyle(.grouped)
         .frame(width: 520, height: 640)

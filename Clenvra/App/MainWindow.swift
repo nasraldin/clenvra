@@ -41,7 +41,7 @@ struct MainWindow: View {
             case .activity:
                 ActivityView(session: environment.activitySession)
             case .system:
-                SystemView(session: environment.systemSession)
+                SystemView(session: environment.systemSession, snapshots: environment.snapshotsSession)
             case .startup:
                 StartupView(session: environment.startupSession, installedApps: environment.installedApps)
             case let section?:
