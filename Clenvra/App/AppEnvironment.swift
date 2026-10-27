@@ -143,12 +143,5 @@ nonisolated final class OwnershipProvider: Sendable {
 
 extension CleanupCategory {
     /// Developer-tool categories live in the Developer section; the rest in Cleanup.
-    var isDeveloper: Bool {
-        switch self {
-        case .xcode, .simulators, .packageCaches, .projectArtifacts, .ideCaches, .containers: true
-        case .appCaches, .logs, .crashReports, .installers, .deviceBackups, .trash, .browserCaches, .systemCaches,
-            .systemLogs:
-            false
-        }
-    }
+    var isDeveloper: Bool { section == .developer }
 }
