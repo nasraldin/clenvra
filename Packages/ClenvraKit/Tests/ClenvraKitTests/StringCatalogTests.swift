@@ -46,6 +46,15 @@ struct StringCatalogTests {
         #expect(try StringCatalogAudit.untranslatedKeys(in: catalog, languages: ["ar"]) == ["%lld items (ar)"])
     }
 
+    @Test("the audit scans only this repository, never sibling projects next to it")
+    func scansOnlyThisRepository() throws {
+        let root = try #require(StringCatalogAudit.repositoryRoot(from: #filePath))
+        #expect(FileManager.default.fileExists(atPath: root.appending(path: "Clenvra.xcworkspace").path))
+        for url in StringCatalogAudit.catalogsInRepository() {
+            #expect(url.path.hasPrefix(root.path + "/"))
+        }
+    }
+
     @Test("every string catalog in the repository is fully translated into Arabic")
     func repositoryCatalogsAreComplete() throws {
         let catalogs = StringCatalogAudit.catalogsInRepository()
