@@ -1,5 +1,7 @@
 import Darwin
 import Foundation
+import Observation
+import Synchronization
 import Testing
 
 @testable import ClenvraKit
@@ -102,17 +104,24 @@ struct CleanupSessionTests {
     @Test("results appear group by group while the scan is still running")
     func progressiveResults() async {
         let session = session()
-        var observedPartial = false
-        let observer = Task { @MainActor in
-            while !Task.isCancelled {
-                if case .scanning = session.phase, !session.groups.isEmpty { observedPartial = true }
-                await Task.yield()
-            }
+        let phaseAtFirstResults = Mutex<CleanupSession.Phase?>(nil)
+        // Observation calls this synchronously, on the main actor, just before the first change to `groups`; the
+        // scan is still running if fewer rules than the total have finished at that moment.
+        withObservationTracking {
+            _ = session.groups
+        } onChange: {
+            MainActor.assumeIsolated { phaseAtFirstResults.withLock { $0 = session.phase } }
         }
-        await session.scan()
-        observer.cancel()
 
-        #expect(observedPartial)
+        await session.scan()
+
+        let phase = phaseAtFirstResults.withLock { $0 }
+        guard case .scanning(let completed, let total)? = phase else {
+            Issue.record("groups changed outside a scan: \(String(describing: phase))")
+            return
+        }
+        #expect(completed < total)
+        #expect(!session.groups.isEmpty)
     }
 
     @Test("a dry run reports what would be removed and changes nothing")
