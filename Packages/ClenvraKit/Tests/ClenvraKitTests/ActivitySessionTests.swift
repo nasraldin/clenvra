@@ -184,6 +184,70 @@ struct ActivitySessionTests {
         #expect(lines[1].contains(",storage,/Volumes/x,"))
     }
 
+    @Test("Markdown report has a title, the period, totals and one escaped row per item")
+    func markdownReport() async throws {
+        let op = UUID()
+        let restored = try trashed(name: "back.bin", op: op)
+        let session = try await loadedSession(records: [
+            record(
+                op: op, date: Date(timeIntervalSince1970: 0), path: "/a|b\nc.dmg", bytes: 10,
+                outcome: .movedToTrash(trashPath: "/Trash/x")),
+            record(
+                op: op, date: Date(timeIntervalSince1970: 60), path: "/Downloads/تقارير/الملف.txt", bytes: 20,
+                outcome: .removedPermanently),
+            record(op: op, date: Date(timeIntervalSince1970: 120), path: "/s", bytes: 30, outcome: .skipped(.inUse)),
+            record(
+                op: UUID(), date: Date(timeIntervalSince1970: 86_400), section: .developer, path: "/f", bytes: 40,
+                outcome: .failed(errno: EIO)),
+            restored,
+        ])
+        #expect(await session.restore(itemPath: restored.itemPath, operationID: op) == nil)
+
+        let report = session.exportMarkdown()
+        let lines = report.components(separatedBy: "\n")
+
+        #expect(lines[0] == "# Clenvra Activity Report")
+        #expect(report.contains("Period: 1970-01-01T00:00:00Z – 2027-01-15T08:00:00Z"))
+        #expect(report.contains("- Moved to Trash: 1\n"))
+        #expect(report.contains("- Removed permanently: 1\n"))
+        #expect(report.contains("- Put back: 1\n"))
+        #expect(report.contains("- Skipped: 1\n"))
+        #expect(report.contains("- Failed: 1\n"))
+        #expect(report.contains("- Bytes freed: 30\n"))
+        #expect(report.contains("| Date | Section | Path | Bytes | Outcome |"))
+        #expect(report.contains("| 1970-01-01T00:00:00Z | cleanup | /a\\|b<br>c.dmg | 10 | movedToTrash |"))
+        #expect(
+            report.contains(
+                "| 1970-01-01T00:01:00Z | cleanup | /Downloads/تقارير/الملف.txt | 20 | removedPermanently |"))
+        #expect(report.contains("| 1970-01-02T00:00:00Z | developer | /f | 40 | failed |"))
+        #expect(report.contains("| 3 | restored |"))
+        #expect(lines.filter { $0.hasPrefix("| ") }.count == 7)  // header, separator, five items
+        #expect(report == session.exportMarkdown())
+    }
+
+    @Test("Markdown report neutralises HTML and honours the section filter")
+    func markdownReportIsFilteredAndEscaped() async throws {
+        let session = try await loadedSession(records: [
+            record(op: UUID(), section: .cleanup, path: "/x/<script>&\r"),
+            record(op: UUID(), date: Date(timeIntervalSince1970: 1_800_001_000), section: .storage, path: "/v"),
+        ])
+
+        #expect(session.exportMarkdown().contains("/x/&lt;script&gt;&amp;<br>"))
+        session.sectionFilter = .storage
+        let report = session.exportMarkdown()
+        #expect(!report.contains("/x/"))
+        #expect(report.contains("| storage | /v | 100 | wouldDelete |"))
+        #expect(report.contains("Period: 2027-01-15T08:16:40Z – 2027-01-15T08:16:40Z"))
+    }
+
+    @Test("an empty Markdown report says there is no activity")
+    func markdownReportEmpty() async throws {
+        let session = try await loadedSession(records: [])
+        let report = session.exportMarkdown()
+        #expect(report.contains("No activity."))
+        #expect(!report.contains("| Date |"))
+    }
+
     // MARK: - Restore
 
     @Test("an item Clenvra moved to the Trash is put back and reported as restored")

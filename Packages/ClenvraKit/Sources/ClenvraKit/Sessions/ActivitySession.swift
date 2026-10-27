@@ -29,7 +29,7 @@ public enum RestoreReason: Sendable, Equatable, Hashable, CaseIterable {
 @MainActor
 /// Everything the activity log says, in a shape the Activity section can display: log records
 /// grouped into operations, newest first, with one final-outcome row per item, plus Put Back
-/// for items still in the Trash and CSV export of the current view.
+/// for items still in the Trash and CSV or Markdown export of the current view.
 public final class ActivitySession {
     /// One item of an operation, showing the outcome that actually happened (never the intent record).
     public struct Item: Sendable, Equatable, Identifiable {
@@ -90,16 +90,21 @@ public final class ActivitySession {
     }
 
     private let activityLog: ActivityLog
+    private let reenabler: LaunchAgentReenabler?
     /// Items put back from the Trash, keyed by operation ID and path; rebuilt from `.restored` log records.
     private var restoredKeys: Set<String> = []
+    /// Startup items loaded again after Put Back during this run, keyed like `restoredKeys`.
+    private var reenabledKeys: Set<String> = []
     private static let iso8601: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.timeZone = TimeZone.gmt
         return formatter
     }()
 
-    public init(activityLog: ActivityLog) {
+    /// - Parameter reenabler: offers loading a put-back startup agent again; `nil` never offers it.
+    public init(activityLog: ActivityLog, reenabler: LaunchAgentReenabler? = nil) {
         self.activityLog = activityLog
+        self.reenabler = reenabler
     }
 
     /// Loads every record the log holds and rebuilds the operations. A read failure leaves the
@@ -145,6 +150,39 @@ public final class ActivitySession {
         }
     }
 
+    // MARK: - Re-enabling startup items
+
+    /// Whether the item is a startup agent that was put back and can now be loaded again (SB-3).
+    public func canReenable(itemPath: String, operationID: UUID) -> Bool {
+        guard let reenabler, let item = item(itemPath: itemPath, operationID: operationID),
+            isRestored(itemPath: itemPath, operationID: operationID),
+            !isReenabled(itemPath: itemPath, operationID: operationID)
+        else { return false }
+        return reenabler.canReenable(item.record)
+    }
+
+    /// Whether the startup agent was loaded again after Put Back during this run.
+    public func isReenabled(itemPath: String, operationID: UUID) -> Bool {
+        reenabledKeys.contains(Self.restoredKey(itemPath: itemPath, operationID: operationID))
+    }
+
+    /// Loads a put-back startup agent again with `launchctl bootstrap`; refused until the item was put back.
+    @discardableResult
+    public func reenable(itemPath: String, operationID: UUID) async -> LaunchAgentReenabler.Outcome {
+        guard let reenabler, let item = item(itemPath: itemPath, operationID: operationID),
+            isRestored(itemPath: itemPath, operationID: operationID)
+        else { return .notAllowed }
+        let outcome = await reenabler.reenable(item.record)
+        if outcome == .enabled || outcome == .alreadyEnabled {
+            reenabledKeys.insert(Self.restoredKey(itemPath: itemPath, operationID: operationID))
+        }
+        return outcome
+    }
+
+    private func item(itemPath: String, operationID: UUID) -> Item? {
+        operations.first { $0.id == operationID }?.items.first { $0.path == itemPath }
+    }
+
     /// The currently visible view as CSV (RFC 4180 quoting, CRLF line endings, ISO-8601 UTC dates),
     /// so the user can keep exactly what they see in the Activity list.
     public func exportCSV() -> String {
@@ -162,6 +200,74 @@ public final class ActivitySession {
             }
         }
         return lines.joined(separator: "\r\n") + "\r\n"
+    }
+
+    /// The currently visible view as a Markdown report (period, totals, one row per item, ISO-8601 UTC dates),
+    /// readable by people where the CSV is for spreadsheets. Items put back count as put back, not as freed.
+    public func exportMarkdown() -> String {
+        let rows = visibleOperations.flatMap { operation in
+            operation.items.map { item in
+                (item: item, restored: isRestored(itemPath: item.path, operationID: operation.id))
+            }
+        }
+        var lines = ["# Clenvra Activity Report", ""]
+        let dates = rows.map(\.item.record.date)
+        guard let first = dates.min(), let last = dates.max() else {
+            lines.append("No activity.")
+            return lines.joined(separator: "\n") + "\n"
+        }
+        lines.append("Period: \(Self.iso8601.string(from: first)) – \(Self.iso8601.string(from: last))")
+
+        var moved = 0
+        var removed = 0
+        var putBack = 0
+        var wouldDelete = 0
+        var skipped = 0
+        var failed = 0
+        var freed: Int64 = 0
+        for row in rows {
+            if row.restored {
+                putBack += 1
+                continue
+            }
+            switch row.item.outcome {
+            case .intent, .restored: break
+            case .movedToTrash:
+                moved += 1
+                freed += row.item.bytes
+            case .removedPermanently:
+                removed += 1
+                freed += row.item.bytes
+            case .wouldDelete: wouldDelete += 1
+            case .skipped, .anomaly, .notAttempted: skipped += 1
+            case .failed: failed += 1
+            }
+        }
+        lines += [
+            "", "## Totals", "",
+            "- Moved to Trash: \(moved)",
+            "- Removed permanently: \(removed)",
+            "- Put back: \(putBack)",
+            "- Would delete (dry run): \(wouldDelete)",
+            "- Skipped: \(skipped)",
+            "- Failed: \(failed)",
+            "- Bytes freed: \(freed)",
+            "", "## Items", "",
+            "| Date | Section | Path | Bytes | Outcome |",
+            "| --- | --- | --- | ---: | --- |",
+        ]
+        for row in rows {
+            let record = row.item.record
+            let cells = [
+                Self.iso8601.string(from: record.date),
+                record.section.rawValue,
+                Self.markdownCell(record.itemPath),
+                String(record.bytes),
+                Self.token(for: row.restored ? .restored : record.outcome),
+            ]
+            lines.append("| " + cells.joined(separator: " | ") + " |")
+        }
+        return lines.joined(separator: "\n") + "\n"
     }
 
     // MARK: - Grouping
@@ -237,6 +343,27 @@ public final class ActivitySession {
         case .anomaly: "anomaly"
         case .notAttempted: "notAttempted"
         }
+    }
+
+    /// Keeps a path inside one table cell, shown literally: backslashes and pipes are escaped, HTML-significant
+    /// characters become entities, and line breaks become `<br>`.
+    private static func markdownCell(_ value: String) -> String {
+        var cell = ""
+        var previousWasCR = false
+        for scalar in value.unicodeScalars {
+            defer { previousWasCR = scalar == "\r" }
+            switch scalar {
+            case "\\": cell += "\\\\"
+            case "|": cell += "\\|"
+            case "&": cell += "&amp;"
+            case "<": cell += "&lt;"
+            case ">": cell += "&gt;"
+            case "\r": cell += "<br>"
+            case "\n": if !previousWasCR { cell += "<br>" }
+            default: cell.unicodeScalars.append(scalar)
+            }
+        }
+        return cell
     }
 
     /// RFC 4180: fields containing a comma, quote or line break are quoted, with embedded quotes doubled.

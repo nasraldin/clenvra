@@ -47,10 +47,13 @@ public final class AppsSession {
     public struct Homebrew: Sendable {
         public let brew: String
         public let runner: any CommandRunning
+        /// Where each cask records its install options; `nil` uses the Caskroom next to `brew`.
+        public let caskroom: String?
 
-        public init(brew: String, runner: any CommandRunning) {
+        public init(brew: String, runner: any CommandRunning, caskroom: String? = nil) {
             self.brew = brew
             self.runner = runner
+            self.caskroom = caskroom
         }
     }
 
@@ -115,7 +118,7 @@ public final class AppsSession {
 
     private var sizes: [String: Int64] = [:]
     private var lastUsedDates: [String: Date] = [:]
-    private var caskTokens: [String: String] = [:]
+    private var casks = HomebrewCaskIndex()
     @ObservationIgnored private var measuring: Set<String> = []
     @ObservationIgnored private var resolveGeneration = 0
     @ObservationIgnored private var homebrewRun = 0
@@ -178,7 +181,8 @@ public final class AppsSession {
                     ids.compactMap { id in lastUsed(id).map { (id, $0) } }, uniquingKeysWith: { first, _ in first })
             }) ?? [:]
         if let homebrew {
-            caskTokens = await HomebrewCasks.installedAppTokens(brew: homebrew.brew, runner: homebrew.runner)
+            casks = await HomebrewCasks.installedCasks(
+                brew: homebrew.brew, runner: homebrew.runner, caskroom: homebrew.caskroom)
         }
         apps = found
         lastUsedDates = dates
@@ -253,7 +257,7 @@ public final class AppsSession {
     public func homebrewToken(for app: InstalledApp) -> String? {
         if case .homebrew(let token) = app.source { return token }
         guard !app.isProtected else { return nil }
-        return caskTokens[(app.id as NSString).lastPathComponent.lowercased()]
+        return casks.token(forAppAt: app.id)
     }
 
     /// Measures one bundle once (rows call this as they appear); cancelled or partial scans are not cached.

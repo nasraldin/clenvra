@@ -146,4 +146,50 @@ struct StartupSessionTests {
         #expect(!session.canRemove(item))
         #expect(await session.remove(item) == .notAllowed)
     }
+    @Test("a removed agent can be put back and re-enabled from Activity, once, and only after Put Back (SB-3)")
+    func putBackAndReenable() async throws {
+        let plist = path("home/Library/LaunchAgents/com.vendor.orphan.plist")
+        let uid = getuid()
+        runner.stub("/bin/launchctl", ["bootout", "gui/501", plist])
+        runner.stub("/bin/launchctl", ["print", "gui/\(uid)/com.vendor.orphan"], status: 113)
+        runner.stub("/bin/launchctl", ["bootstrap", "gui/\(uid)", plist])
+        let startup = session()
+        await startup.load(installedApps: [])
+        let item = try #require(startup.items.first { $0.label == "com.vendor.orphan" })
+        #expect(await startup.remove(item) == .removed)
+
+        let activity = ActivitySession(
+            activityLog: ActivityLog(directory: fixture.url("log")),
+            reenabler: LaunchAgentReenabler(
+                runner: runner, userAgentsDirectory: path("home/Library/LaunchAgents"), userID: uid))
+        await activity.load()
+        let operation = try #require(activity.operations.first)
+        #expect(!activity.canReenable(itemPath: plist, operationID: operation.id))
+        #expect(await activity.reenable(itemPath: plist, operationID: operation.id) == .notAllowed)
+
+        #expect(await activity.restore(itemPath: plist, operationID: operation.id) == nil)
+        #expect(activity.canReenable(itemPath: plist, operationID: operation.id))
+        #expect(await activity.reenable(itemPath: plist, operationID: operation.id) == .enabled)
+
+        #expect(runner.commands.last?.arguments == ["bootstrap", "gui/\(uid)", plist])
+        #expect(activity.isReenabled(itemPath: plist, operationID: operation.id))
+        #expect(!activity.canReenable(itemPath: plist, operationID: operation.id))
+    }
+
+    @Test("without a re-enabler, Activity never offers re-enabling")
+    func noReenabler() async throws {
+        let plist = path("home/Library/LaunchAgents/com.vendor.orphan.plist")
+        runner.stub("/bin/launchctl", ["bootout", "gui/501", plist])
+        let startup = session()
+        await startup.load(installedApps: [])
+        let item = try #require(startup.items.first { $0.label == "com.vendor.orphan" })
+        #expect(await startup.remove(item) == .removed)
+        let activity = ActivitySession(activityLog: ActivityLog(directory: fixture.url("log")))
+        await activity.load()
+        let operation = try #require(activity.operations.first)
+        #expect(await activity.restore(itemPath: plist, operationID: operation.id) == nil)
+
+        #expect(!activity.canReenable(itemPath: plist, operationID: operation.id))
+        #expect(await activity.reenable(itemPath: plist, operationID: operation.id) == .notAllowed)
+    }
 }

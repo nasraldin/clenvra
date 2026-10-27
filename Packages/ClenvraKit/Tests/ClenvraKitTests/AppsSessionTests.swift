@@ -293,7 +293,7 @@ struct AppsSessionTests {
                 ]}
                 """)
         runner.stub(brew, ["uninstall", "--cask", "firefox"], stdout: "==> Uninstalling Cask firefox\n")
-        let session = session(homebrew: .init(brew: brew, runner: runner))
+        let session = session(homebrew: .init(brew: brew, runner: runner, caskroom: fixture.home + "/Caskroom"))
         await session.load()
 
         session.filter = .homebrew
@@ -312,16 +312,25 @@ struct AppsSessionTests {
         #expect(session.apps.map(\.name) == ["Writer"])
     }
 
-    @Test("brew info output maps targets and drops names claimed by two casks")
-    func caskParsing() {
-        let json = """
-            {"casks": [
-              {"token": "a", "artifacts": [{"app": ["A.app"]}, {"app": ["Shared.app"]}]},
-              {"token": "b", "artifacts": [{"app": ["Shared.app"]}, {"app": ["Src.app", {"target": "Target.app"}]}]},
-              {"token": "c", "artifacts": [{"uninstall": [{"quit": "x"}]}]}
-            ]}
-            """
-        #expect(HomebrewCasks.appTokens(fromInfoJSON: Data(json.utf8)) == ["a.app": "a", "target.app": "b"])
+    @Test("a cask installed with a custom --appdir is matched by the location Homebrew reports, not by name")
+    func homebrewCustomAppdir() async throws {
+        let app = try fixture.app("org.mozilla.firefox", name: "Firefox")
+        let brew = "/opt/homebrew/bin/brew"
+        let runner = FakeCommandRunner()
+        runner.stub(
+            brew, ["info", "--json=v2", "--installed", "--cask"],
+            stdout: """
+                {"casks": [
+                  {"token": "firefox", "artifacts": [{"app": ["Firefox.app"], "target": "\(app.id)"}]},
+                  {"token": "elsewhere", "artifacts": [{"app": ["Writer.app"], "target": "/Applications/Writer.app"}]}
+                ]}
+                """)
+        let writer = try fixture.app("com.example.writer", name: "Writer")
+        let session = session(homebrew: .init(brew: brew, runner: runner, caskroom: fixture.home + "/Caskroom"))
+        await session.load()
+
+        #expect(session.homebrewToken(for: app) == "firefox")
+        #expect(session.homebrewToken(for: writer) == nil)
     }
 
     // MARK: - Leftovers
