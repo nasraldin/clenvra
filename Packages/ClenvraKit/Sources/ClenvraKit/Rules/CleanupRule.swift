@@ -13,8 +13,22 @@ public enum CleanupCategory: String, Sendable, Hashable, Codable, CaseIterable {
     case appCaches, logs, crashReports, installers, deviceBackups, trash, browserCaches
     /// Outside the home folder; removed through the privileged helper (M13).
     case systemCaches, systemLogs
+    case mailAttachments, temporaryFiles, emptyFolders
     case xcode, simulators, packageCaches, projectArtifacts, ideCaches, containers
     case aiModels
+}
+
+extension CleanupCategory {
+    /// Which app section this category belongs to.
+    public var section: ActivityRecord.Section {
+        switch self {
+        case .xcode, .simulators, .packageCaches, .projectArtifacts, .ideCaches, .containers, .aiModels:
+            .developer
+        case .appCaches, .logs, .crashReports, .installers, .deviceBackups, .trash, .browserCaches,
+            .systemCaches, .systemLogs, .mailAttachments, .temporaryFiles, .emptyFolders:
+            .cleanup
+        }
+    }
 }
 
 /// Where a rule looks. Home-relative roots make rules portable across Macs and user names.
@@ -25,7 +39,7 @@ public enum RuleRoot: Sendable, Hashable {
     public func path(home: String) -> String {
         switch self {
         case .home(let relative): relative.isEmpty ? home : home + "/" + relative
-        case .absolute(let path): path
+        case .absolute(let path): path.hasSuffix("/") && path.count > 1 ? String(path.dropLast()) : path
         }
     }
 }
@@ -40,8 +54,8 @@ public struct Age: Sendable, Hashable {
 /// What inside the root is offered.
 public enum Selection: Sendable, Hashable {
     /// Each direct child of the root is one item (e.g. one cache folder per app), except names that more
-    /// specific rules own.
-    case children(excluding: Set<String> = [])
+    /// specific rules own. When `minimumAge` is specified, items modified more recently are left alone.
+    case children(excluding: Set<String> = [], minimumAge: Age? = nil)
     /// Only the listed direct children (e.g. an editor's cache folders, never its settings).
     case named(Set<String>)
     /// Files anywhere below the root (up to `maximumDepth` folders deep) with one of the extensions,
@@ -50,6 +64,8 @@ public enum Selection: Sendable, Hashable {
     /// Build-output folders inside code projects (up to `maximumDepth` folders deep). A folder is offered only when
     /// one of its kind's marker files sits next to it; projects active within `inactivity` are offered for review only.
     case projectArtifacts([ArtifactKind], inactivity: Age, maximumDepth: Int)
+    /// Folders with no files at any depth (only empty subfolders or `.DS_Store`), never the root itself.
+    case emptyFolders(maximumDepth: Int = 10)
 }
 
 /// A regenerable project folder and the files that prove it belongs to a project (e.g. node_modules ← package.json).

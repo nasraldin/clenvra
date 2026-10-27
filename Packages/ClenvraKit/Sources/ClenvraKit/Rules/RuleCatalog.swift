@@ -1,8 +1,20 @@
+import Foundation
+
 /// The built-in cleanup rules. Adding a category is adding a row here; the scanner, deletion gate and review UI
 /// are shared. Rules whose root does not exist on a Mac (tool not installed) simply produce nothing.
 public enum RuleCatalog {
-    public static let standard: [CleanupRule] =
-        system + trash + browsers + deviceBackups + xcode + editors + projects
+    public static var defaultTemporaryDirectory: String {
+        ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory()
+    }
+
+    public static func standard(temporaryDirectory: String = defaultTemporaryDirectory) -> [CleanupRule] {
+        system + trash + browsers + deviceBackups + mailAttachments + [temporaryFilesRule(root: temporaryDirectory)]
+            + emptyFolders + xcode + editors + projects
+    }
+
+    public static var standard: [CleanupRule] {
+        standard(temporaryDirectory: defaultTemporaryDirectory)
+    }
 
     // MARK: - System and app junk
 
@@ -112,6 +124,49 @@ public enum RuleCatalog {
             id: "deviceBackups.firmware", category: .deviceBackups, root: .home("Library/iTunes"),
             selection: .files(extensions: ["ipsw"], minimumAge: nil, maximumDepth: 2), risk: .safe,
             action: .moveToTrash, ownership: .none),
+    ]
+
+    // MARK: - Mail attachments
+
+    /// Downloaded copies of attachments Mail keeps locally. The mailbox itself (~/Library/Mail) is protected.
+    public static let mailAttachments: [CleanupRule] = [
+        CleanupRule(
+            id: "mailAttachments.container", category: .mailAttachments,
+            root: .home("Library/Containers/com.apple.mail/Data/Library/Mail Downloads"),
+            selection: .children(), risk: .review, action: .moveToTrash,
+            ownership: .fixed("com.apple.mail")),
+        CleanupRule(
+            id: "mailAttachments.legacy", category: .mailAttachments,
+            root: .home("Library/Mail Downloads"),
+            selection: .children(), risk: .review, action: .moveToTrash,
+            ownership: .fixed("com.apple.mail")),
+    ]
+
+    // MARK: - Temporary files
+
+    /// The user's temporary directory items older than 3 days. Injectable for testing.
+    public static func temporaryFilesRule(root: String = defaultTemporaryDirectory) -> CleanupRule {
+        CleanupRule(
+            id: "temporaryFiles.user", category: .temporaryFiles,
+            root: .absolute(root),
+            selection: .children(minimumAge: .days(3)),
+            risk: .review, action: .moveToTrash,
+            ownership: .bundleIdentifierFromName)
+    }
+
+    // MARK: - Empty folders
+
+    /// Folders with no files at any depth inside user standard folders; never pre-selected and never the roots.
+    public static let emptyFolders: [CleanupRule] = [
+        CleanupRule(
+            id: "emptyFolders.downloads", category: .emptyFolders, root: .home("Downloads"),
+            selection: .emptyFolders(), risk: .review, action: .moveToTrash, ownership: .none),
+        CleanupRule(
+            id: "emptyFolders.desktop", category: .emptyFolders, root: .home("Desktop"),
+            selection: .emptyFolders(), risk: .review, action: .moveToTrash, ownership: .none),
+        CleanupRule(
+            id: "emptyFolders.documents", category: .emptyFolders, root: .home("Documents"),
+            selection: .emptyFolders(), risk: .review, action: .moveToTrash, ownership: .none),
     ]
 
     // MARK: - Xcode and simulators

@@ -33,7 +33,7 @@ struct CleanupCoverageTests {
 
     private func scanCatalog(running: Set<String> = []) async -> [String: [CleanupCandidate]] {
         var found: [String: [CleanupCandidate]] = [:]
-        for rule in RuleCatalog.standard {
+        for rule in RuleCatalog.standard(temporaryDirectory: path("tmp")) {
             let result = await RuleScanner.scan(
                 rule, home: home, policy: ProtectionPolicy(home: home),
                 ownerState: { running.contains($0) ? .running : .notRunning })
@@ -105,7 +105,7 @@ struct CleanupCoverageTests {
     func nestedRootsNeverOverlap() {
         let home = "/Users/u"
         for outer in RuleCatalog.standard {
-            guard case .children(let excluded) = outer.selection else { continue }
+            guard case .children(let excluded, _) = outer.selection else { continue }
             let outerRoot = outer.root.path(home: home)
             for inner in RuleCatalog.standard where inner.id != outer.id {
                 let innerRoot = inner.root.path(home: home)

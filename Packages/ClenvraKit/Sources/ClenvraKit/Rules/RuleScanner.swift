@@ -15,10 +15,11 @@ public enum RuleScanner {
         let found: FoundItems
         do {
             switch rule.selection {
-            case .children(let excluded):
-                found = try await children(of: rootPath, executor: executor) { !excluded.contains($0) }
+            case .children(let excluded, let minimumAge):
+                let cutoff = minimumAge.map { now.addingTimeInterval(-$0.seconds) }
+                found = try await children(of: rootPath, cutoff: cutoff, executor: executor) { !excluded.contains($0) }
             case .named(let names):
-                found = try await children(of: rootPath, executor: executor) { names.contains($0) }
+                found = try await children(of: rootPath, cutoff: nil, executor: executor) { names.contains($0) }
             case .projectArtifacts(let kinds, let inactivity, let maximumDepth):
                 let cutoff = now.addingTimeInterval(-inactivity.seconds)
                 found = try await projectArtifacts(
@@ -28,6 +29,10 @@ public enum RuleScanner {
                 let lowercased = Set(extensions.map { $0.lowercased() })
                 found = try await executor.run {
                     try files(below: rootPath, extensions: lowercased, cutoff: cutoff, maximumDepth: maximumDepth)
+                }
+            case .emptyFolders(let maximumDepth):
+                found = try await executor.run {
+                    try emptyFolders(below: rootPath, maximumDepth: maximumDepth)
                 }
             }
         } catch let error as FileSystemError where error.code == ENOENT || error.code == ENOTDIR {
@@ -52,7 +57,12 @@ public enum RuleScanner {
                     of: item, owner: owner, policy: policy, ownerState: ownerState, elevated: rule.elevation == .helper),
                 risk: item.isRecentlyActive ? .review : rule.risk)
         }
-        .filter { $0.allocatedSize > 0 }  // empty items are noise, never worth a decision
+        .filter {
+            switch rule.selection {
+            case .emptyFolders: true
+            default: $0.allocatedSize > 0
+            }
+        }
         .sorted(by: CleanupCandidate.largestFreedFirst)
 
         return RuleScanResult(rule: rule, rootExists: true, candidates: candidates, skipped: found.skipped)
@@ -78,7 +88,7 @@ public enum RuleScanner {
 
     /// Direct children of the root; folder sizes come from one storage scan of the root.
     private static func children(
-        of rootPath: String, executor: FSExecutor, including isIncluded: (String) -> Bool
+        of rootPath: String, cutoff: Date?, executor: FSExecutor, including isIncluded: (String) -> Bool
     ) async throws -> FoundItems {
         let listing = try await executor.run { try OpenDirectory(path: rootPath).read() }
         let entries = listing.entries.filter { isIncluded($0.name) }
@@ -91,13 +101,24 @@ public enum RuleScanner {
         var found = FoundItems()
         for entry in entries {
             let path = rootPath + "/" + entry.name
+            if cutoff != nil {
+                // When age filtering is active (e.g. temporary files), skip sockets and anything not a regular file or folder.
+                guard entry.kind == .file || entry.kind == .directory else { continue }
+            } else {
+                guard entry.kind != .other else { continue }
+            }
             if entry.kind == .directory {
                 let aggregate = snapshot?.aggregate(at: path)
+                if let cutoff {
+                    if entry.modificationDate > cutoff { continue }
+                    if let latest = aggregate?.latestModification, latest > cutoff { continue }
+                }
                 found.items.append(
                     FoundItem(
                         path: path, name: entry.name, entry: entry, logical: aggregate?.logical ?? 0,
                         allocated: aggregate?.allocated ?? 0, reclaimable: aggregate?.reclaimable ?? 0))
             } else {
+                if let cutoff, entry.modificationDate > cutoff { continue }
                 found.items.append(item(entry, at: path))
             }
         }
@@ -220,6 +241,134 @@ public enum RuleScanner {
         }
     }
 
+    // MARK: - Empty folders
+
+    private static let packageExtensions: Set<String> = [
+        "app", "photoslibrary", "bundle", "framework", "plugin", "kext", "savedstate", "pkg", "download",
+        "prefpane", "qlgenerator", "component", "xpc", "appex",
+    ]
+
+    private static func isPackage(name: String) -> Bool {
+        let ext = (name as NSString).pathExtension.lowercased()
+        guard !ext.isEmpty else { return false }
+        return packageExtensions.contains(ext)
+    }
+
+    private static func isDotMarker(name: String) -> Bool {
+        name.hasPrefix(".") && name != ".DS_Store"
+    }
+
+    private struct EmptyFolderReport {
+        let isEmpty: Bool
+        let allocatedSize: Int64
+        let logicalSize: Int64
+    }
+
+    /// Finds empty folders strictly below rootPath up to maximumDepth folders deep.
+    private static func emptyFolders(below rootPath: String, maximumDepth: Int) throws(FileSystemError) -> FoundItems {
+        var found = FoundItems()
+        let root = try OpenDirectory(path: rootPath)
+        let device = try root.identity().device
+        _ = checkEmptyFolder(
+            in: root, path: rootPath, isRoot: true, depth: 0, device: device, maximumDepth: maximumDepth, into: &found)
+        return found
+    }
+
+    private static func checkEmptyFolder(
+        in directory: borrowing OpenDirectory, path: String, isRoot: Bool, depth: Int, device: Int32,
+        maximumDepth: Int, into found: inout FoundItems
+    ) -> EmptyFolderReport {
+        let entries: [FileEntry]
+        do {
+            entries = try directory.entries()
+        } catch {
+            found.skipped.append(SkippedPath(path: path, reason: StorageScanner.reason(for: error)))
+            return EmptyFolderReport(isEmpty: false, allocatedSize: 0, logicalSize: 0)
+        }
+
+        var hasDisqualifier = false
+        var dsAllocated: Int64 = 0
+        var dsLogical: Int64 = 0
+        var subdirs: [FileEntry] = []
+
+        for entry in entries {
+            switch entry.kind {
+            case .file:
+                if entry.name == ".DS_Store" {
+                    dsAllocated += entry.size.allocated
+                    dsLogical += entry.size.logical
+                } else {
+                    hasDisqualifier = true
+                }
+            case .directory:
+                if isDotMarker(name: entry.name) {
+                    // A folder with a dot-folder marker (.git, etc.) is never an empty folder candidate and never descended into.
+                    return EmptyFolderReport(isEmpty: false, allocatedSize: 0, logicalSize: 0)
+                } else if isPackage(name: entry.name) {
+                    hasDisqualifier = true
+                } else if !entry.isMountPoint && entry.identity.device == device {
+                    subdirs.append(entry)
+                } else {
+                    hasDisqualifier = true
+                }
+            case .symlink, .other:
+                hasDisqualifier = true
+            }
+        }
+
+        if depth >= maximumDepth && !subdirs.isEmpty {
+            hasDisqualifier = true
+        }
+
+        var emptyChildren: [(entry: FileEntry, path: String, report: EmptyFolderReport)] = []
+        var allSubdirsEmpty = true
+
+        for subdir in subdirs {
+            let childPath = path + "/" + subdir.name
+            let childDir: OpenDirectory
+            do {
+                childDir = try directory.openChild(named: subdir.name)
+            } catch {
+                found.skipped.append(SkippedPath(path: childPath, reason: StorageScanner.reason(for: error)))
+                allSubdirsEmpty = false
+                continue
+            }
+            let childReport = checkEmptyFolder(
+                in: childDir, path: childPath, isRoot: false, depth: depth + 1, device: device,
+                maximumDepth: maximumDepth, into: &found)
+            if childReport.isEmpty {
+                dsAllocated += childReport.allocatedSize
+                dsLogical += childReport.logicalSize
+                emptyChildren.append((subdir, childPath, childReport))
+            } else {
+                allSubdirsEmpty = false
+            }
+        }
+
+        let isThisFolderEmpty = !hasDisqualifier && allSubdirsEmpty
+        if isThisFolderEmpty {
+            if isRoot {
+                for child in emptyChildren {
+                    found.items.append(
+                        FoundItem(
+                            path: child.path, name: child.entry.name, entry: child.entry,
+                            logical: child.report.logicalSize, allocated: child.report.allocatedSize,
+                            reclaimable: child.report.allocatedSize))
+                }
+            }
+            return EmptyFolderReport(isEmpty: true, allocatedSize: dsAllocated, logicalSize: dsLogical)
+        } else {
+            for child in emptyChildren {
+                found.items.append(
+                    FoundItem(
+                        path: child.path, name: child.entry.name, entry: child.entry,
+                        logical: child.report.logicalSize, allocated: child.report.allocatedSize,
+                        reclaimable: child.report.allocatedSize))
+            }
+            return EmptyFolderReport(isEmpty: false, allocatedSize: dsAllocated, logicalSize: dsLogical)
+        }
+    }
+
     private static func item(_ entry: FileEntry, at path: String) -> FoundItem {
         // Deleting one name of a hard-linked file frees nothing.
         let reclaimable = entry.linkCount > 1 ? 0 : entry.size.freedIfDeleted
@@ -286,7 +435,24 @@ public enum RuleScanner {
             return .systemManaged
         }
         if let owner, ownerState(owner) != .notRunning { return .inUse }
+        if item.entry.kind == .file && isFileLocked(item.path) { return .inUse }
         return .available
+    }
+
+    /// Checks if a regular file is currently locked by another process via an advisory write lock.
+    private static func isFileLocked(_ path: String) -> Bool {
+        let fd = Darwin.open(path, O_RDONLY | O_NONBLOCK | O_NOFOLLOW)
+        guard fd >= 0 else { return false }
+        defer { close(fd) }
+        var fl = flock()
+        fl.l_type = Int16(F_WRLCK)
+        fl.l_whence = Int16(SEEK_SET)
+        fl.l_start = 0
+        fl.l_len = 0
+        if fcntl(fd, F_GETLK, &fl) == 0 && fl.l_type != F_UNLCK {
+            return true
+        }
+        return false
     }
 
     /// Removing needs write access to the parent; emptying a folder needs write access to the folder itself.
