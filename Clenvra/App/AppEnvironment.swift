@@ -41,6 +41,7 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var startupSession = StartupSession(
         reader: LaunchItemReader(), runner: ProcessCommandRunner(),
         deleter: makeDeleter { _ in .notRunning }, privileged: helper)
+    @ObservationIgnored private(set) lazy var scheduler = ScanScheduler(environment: self)
     @ObservationIgnored private(set) lazy var snapshotsSession = SnapshotsSession(
         runner: ProcessCommandRunner(), privileged: helper)
 
@@ -57,8 +58,10 @@ final class AppEnvironment {
     /// Saves new settings and applies them to every deletion gate immediately.
     func apply(_ newSettings: UserSettings) throws {
         try settingsStore.save(newSettings)
+        let rulesChanged = settings.customRules != newSettings.customRules
         settings = newSettings
         policyProvider.update(ProtectionPolicy(home: home, exclusions: newSettings.exclusions))
+        if rulesChanged { cleanupSession.setRules(cleanupRules) }
     }
 
     /// The one way sections get a deleter: always the live rules, always the shared activity log.
@@ -93,11 +96,15 @@ final class AppEnvironment {
         snapshotsSession.helperAvailable = available
     }
 
+    /// Cleanup's rules: the catalog, the system rules (through the helper) and the user's own review-only rules.
+    private var cleanupRules: [CleanupRule] {
+        RuleCatalog.standard.filter { !$0.category.isDeveloper } + RuleCatalog.system(root: "/")
+            + settings.customRules.map(\.cleanupRule)
+    }
+
     private func makeSession(for section: ActivityRecord.Section) -> CleanupSession {
         let rules =
-            RuleCatalog.standard.filter {
-                section == .developer ? $0.category.isDeveloper : !$0.category.isDeveloper
-            } + (section == .cleanup ? RuleCatalog.system(root: "/") : [])
+            section == .cleanup ? cleanupRules : RuleCatalog.standard.filter { $0.category.isDeveloper }
         let policy = policy
         let ownerState: @Sendable (String) -> OwnerState = { [ownership] in ownership.state(of: $0) }
         return CleanupSession(

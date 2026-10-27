@@ -56,12 +56,44 @@
         }
       }
     },
+    "%@ free on %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ متاح على %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ free on %2$@"
+          }
+        }
+      }
+    },
     "%@ of disk free": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ من القرص متاح"
+          }
+        }
+      }
+    },
+    "%@ · older than %lld days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · أقدم من %2$lld يومًا"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · older than %2$lld days"
           }
         }
       }
@@ -638,6 +670,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld items need your attention.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld من العناصر تحتاج إلى انتباهك."
           }
         }
       }
@@ -1396,6 +1438,16 @@
         }
       }
     },
+    "A cached Hugging Face model. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نموذج Hugging Face مخزّن مؤقتًا. معروض للاطلاع فقط."
+          }
+        }
+      }
+    },
     "A folder on the way to this item changed.": {
       "localizations": {
         "ar": {
@@ -1412,6 +1464,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مجلد رئيسي في مجلد الصفحة الرئيسية. افتحه لمراجعة محتوياته."
+          }
+        }
+      }
+    },
+    "AI Models": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نماذج الذكاء الاصطناعي"
           }
         }
       }
@@ -1462,6 +1524,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة مجلد…"
+          }
+        }
+      }
+    },
+    "Add Rule": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة قاعدة"
           }
         }
       }
@@ -1522,6 +1594,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "يعمل دائمًا"
+          }
+        }
+      }
+    },
+    "An Android Virtual Device and its storage. Deleting it removes its state and installed apps.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جهاز Android افتراضي ومساحته. حذفه يزيل حالته والتطبيقات المثبتة عليه."
+          }
+        }
+      }
+    },
+    "An LM Studio model. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نموذج LM Studio. معروض للاطلاع فقط."
+          }
+        }
+      }
+    },
+    "An Ollama model. It can be downloaded again with ollama pull.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نموذج Ollama. يمكن تنزيله مرة أخرى باستخدام ollama pull."
+          }
+        }
+      }
+    },
+    "An older version of Android build tools. Current projects usually use the latest version.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إصدار أقدم من أدوات بناء Android. تستخدم المشاريع الحالية عادةً أحدث إصدار."
+          }
+        }
+      }
+    },
+    "Android AVD (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جهاز Android افتراضي (%@)"
+          }
+        }
+      }
+    },
+    "Android Build-Tools (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدوات بناء Android (%@)"
+          }
+        }
+      }
+    },
+    "Android Emulator": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محاكي Android"
+          }
+        }
+      }
+    },
+    "Android Platform (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منصة Android (%@)"
+          }
+        }
+      }
+    },
+    "Android SDK platform files and system headers.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات منصة Android SDK وترويسات النظام."
+          }
+        }
+      }
+    },
+    "Android System Image (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة نظام Android (%@)"
+          }
+        }
+      }
+    },
+    "Android system image for emulator virtual devices.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة نظام Android للأجهزة الافتراضية في المحاكي."
           }
         }
       }
@@ -2070,6 +2252,16 @@
         }
       }
     },
+    "Cleanup could free %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكن للتنظيف تحرير %@."
+          }
+        }
+      }
+    },
     "Clean…": {
       "localizations": {
         "ar": {
@@ -2079,6 +2271,9 @@
           }
         }
       }
+    },
+    "Clenvra": {
+      "shouldTranslate": false
     },
     "Clenvra could not read this app. It may have been moved.": {
       "localizations": {
@@ -2106,6 +2301,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يعرض Clenvra أي شيء داخل هذه المجلدات ولا يزيله. تُطبَّق التغييرات فورًا."
+          }
+        }
+      }
+    },
+    "Clenvra protects this folder, so it cannot be a cleanup rule.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحمي Clenvra هذا المجلد، لذا لا يمكن أن يكون قاعدة تنظيف."
+          }
+        }
+      }
+    },
+    "Clenvra scan finished": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتمل فحص Clenvra"
           }
         }
       }
@@ -2206,6 +2421,16 @@
         }
       }
     },
+    "Copies of attachments Mail downloaded when you opened them. Your mail and the attachments in it are kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نُسخ المرفقات التي نزّلها البريد عند فتحها. يبقى بريدك والمرفقات التي فيه."
+          }
+        }
+      }
+    },
     "Copy Path": {
       "localizations": {
         "ar": {
@@ -2282,6 +2507,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عدد الدورات"
+          }
+        }
+      }
+    },
+    "Day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوم"
           }
         }
       }
@@ -2469,6 +2704,16 @@
         }
       }
     },
+    "Downloaded AI models. You can download them again, but they are large.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نماذج ذكاء اصطناعي منزّلة. يمكنك تنزيلها مرة أخرى، لكنها كبيرة الحجم."
+          }
+        }
+      }
+    },
     "Downloaded from %@": {
       "localizations": {
         "ar": {
@@ -2539,6 +2784,16 @@
         }
       }
     },
+    "Empty Folders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجلدات الفارغة"
+          }
+        }
+      }
+    },
     "Enable at Login": {
       "localizations": {
         "ar": {
@@ -2589,12 +2844,32 @@
         }
       }
     },
+    "Every day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل يوم"
+          }
+        }
+      }
+    },
     "Every item is checked again just before it is moved. You can put items back from Activity.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "يُفحص كل عنصر مرة أخرى قبل نقله مباشرة. يمكنك إرجاع العناصر من السجل."
+          }
+        }
+      }
+    },
+    "Every week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل أسبوع"
           }
         }
       }
@@ -2675,6 +2950,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "معتدل"
+          }
+        }
+      }
+    },
+    "File names, for example *.log": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسماء الملفات، مثل ‎*.log"
           }
         }
       }
@@ -2769,6 +3054,16 @@
         }
       }
     },
+    "Folders in Downloads, Desktop and Documents with nothing inside.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلدات فارغة في التنزيلات وسطح المكتب والمستندات."
+          }
+        }
+      }
+    },
     "Folders in your home folder are saved relative to it, so they work for any user name.": {
       "localizations": {
         "ar": {
@@ -2785,6 +3080,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المجلدات المراد البحث فيها"
+          }
+        }
+      }
+    },
+    "Folders you added in Settings. Always check them before removing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلدات أضفتها في الإعدادات. راجعها دائمًا قبل الإزالة."
           }
         }
       }
@@ -2845,6 +3150,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "متاح %@"
+          }
+        }
+      }
+    },
+    "Free space and the last scan at a glance. Cleaning always happens in the main window.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساحة المتاحة وآخر فحص في لمحة. يجري التنظيف دائمًا في النافذة الرئيسية."
           }
         }
       }
@@ -3139,6 +3454,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "يزيل Homebrew التطبيق نهائيًا. لن يُنقل إلى سلة المهملات ولا يمكن استعادته."
+          }
+        }
+      }
+    },
+    "How often": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التكرار"
+          }
+        }
+      }
+    },
+    "Hugging Face (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hugging Face (%@)"
           }
         }
       }
@@ -3443,6 +3778,16 @@
         }
       }
     },
+    "LM Studio (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LM Studio (%@)"
+          }
+        }
+      }
+    },
     "Large & Old": {
       "localizations": {
         "ar": {
@@ -3723,6 +4068,16 @@
         }
       }
     },
+    "Mail Attachments": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرفقات البريد"
+          }
+        }
+      }
+    },
     "Managed by macOS": {
       "localizations": {
         "ar": {
@@ -3739,6 +4094,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تديره مؤسستك"
+          }
+        }
+      }
+    },
+    "Matching files appear in Cleanup under Your Rules for you to review. They are never selected for you, and protected folders cannot be added.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تظهر الملفات المطابقة في التنظيف ضمن «قواعدك» لتراجعها. لا تُحدَّد نيابةً عنك أبدًا، ولا يمكن إضافة المجلدات المحمية."
           }
         }
       }
@@ -3809,6 +4174,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ضغط الذاكرة: %@"
+          }
+        }
+      }
+    },
+    "Menu Bar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شريط القوائم"
           }
         }
       }
@@ -4047,6 +4422,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "يحتاج إلى مساعد النظام"
+          }
+        }
+      }
+    },
+    "Next scan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفحص التالي"
+          }
+        }
+      }
+    },
+    "Next scan %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفحص التالي %@"
           }
         }
       }
@@ -4301,6 +4696,16 @@
         }
       }
     },
+    "Nothing needs your attention.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء يحتاج إلى انتباهك."
+          }
+        }
+      }
+    },
     "Nothing to clean": {
       "localizations": {
         "ar": {
@@ -4374,6 +4779,59 @@
         }
       }
     },
+    "Older than %lld days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقدم من %lld يومًا"
+          }
+        }
+      }
+    },
+    "Ollama": {
+      "shouldTranslate": false
+    },
+    "Ollama (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama (%@)"
+          }
+        }
+      }
+    },
+    "Ollama is not running.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ollama لا يعمل."
+          }
+        }
+      }
+    },
+    "Ollama models": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نماذج Ollama"
+          }
+        }
+      }
+    },
+    "Ollama's local model store. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مخزن نماذج Ollama المحلي. معروض للاطلاع فقط."
+          }
+        }
+      }
+    },
     "On a schedule": {
       "localizations": {
         "ar": {
@@ -4430,6 +4888,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح"
+          }
+        }
+      }
+    },
+    "Open Clenvra": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح Clenvra"
           }
         }
       }
@@ -4874,6 +5342,16 @@
         }
       }
     },
+    "Remove Rule": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة القاعدة"
+          }
+        }
+      }
+    },
     "Remove this startup item?": {
       "localizations": {
         "ar": {
@@ -5224,6 +5702,26 @@
         }
       }
     },
+    "Scan Now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افحص الآن"
+          }
+        }
+      }
+    },
+    "Scan on a schedule": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفحص وفق جدول"
+          }
+        }
+      }
+    },
     "Scan to see what uses space.": {
       "localizations": {
         "ar": {
@@ -5240,6 +5738,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ الفحص…"
+          }
+        }
+      }
+    },
+    "Scheduled Scans": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفحوصات المجدولة"
           }
         }
       }
@@ -5544,6 +6052,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إظهار عناصر Apple"
+          }
+        }
+      }
+    },
+    "Show Clenvra in the menu bar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار Clenvra في شريط القوائم"
           }
         }
       }
@@ -5951,12 +6469,32 @@
         }
       }
     },
+    "Temporary Files": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات المؤقتة"
+          }
+        }
+      }
+    },
     "Temporary files apps create to load faster. Apps rebuild them when needed.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "ملفات مؤقتة تنشئها التطبيقات لتعمل بسرعة أكبر. تعيد التطبيقات إنشاءها عند الحاجة."
+          }
+        }
+      }
+    },
+    "The Android Emulator application and support files.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تطبيق محاكي Android وملفات الدعم."
           }
         }
       }
@@ -6121,6 +6659,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يبدو الاسم مرتبطًا. لا يُحدَّد تلقائيًا أبدًا، لذا تحقّق منه قبل الإزالة."
+          }
+        }
+      }
+    },
+    "The rule could not be saved.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ القاعدة."
           }
         }
       }
@@ -6301,6 +6849,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا الموقع غير مسموح به."
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوقت"
           }
         }
       }
@@ -6621,6 +7179,16 @@
         }
       }
     },
+    "While Clenvra is open, it looks for what could be cleaned and tells you in a notification. It never removes anything by itself.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أثناء فتح Clenvra، يبحث عمّا يمكن تنظيفه ويُعلمك بإشعار. لا يزيل أي شيء من تلقاء نفسه أبدًا."
+          }
+        }
+      }
+    },
     "Wired Memory": {
       "localizations": {
         "ar": {
@@ -6714,12 +7282,62 @@
         }
       }
     },
+    "Your Cleanup Rules": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قواعد التنظيف الخاصة بك"
+          }
+        }
+      }
+    },
     "Your Login Agents": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "وكلاء تسجيل الدخول الخاصة بك"
+          }
+        }
+      }
+    },
+    "Your Rules": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قواعدك"
+          }
+        }
+      }
+    },
+    "Your startup disk is almost full.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص بدء التشغيل ممتلئ تقريبًا."
+          }
+        }
+      }
+    },
+    "Your startup disk is almost full. Cleanup could free %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص بدء التشغيل ممتلئ تقريبًا. يمكن للتنظيف تحرير %@."
+          }
+        }
+      }
+    },
+    "Your temporary files older than three days. Apps that are open keep theirs.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفاتك المؤقتة الأقدم من ثلاثة أيام. تحتفظ التطبيقات المفتوحة بملفاتها."
           }
         }
       }

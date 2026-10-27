@@ -110,10 +110,16 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            CustomRulesSettingsSection(environment: environment)
+
+            ScheduleSettingsSection(environment: environment)
+
+            MenuBarSettingsSection()
+
             HelperSettingsSection(onChange: { await environment.refreshHelper() })
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 640)
+        .frame(width: 560, height: 720)
         .task { await refreshFullDiskAccess() }
         .sheet(isPresented: $isShowingGuide) { PermissionsGuideView(home: environment.home) }
         // The user may grant access in System Settings and come back.

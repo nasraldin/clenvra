@@ -7,14 +7,16 @@ struct ClenvraApp: App {
     @AppStorage(PermissionsGuideView.seenKey) private var hasSeenPermissionsGuide = false
     /// Also tracked per launch: a launch argument can override the stored value.
     @State private var dismissedPermissionsGuide = false
+    @AppStorage(MenuBarExtraView.preferenceKey) private var showsMenuBarExtra = false
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             MainWindow(selection: $selection, environment: environment)
                 .frame(minWidth: 900, minHeight: 560)
                 .task { await environment.loadInstalledApps() }
                 .task { await environment.prepareTools() }
                 .task { await environment.refreshHelper() }
+                .task { environment.scheduler.start() }
                 .sheet(
                     isPresented: Binding(
                         get: { !hasSeenPermissionsGuide && !dismissedPermissionsGuide },
@@ -43,6 +45,13 @@ struct ClenvraApp: App {
                     }
                 }
             }
+        }
+
+        MenuBarExtra(isInserted: $showsMenuBarExtra) {
+            MenuBarExtraView(environment: environment)
+        } label: {
+            Image(systemName: "sparkles")
+                .accessibilityLabel(Text("Clenvra"))
         }
 
         Settings {

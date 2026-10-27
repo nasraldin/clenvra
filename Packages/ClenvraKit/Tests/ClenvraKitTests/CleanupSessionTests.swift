@@ -164,4 +164,16 @@ struct CleanupSessionTests {
         #expect(summary.problems.map(\.path) == [path("Library/Caches/com.vendor.small")])
         #expect(summary.problems.first?.reason == .skipped(.notFound))
     }
+
+    @Test("rules can be replaced, and the next scan uses the new ones")
+    func replacesRules() async throws {
+        let session = session()
+        await session.scan()
+        #expect(session.groups.map(\.category) == [.appCaches, .installers])
+
+        session.setRules(RuleCatalog.standard.filter { $0.id == "installers.downloads" })
+        await session.scan()
+
+        #expect(session.groups.map(\.category) == [.installers])
+    }
 }

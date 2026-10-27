@@ -77,9 +77,9 @@ public final class CleanupSession {
         didSet { if !helperAvailable { selection = selection.filter { !isElevated($0) } } }
     }
 
-    private let rules: [CleanupRule]
-    private let actionsByRule: [String: CleanupAction]
-    private let elevatedRules: Set<String>
+    private var rules: [CleanupRule]
+    private var actionsByRule: [String: CleanupAction]
+    private var elevatedRules: Set<String>
     private let privileged: (any PrivilegedOperations)?
     private let ownerBundlePath: @Sendable (String) -> String?
     private let section: ActivityRecord.Section
@@ -109,6 +109,13 @@ public final class CleanupSession {
         self.ownerState = ownerState
         self.deleter = deleter
         self.executor = executor
+    }
+
+    /// Replaces the rules (for example after the user edits custom rules in Settings); the next scan uses them.
+    public func setRules(_ newRules: [CleanupRule]) {
+        rules = newRules
+        actionsByRule = Dictionary(newRules.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
+        elevatedRules = Set(newRules.filter { $0.elevation == .helper }.map(\.id))
     }
 
     // MARK: - Scanning
