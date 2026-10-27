@@ -1,0 +1,267 @@
+import Darwin
+public import Foundation
+
+/// Runs one `CleanupRule` read-only and returns review candidates with sizes, ownership and status.
+public enum RuleScanner {
+    public static func scan(
+        _ rule: CleanupRule,
+        home: String,
+        policy: ProtectionPolicy,
+        ownerState: @escaping @Sendable (String) -> OwnerState,
+        now: Date = Date(),
+        executor: FSExecutor = .shared
+    ) async -> RuleScanResult {
+        let rootPath = rule.root.path(home: home)
+        let found: FoundItems
+        do {
+            switch rule.selection {
+            case .children(let excluded):
+                found = try await children(of: rootPath, executor: executor) { !excluded.contains($0) }
+            case .named(let names):
+                found = try await children(of: rootPath, executor: executor) { names.contains($0) }
+            case .projectArtifacts(let kinds, let inactivity, let maximumDepth):
+                let cutoff = now.addingTimeInterval(-inactivity.seconds)
+                found = try await projectArtifacts(
+                    below: rootPath, kinds: kinds, activeSince: cutoff, maximumDepth: maximumDepth, executor: executor)
+            case .files(let extensions, let minimumAge, let maximumDepth):
+                let cutoff = minimumAge.map { now.addingTimeInterval(-$0.seconds) }
+                let lowercased = Set(extensions.map { $0.lowercased() })
+                found = try await executor.run {
+                    try files(below: rootPath, extensions: lowercased, cutoff: cutoff, maximumDepth: maximumDepth)
+                }
+            }
+        } catch let error as FileSystemError where error.code == ENOENT || error.code == ENOTDIR {
+            return RuleScanResult(rule: rule, rootExists: false, candidates: [], skipped: [])
+        } catch let error as FileSystemError {
+            return RuleScanResult(
+                rule: rule, rootExists: true, candidates: [],
+                skipped: [SkippedPath(path: rootPath, reason: StorageScanner.reason(for: error))])
+        } catch {
+            return RuleScanResult(rule: rule, rootExists: true, candidates: [], skipped: [])
+        }
+
+        let candidates = found.items.map { item in
+            let owner = owner(of: item, hint: rule.ownership)
+            return CleanupCandidate(
+                ruleID: rule.id, name: item.name, path: item.path, ruleRoot: rootPath, kind: item.entry.kind,
+                logicalSize: item.logical, allocatedSize: item.allocated, reclaimableSize: item.reclaimable,
+                modificationDate: item.entry.modificationDate, snapshot: FileSnapshot(item.entry),
+                ownerBundleID: owner,
+                status: status(of: item, owner: owner, policy: policy, ownerState: ownerState),
+                risk: item.isRecentlyActive ? .review : rule.risk)
+        }
+        .filter { $0.allocatedSize > 0 }  // empty items are noise, never worth a decision
+        .sorted(by: CleanupCandidate.largestFreedFirst)
+
+        return RuleScanResult(rule: rule, rootExists: true, candidates: candidates, skipped: found.skipped)
+    }
+
+    // MARK: - Collecting items
+
+    struct FoundItem: Sendable {
+        let path: String
+        let name: String
+        let entry: FileEntry
+        let logical: Int64
+        let allocated: Int64
+        let reclaimable: Int64
+        /// Belongs to a project touched recently; offered for review only.
+        var isRecentlyActive = false
+    }
+
+    struct FoundItems: Sendable {
+        var items: [FoundItem] = []
+        var skipped: [SkippedPath] = []
+    }
+
+    /// Direct children of the root; folder sizes come from one storage scan of the root.
+    private static func children(
+        of rootPath: String, executor: FSExecutor, including isIncluded: (String) -> Bool
+    ) async throws -> FoundItems {
+        let listing = try await executor.run { try OpenDirectory(path: rootPath).read() }
+        let entries = listing.entries.filter { isIncluded($0.name) }
+        // One storage pass over the root sizes every folder; per-folder scans would repeat setup hundreds of times.
+        let snapshot: StorageSnapshot? =
+            entries.contains { $0.kind == .directory }
+            ? try? await StorageScanner.scan(root: rootPath, executor: executor) : nil
+        let skipped = snapshot?.skipped ?? []
+
+        var found = FoundItems()
+        for entry in entries {
+            let path = rootPath + "/" + entry.name
+            if entry.kind == .directory {
+                let aggregate = snapshot?.aggregate(at: path)
+                found.items.append(
+                    FoundItem(
+                        path: path, name: entry.name, entry: entry, logical: aggregate?.logical ?? 0,
+                        allocated: aggregate?.allocated ?? 0, reclaimable: aggregate?.reclaimable ?? 0))
+            } else {
+                found.items.append(item(entry, at: path))
+            }
+        }
+        found.skipped = skipped
+        return found
+    }
+
+    /// Matching files below the root, never following links or crossing into another volume.
+    private static func files(
+        below rootPath: String, extensions: Set<String>, cutoff: Date?, maximumDepth: Int
+    ) throws(FileSystemError) -> FoundItems {
+        var found = FoundItems()
+        let root = try OpenDirectory(path: rootPath)
+        let device = try root.identity().device
+        collect(
+            in: root, path: rootPath, depth: 0, device: device, extensions: extensions, cutoff: cutoff,
+            maximumDepth: maximumDepth, into: &found)
+        return found
+    }
+
+    private static func collect(
+        in directory: borrowing OpenDirectory, path: String, depth: Int, device: Int32, extensions: Set<String>,
+        cutoff: Date?, maximumDepth: Int, into found: inout FoundItems
+    ) {
+        let entries: [FileEntry]
+        do {
+            entries = try directory.entries()
+        } catch {
+            found.skipped.append(SkippedPath(path: path, reason: StorageScanner.reason(for: error)))
+            return
+        }
+        for entry in entries {
+            let childPath = path + "/" + entry.name
+            switch entry.kind {
+            case .directory:
+                guard depth < maximumDepth, !entry.isMountPoint, entry.identity.device == device else { continue }
+                do {
+                    let child = try directory.openChild(named: entry.name)
+                    collect(
+                        in: child, path: childPath, depth: depth + 1, device: device, extensions: extensions,
+                        cutoff: cutoff, maximumDepth: maximumDepth, into: &found)
+                } catch {
+                    found.skipped.append(SkippedPath(path: childPath, reason: StorageScanner.reason(for: error)))
+                }
+            case .file:
+                let ext = (entry.name as NSString).pathExtension.lowercased()
+                guard extensions.contains(ext) else { continue }
+                if let cutoff, entry.modificationDate > cutoff { continue }
+                found.items.append(item(entry, at: childPath))
+            case .symlink, .other:
+                continue
+            }
+        }
+    }
+
+    /// Artifact folders found by walking the root; sizes come from a storage scan of each folder.
+    private static func projectArtifacts(
+        below rootPath: String, kinds: [ArtifactKind], activeSince cutoff: Date, maximumDepth: Int,
+        executor: FSExecutor
+    ) async throws -> FoundItems {
+        var located = try await executor.run {
+            var found = FoundItems()
+            let root = try OpenDirectory(path: rootPath)
+            let device = try root.identity().device
+            findArtifacts(
+                in: root, path: rootPath, depth: 0, device: device, kinds: kinds, cutoff: cutoff,
+                maximumDepth: maximumDepth, into: &found)
+            return found
+        }
+        guard !located.items.isEmpty,
+            let snapshot = try? await StorageScanner.scan(root: rootPath, executor: executor)
+        else { return located }
+        located.items = located.items.map { item in
+            guard let aggregate = snapshot.aggregate(at: item.path) else { return item }
+            return FoundItem(
+                path: item.path, name: item.name, entry: item.entry, logical: aggregate.logical,
+                allocated: aggregate.allocated, reclaimable: aggregate.reclaimable,
+                isRecentlyActive: item.isRecentlyActive)
+        }
+        return located
+    }
+
+    private static func findArtifacts(
+        in directory: borrowing OpenDirectory, path: String, depth: Int, device: Int32, kinds: [ArtifactKind],
+        cutoff: Date, maximumDepth: Int, into found: inout FoundItems
+    ) {
+        let entries: [FileEntry]
+        do {
+            entries = try directory.entries()
+        } catch {
+            found.skipped.append(SkippedPath(path: path, reason: StorageScanner.reason(for: error)))
+            return
+        }
+        let names = Set(entries.map(\.name))
+        let artifactFolderNames = Set(kinds.map(\.folder))
+        var matched: Set<String> = []
+        for kind in kinds where !kind.markers.isDisjoint(with: names) {
+            guard let entry = entries.first(where: { $0.name == kind.folder && $0.kind == .directory }) else {
+                continue
+            }
+            matched.insert(entry.name)
+            // Project activity: newest change among the project's own entries, not its build output or .git.
+            let latest = entries.filter { !artifactFolderNames.contains($0.name) && $0.name != ".git" }
+                .map(\.modificationDate).max()
+            var item = FoundItem(
+                path: path + "/" + entry.name, name: entry.name, entry: entry, logical: 0, allocated: 0,
+                reclaimable: 0)
+            item.isRecentlyActive = (latest ?? .distantPast) > cutoff
+            found.items.append(item)
+        }
+        guard depth < maximumDepth else { return }
+        for entry in entries
+        where entry.kind == .directory && !entry.name.hasPrefix(".") && !matched.contains(entry.name)
+            && !entry.isMountPoint && entry.identity.device == device
+        {
+            guard let child = try? directory.openChild(named: entry.name) else { continue }
+            findArtifacts(
+                in: child, path: path + "/" + entry.name, depth: depth + 1, device: device, kinds: kinds,
+                cutoff: cutoff, maximumDepth: maximumDepth, into: &found)
+        }
+    }
+
+    private static func item(_ entry: FileEntry, at path: String) -> FoundItem {
+        // Deleting one name of a hard-linked file frees nothing.
+        let reclaimable = entry.linkCount > 1 ? 0 : entry.size.freedIfDeleted
+        return FoundItem(
+            path: path, name: entry.name, entry: entry, logical: entry.size.logical, allocated: entry.size.allocated,
+            reclaimable: reclaimable)
+    }
+
+    // MARK: - Status
+
+    private static func owner(of item: FoundItem, hint: OwnershipHint) -> String? {
+        switch hint {
+        case .none: nil
+        case .fixed(let identifier): identifier
+        case .bundleIdentifierFromName: isBundleIdentifierLike(item.name) ? item.name : nil
+        }
+    }
+
+    /// Reverse-DNS shaped: at least three non-empty components of letters, digits, "-" and "_".
+    static func isBundleIdentifierLike(_ name: String) -> Bool {
+        let parts = name.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count >= 3, parts.allSatisfy({ !$0.isEmpty }) else { return false }
+        return name.unicodeScalars.allSatisfy { scalar in
+            scalar.isASCII
+                && (scalar.properties.isAlphabetic || ("0"..."9").contains(scalar)
+                    || "._-".unicodeScalars.contains(scalar))
+        }
+    }
+
+    private static func status(
+        of item: FoundItem, owner: String?, policy: ProtectionPolicy,
+        ownerState: @Sendable (String) -> OwnerState
+    ) -> CandidateStatus {
+        if let reason = policy.protection(for: item.path) { return .protected(reason) }
+        if !isRemovableByCurrentUser(item) { return .systemManaged }
+        if let owner, ownerState(owner) != .notRunning { return .inUse }
+        return .available
+    }
+
+    /// Removing needs write access to the parent; emptying a folder needs write access to the folder itself.
+    private static func isRemovableByCurrentUser(_ item: FoundItem) -> Bool {
+        guard item.entry.flags & DeletionGate.protectiveFlags == 0 else { return false }
+        let parent = (item.path as NSString).deletingLastPathComponent
+        guard access(parent, W_OK) == 0 else { return false }
+        return item.entry.kind != .directory || access(item.path, W_OK) == 0
+    }
+}
