@@ -12,6 +12,7 @@ final class ScreenshotUITests: XCTestCase {
             let app = XCUIApplication()
             app.launchArguments += [
                 "-AppleLanguages", "(\(language))", "-AppleLocale", language, "-ApplePersistenceIgnoreState", "YES",
+                "-clenvra.permissionsGuideSeen", "YES",
             ]
             if language == "ar" {
                 // What Xcode's right-to-left run option passes, so the layout mirrors as on an Arabic system.

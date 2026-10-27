@@ -10,6 +10,7 @@ final class NavigationUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += [
             "-AppleLanguages", "(\(language))", "-AppleLocale", language, "-ApplePersistenceIgnoreState", "YES",
+            "-clenvra.permissionsGuideSeen", "YES",
         ]
         app.launch()
         return app
@@ -27,6 +28,20 @@ final class NavigationUITests: XCTestCase {
                 app.descendants(matching: .any)["section.\(section)"].waitForExistence(timeout: 2),
                 "Section \(section) did not appear")
         }
+    }
+
+    @MainActor
+    func testPermissionsGuideAppearsOnFirstLaunchAndCanBeDismissed() {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-AppleLanguages", "(en)", "-AppleLocale", "en", "-ApplePersistenceIgnoreState", "YES",
+            "-clenvra.permissionsGuideSeen", "NO",
+        ]
+        app.launch()
+        let guide = app.descendants(matching: .any)["permissionsGuide"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 3))
+        app.buttons["guide.continue"].click()
+        XCTAssertTrue(guide.waitForNonExistence(timeout: 3))
     }
 
     @MainActor
