@@ -1,0 +1,261 @@
+{
+  "System": {
+    "ar": "النظام"
+  },
+  "Health": {
+    "ar": "الحالة"
+  },
+  "Heavy Processes": {
+    "ar": "العمليات المستهلكة"
+  },
+  "Security": {
+    "ar": "الأمان"
+  },
+  "System View": {
+    "ar": "عرض النظام"
+  },
+  "Memory Pressure": {
+    "ar": "ضغط الذاكرة"
+  },
+  "macOS manages memory dynamically. High used memory is normal and keeps the system responsive; memory pressure is the true indicator of memory constraint.": {
+    "ar": "يدير macOS الذاكرة تلقائيًا. الذاكرة المستهلكة العالية أمر طبيعي وتبقي النظام سريع الاستجابة؛ ضغط الذاكرة هو المقياس الفعلي لنقص الذاكرة."
+  },
+  "Normal": {
+    "ar": "طبيعي"
+  },
+  "Warning": {
+    "ar": "تحذير"
+  },
+  "Critical": {
+    "ar": "حرج"
+  },
+  "Memory Usage": {
+    "ar": "استخدام الذاكرة"
+  },
+  "App Memory": {
+    "ar": "ذاكرة التطبيقات"
+  },
+  "Wired Memory": {
+    "ar": "الذاكرة المحجوزة"
+  },
+  "Compressed Memory": {
+    "ar": "الذاكرة المضغوطة"
+  },
+  "Available Memory": {
+    "ar": "الذاكرة المتوفرة"
+  },
+  "Total RAM": {
+    "ar": "إجمالي الذاكرة"
+  },
+  "Swap Used": {
+    "ar": "مساحة التبديل المستخدمة"
+  },
+  "System Performance": {
+    "ar": "أداء النظام"
+  },
+  "CPU Usage": {
+    "ar": "استخدام المعالج"
+  },
+  "Uptime": {
+    "ar": "مدة التشغيل"
+  },
+  "Thermal State": {
+    "ar": "الحالة الحرارية"
+  },
+  "Fair": {
+    "ar": "معتدل"
+  },
+  "Serious": {
+    "ar": "مرتفع"
+  },
+  "Battery": {
+    "ar": "البطارية"
+  },
+  "Charge": {
+    "ar": "الشحن"
+  },
+  "Cycle Count": {
+    "ar": "عدد الدورات"
+  },
+  "Maximum Capacity": {
+    "ar": "أقصى سعة"
+  },
+  "Condition": {
+    "ar": "الحالة"
+  },
+  "Sort by": {
+    "ar": "فرز حسب"
+  },
+  "Sort Order": {
+    "ar": "ترتيب الفرز"
+  },
+  "CPU": {
+    "ar": "المعالج"
+  },
+  "Memory": {
+    "ar": "الذاكرة"
+  },
+  "No heavy processes detected": {
+    "ar": "لم يتم رصد عمليات مستهلكة"
+  },
+  "Sampling active host processes…": {
+    "ar": "جارٍ فحص العمليات النشطة…"
+  },
+  "Process": {
+    "ar": "العملية"
+  },
+  "Action": {
+    "ar": "الإجراء"
+  },
+  "Quit": {
+    "ar": "إنهاء"
+  },
+  "Force Quit": {
+    "ar": "فرض الإنهاء"
+  },
+  "Quit Application": {
+    "ar": "إنهاء التطبيق"
+  },
+  "Force Quit Application": {
+    "ar": "فرض إنهاء التطبيق"
+  },
+  "Cancel": {
+    "ar": "إلغاء"
+  },
+  "Force quitting immediately terminates %1$@. Any unsaved data will be lost.": {
+    "ar": "سيؤدي فرض الإنهاء إلى إيقاف %1$@ فورًا. سيتم فقدان أي بيانات غير محفوظة."
+  },
+  "Are you sure you want to quit %1$@? Unsaved changes may be lost.": {
+    "ar": "هل أنت متأكد من رغبتك في إنهاء %1$@؟ قد يتم فقدان التغييرات غير المحفوظة."
+  },
+  "Security Protections": {
+    "ar": "حمايات الأمان"
+  },
+  "Check Again": {
+    "ar": "فحص مجددًا"
+  },
+  "System Integrity Protection": {
+    "ar": "حماية تكامل النظام"
+  },
+  "FileVault": {
+    "ar": "FileVault"
+  },
+  "Gatekeeper": {
+    "ar": "Gatekeeper"
+  },
+  "Firewall": {
+    "ar": "جدار الحماية"
+  },
+  "XProtect": {
+    "ar": "XProtect"
+  },
+  "Security Updates": {
+    "ar": "تحديثات الأمان"
+  },
+  "Security Check": {
+    "ar": "فحص الأمان"
+  },
+  "Protects system-owned files and directories against unauthorized modification.": {
+    "ar": "يحمي ملفات ومجلدات النظام من أي تعديل غير مصرح به."
+  },
+  "Encrypts the system volume to prevent unauthorized access to your data.": {
+    "ar": "يشفر قرص النظام لمنع الوصول غير المصرح به إلى بياناتك."
+  },
+  "Enforces signature and notarization checks before opening downloaded apps.": {
+    "ar": "يتحقق من التوقيع والمصادقة قبل فتح التطبيقات التي تم تنزيلها."
+  },
+  "Blocks unwanted incoming network connections and services.": {
+    "ar": "يحظر الاتصالات والخدمات الشبكية الواردة غير المرغوب فيها."
+  },
+  "Apple built-in signature engine that detects and blocks known malware.": {
+    "ar": "محرك آبل المدمج للتعرف على البرامج الضارة المعروفة وحظرها."
+  },
+  "Ensures critical security updates and system definitions install automatically.": {
+    "ar": "يضمن تثبيت تحديثات الأمان المهمة وتعريفات النظام تلقائيًا."
+  },
+  "Verifies macOS security configuration.": {
+    "ar": "يتحقق من إعدادات أمان macOS."
+  },
+  "Open System Settings": {
+    "ar": "فتح إعدادات النظام"
+  },
+  "Good": {
+    "ar": "سليم"
+  },
+  "Attention": {
+    "ar": "تنبيه"
+  },
+  "Unknown": {
+    "ar": "غير معروف"
+  },
+  "%lld processes": {
+    "en_plural": {
+      "one": "%lld process",
+      "other": "%lld processes"
+    },
+    "ar_plural": {
+      "zero": "لا توجد عمليات",
+      "one": "عملية واحدة",
+      "two": "عمليتان",
+      "few": "%lld عمليات",
+      "many": "%lld عملية",
+      "other": "%lld عملية"
+    }
+  },
+  "%lld cycles": {
+    "en_plural": {
+      "one": "%lld cycle",
+      "other": "%lld cycles"
+    },
+    "ar_plural": {
+      "zero": "لا توجد دورات",
+      "one": "دورة واحدة",
+      "two": "دورتان",
+      "few": "%lld دورات",
+      "many": "%lld دورة",
+      "other": "%lld دورة"
+    }
+  },
+  "%lld days": {
+    "en_plural": {
+      "one": "%lld day",
+      "other": "%lld days"
+    },
+    "ar_plural": {
+      "zero": "لا توجد أيام",
+      "one": "يوم واحد",
+      "two": "يومان",
+      "few": "%lld أيام",
+      "many": "%lld يومًا",
+      "other": "%lld يوم"
+    }
+  },
+  "%lld hours": {
+    "en_plural": {
+      "one": "%lld hour",
+      "other": "%lld hours"
+    },
+    "ar_plural": {
+      "zero": "لا توجد ساعات",
+      "one": "ساعة واحدة",
+      "two": "ساعتان",
+      "few": "%lld ساعات",
+      "many": "%lld ساعة",
+      "other": "%lld ساعة"
+    }
+  },
+  "%lld minutes": {
+    "en_plural": {
+      "one": "%lld minute",
+      "other": "%lld minutes"
+    },
+    "ar_plural": {
+      "zero": "لا توجد دقائق",
+      "one": "دقيقة واحدة",
+      "two": "دقيقتان",
+      "few": "%lld دقائق",
+      "many": "%lld دقيقة",
+      "other": "%lld دقيقة"
+    }
+  }
+}

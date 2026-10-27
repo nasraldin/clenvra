@@ -1,0 +1,4 @@
+{
+  "Are you sure you want to quit %@? Unsaved changes may be lost.": {"ar": "هل أنت متأكد من أنك تريد إنهاء %@؟ قد تُفقد التغييرات غير المحفوظة."},
+  "Force quitting immediately terminates %@. Any unsaved data will be lost.": {"ar": "يؤدي فرض الإنهاء إلى إيقاف %@ فورًا. ستُفقد أي بيانات غير محفوظة."}
+}

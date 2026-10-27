@@ -1,0 +1,7 @@
+{
+  "Full Disk Access": {"ar": "الوصول الكامل إلى القرص"},
+  "Full Disk Access is on": {"ar": "الوصول الكامل إلى القرص مفعّل"},
+  "Full Disk Access status is unknown": {"ar": "حالة الوصول الكامل إلى القرص غير معروفة"},
+  "Open Settings…": {"ar": "فتح الإعدادات…"},
+  "Lets scans include protected folders such as Safari and Mail data. Clenvra only reads them; nothing is deleted without your review.": {"ar": "يتيح للفحص تضمين المجلدات المحمية، مثل بيانات Safari والبريد. يكتفي Clenvra بقراءتها، ولا يُحذف أي شيء دون مراجعتك."}
+}

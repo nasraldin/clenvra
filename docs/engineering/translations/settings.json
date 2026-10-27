@@ -1,0 +1,17 @@
+{
+  "Clenvra never lists or removes anything inside these folders. Changes apply immediately.": {"ar": "لا يعرض Clenvra أي شيء داخل هذه المجلدات ولا يزيله. تُطبَّق التغييرات فورًا."},
+  "Excluded Folders": {"ar": "المجلدات المستثناة"},
+  "Folders in your home folder are saved relative to it, so they work for any user name.": {"ar": "تُحفظ المجلدات الموجودة في مجلد المنزل بالنسبة إليه، لذا تعمل مع أي اسم مستخدم."},
+  "Import…": {"ar": "استيراد…"},
+  "No excluded folders": {"ar": "لا توجد مجلدات مستثناة"},
+  "Settings": {"ar": "الإعدادات"},
+  "Settings imported.": {"ar": "تم استيراد الإعدادات."},
+  "The settings could not be exported.": {"ar": "تعذّر تصدير الإعدادات."},
+  "The settings could not be saved.": {"ar": "تعذّر حفظ الإعدادات."},
+  "This file is not a Clenvra settings file.": {"ar": "هذا الملف ليس ملف إعدادات Clenvra."},
+  "This file was made by a newer version of Clenvra.": {"ar": "أُنشئ هذا الملف بإصدار أحدث من Clenvra."},
+  "Use on Another Mac": {"ar": "الاستخدام على جهاز Mac آخر"},
+  "Settings imported. %lld invalid entries were skipped.": {
+    "en_plural": {"one": "Settings imported. %lld invalid entry was skipped.", "other": "Settings imported. %lld invalid entries were skipped."},
+    "ar_plural": {"zero": "تم استيراد الإعدادات.", "one": "تم استيراد الإعدادات. تم تخطي إدخال واحد غير صالح.", "two": "تم استيراد الإعدادات. تم تخطي إدخالين غير صالحين.", "few": "تم استيراد الإعدادات. تم تخطي %lld إدخالات غير صالحة.", "many": "تم استيراد الإعدادات. تم تخطي %lld إدخالًا غير صالح.", "other": "تم استيراد الإعدادات. تم تخطي %lld إدخال غير صالح."}}
+}

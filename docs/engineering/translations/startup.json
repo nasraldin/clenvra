@@ -1,0 +1,22 @@
+{
+  "Always running": {"ar": "يعمل دائمًا"},
+  "Apple": {"doNotTranslate": true},
+  "At login": {"ar": "عند تسجيل الدخول"},
+  "It is stopped now and will not start again. Its file goes to the Trash, so you can put it back.": {"ar": "سيتوقف الآن ولن يبدأ مرة أخرى. ينتقل ملفه إلى سلة المهملات، لذا يمكنك إرجاعه."},
+  "Login Items Settings": {"ar": "إعدادات عناصر تسجيل الدخول"},
+  "Needs Attention": {"ar": "يحتاج إلى انتباه"},
+  "OK": {"ar": "حسنًا"},
+  "On a schedule": {"ar": "وفق جدول زمني"},
+  "Only your own startup items can be removed here. Use Show in Finder for system items.": {"ar": "يمكن هنا إزالة عناصر بدء التشغيل الخاصة بك فقط. استخدم «إظهار في Finder» لعناصر النظام."},
+  "Program missing — left behind by an app that was removed": {"ar": "البرنامج مفقود — خلّفه تطبيق تمت إزالته"},
+  "Remove this startup item?": {"ar": "هل تريد إزالة عنصر بدء التشغيل هذا؟"},
+  "Remove…": {"ar": "إزالة…"},
+  "Repeats": {"ar": "يتكرر"},
+  "Startup item": {"ar": "عنصر بدء التشغيل"},
+  "Stop and Move to Trash": {"ar": "إيقاف ونقل إلى سلة المهملات"},
+  "System Agents": {"ar": "وكلاء النظام"},
+  "System Daemons": {"ar": "خدمات النظام الخلفية"},
+  "The item was stopped and moved to the Trash.": {"ar": "تم إيقاف العنصر ونقله إلى سلة المهملات."},
+  "When needed": {"ar": "عند الحاجة"},
+  "Your Login Agents": {"ar": "وكلاء تسجيل الدخول الخاصة بك"}
+}

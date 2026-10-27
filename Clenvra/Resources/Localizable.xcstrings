@@ -1,0 +1,5973 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ (whole disk)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (القرص بالكامل)"
+          }
+        }
+      }
+    },
+    "%@ Simulator runtime": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيئة تشغيل محاكي %@"
+          }
+        }
+      }
+    },
+    "%@ available of %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ متاح من %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ available of %2$@"
+          }
+        }
+      }
+    },
+    "%@ free of %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ متاح من %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ free of %2$@"
+          }
+        }
+      }
+    },
+    "%@ of disk free": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ من القرص متاح"
+          }
+        }
+      }
+    },
+    "%lld copies marked": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تحديد %lld نسخ"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تحديد %lld نسخة"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تحديد نسخة واحدة"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تحديد %lld نسخة"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تحديد نسختين"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يتم تحديد أي نسخة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld copy marked"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld copies marked"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld copies · %@ each": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld نسخ · %@ لكل نسخة"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld نسخة · %@ لكل نسخة"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "نسخة واحدة · %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld نسخة · %@ لكل نسخة"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "نسختان · %@ لكل نسخة"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا توجد نسخ · %@ لكل نسخة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld copy · %@ each"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld copies · %@ each"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملفات"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملفًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ملف واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملف"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ملفان"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا ملفات"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files could not be read.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذرت قراءة %lld ملفات."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذرت قراءة %lld ملفًا."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذرت قراءة ملف واحد."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذرت قراءة %lld ملف."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذرت قراءة ملفين."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يتعذر قراءة أي ملف."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file could not be read."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files could not be read."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files found": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم العثور على %lld ملفات"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم العثور على %lld ملفًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم العثور على ملف واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم العثور على %lld ملف"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم العثور على ملفين"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يتم العثور على أي ملف"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file found"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files to compare · %@ read": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملفات للمقارنة · تمت قراءة %@"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملفًا للمقارنة · تمت قراءة %@"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ملف واحد للمقارنة · تمت قراءة %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملف للمقارنة · تمت قراءة %@"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ملفان للمقارنة · تمت قراءة %@"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا توجد ملفات للمقارنة · تمت قراءة %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file to compare · %@ read"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files to compare · %@ read"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld files · %@ found": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملفات · تم العثور على %@"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملفًا · تم العثور على %@"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ملف واحد · تم العثور على %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ملف · تم العثور على %@"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ملفان · تم العثور على %@"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا ملفات · تم العثور على %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file · %@ found"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files · %@ found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld items": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld items left behind by removed apps": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر متبقية من تطبيقات محذوفة"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا متبقيًا من تطبيقات محذوفة"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر واحد متبقٍّ من تطبيقات محذوفة"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر متبقٍّ من تطبيقات محذوفة"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران متبقيان من تطبيقات محذوفة"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر متبقية من تطبيقات محذوفة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item left behind by removed apps"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items left behind by removed apps"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld items selected": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر محددة"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا محددًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر واحد محدد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر محدد"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران محددان"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يُحدَّد أي عنصر"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item selected"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld items were skipped": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تخطي %lld عناصر"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تخطي %lld عنصرًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تخطي عنصر واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تخطي %lld عنصر"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم تخطي عنصرين"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يُتخطَّ أي عنصر"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item was skipped"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items were skipped"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld safe items that apps recreate when needed.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر آمنة تعيد التطبيقات إنشاءها عند الحاجة."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا آمنًا تعيد التطبيقات إنشاءها عند الحاجة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر آمن واحد تعيد التطبيقات إنشاءه عند الحاجة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر آمن تعيد التطبيقات إنشاءها عند الحاجة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران آمنان تعيد التطبيقات إنشاءهما عند الحاجة."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر آمنة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld safe item that apps recreate when needed."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld safe items that apps recreate when needed."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld safe items that your tools rebuild when needed.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر آمنة تعيد أدواتك بناءها عند الحاجة."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا آمنًا تعيد أدواتك بناءها عند الحاجة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر آمن واحد تعيد أدواتك بناءه عند الحاجة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر آمن تعيد أدواتك بناءها عند الحاجة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران آمنان تعيد أدواتك بناءهما عند الحاجة."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر آمنة"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld safe item that your tools rebuild when needed."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld safe items that your tools rebuild when needed."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld safe items, %@": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر آمنة، %@"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا آمنًا، %@"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر آمن واحد، %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر آمن، %@"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران آمنان، %@"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر آمنة، %@"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld safe item, %@"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld safe items, %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld security settings are off or need review.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld إعدادات أمان متوقفة أو تحتاج إلى مراجعة."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld إعدادًا أمنيًا متوقفًا أو يحتاج إلى مراجعة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "إعداد أمان واحد متوقف أو يحتاج إلى مراجعة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld إعداد أمان متوقف أو يحتاج إلى مراجعة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "إعدادا أمان متوقفان أو يحتاجان إلى مراجعة."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا إعدادات أمان متوقفة أو تحتاج إلى مراجعة."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld security setting is off or needs review."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld security settings are off or need review."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld settings need attention": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld إعدادات تحتاج إلى انتباه"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld إعدادًا يحتاج إلى انتباه"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "إعداد واحد يحتاج إلى انتباه"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld إعداد يحتاج إلى انتباه"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "إعدادان يحتاجان إلى انتباه"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا إعدادات تحتاج إلى انتباه"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld setting needs attention"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld settings need attention"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld simulators whose runtime is no longer installed. Deleting them also removes their apps and data.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld محاكيات لم تعد بيئة تشغيلها مثبتة. حذفها يزيل تطبيقاتها وبياناتها أيضًا."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld محاكيًا لم تعد بيئة تشغيلها مثبتة. حذفها يزيل تطبيقاتها وبياناتها أيضًا."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "محاكٍ واحد لم تعد بيئة تشغيله مثبتة. حذفه يزيل تطبيقاته وبياناته أيضًا."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld محاكٍ لم تعد بيئة تشغيلها مثبتة. حذفها يزيل تطبيقاتها وبياناتها أيضًا."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "محاكيان لم تعد بيئة تشغيلهما مثبتة. حذفهما يزيل تطبيقاتهما وبياناتهما أيضًا."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا توجد محاكيات بلا بيئة تشغيل."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld simulator whose runtime is no longer installed. Deleting it also removes its apps and data."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld simulators whose runtime is no longer installed. Deleting them also removes their apps and data."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld startup items belong to apps that were removed.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر بدء تشغيل تعود إلى تطبيقات محذوفة."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا من عناصر بدء التشغيل يعود إلى تطبيقات محذوفة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر بدء تشغيل واحد يعود إلى تطبيق محذوف."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر بدء تشغيل يعود إلى تطبيقات محذوفة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصرا بدء تشغيل يعودان إلى تطبيقات محذوفة."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر بدء تشغيل لتطبيقات محذوفة."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld startup item belongs to an app that was removed."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld startup items belong to apps that were removed."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld startup items, none left behind": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر بدء تشغيل، ولا شيء متبقٍّ"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر بدء تشغيل، ولا شيء متبقٍّ"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر بدء تشغيل واحد، ولا شيء متبقٍّ"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر بدء تشغيل، ولا شيء متبقٍّ"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصرا بدء تشغيل، ولا شيء متبقٍّ"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا عناصر بدء تشغيل"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld startup item, none left behind"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld startup items, none left behind"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld tool stores found": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عُثر على %lld مخازن أدوات"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عُثر على %lld مخزن أدوات"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عُثر على مخزن أداة واحد"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عُثر على %lld مخزن أدوات"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عُثر على مخزنَي أدوات"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يُعثر على مخازن أدوات"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tool store found"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tool stores found"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "1 year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنة واحدة"
+          }
+        }
+      }
+    },
+    "2 years": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنتين"
+          }
+        }
+      }
+    },
+    "6 months": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستة أشهر"
+          }
+        }
+      }
+    },
+    "A Lima virtual machine and its disk. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جهاز Lima افتراضي وقرصه. معروض للعلم فقط."
+          }
+        }
+      }
+    },
+    "A folder on the way to this item changed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر مجلد في المسار المؤدي إلى هذا العنصر."
+          }
+        }
+      }
+    },
+    "A main folder of your home folder. Open it to review what is inside.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد رئيسي في مجلد الصفحة الرئيسية. افتحه لمراجعة محتوياته."
+          }
+        }
+      }
+    },
+    "Action": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجراء"
+          }
+        }
+      }
+    },
+    "Activity": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النشاط"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة"
+          }
+        }
+      }
+    },
+    "Add Folder…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة مجلد…"
+          }
+        }
+      }
+    },
+    "Add at least one folder to search.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف مجلدًا واحدًا على الأقل للبحث فيه."
+          }
+        }
+      }
+    },
+    "Age": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العمر"
+          }
+        }
+      }
+    },
+    "All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكل"
+          }
+        }
+      }
+    },
+    "All Sections": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل الأقسام"
+          }
+        }
+      }
+    },
+    "Also used by %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدمه أيضًا %@"
+          }
+        }
+      }
+    },
+    "Always running": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعمل دائمًا"
+          }
+        }
+      }
+    },
+    "Another item now occupies its original location, so it was left in the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد عنصر آخر الآن في موقعه الأصلي، لذلك بقي في سلة المهملات."
+          }
+        }
+      }
+    },
+    "Any time": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي وقت"
+          }
+        }
+      }
+    },
+    "App Caches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت للتطبيقات"
+          }
+        }
+      }
+    },
+    "App Memory": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التطبيقات"
+          }
+        }
+      }
+    },
+    "App Scripts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نصوص التطبيق البرمجية"
+          }
+        }
+      }
+    },
+    "App Store": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store"
+          }
+        }
+      }
+    },
+    "App size: %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حجم التطبيق: %@"
+          }
+        }
+      }
+    },
+    "Apple": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple"
+          }
+        }
+      },
+      "shouldTranslate": false
+    },
+    "Apple built-in signature engine that detects and blocks known malware.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محرك آبل المدمج للتعرف على البرامج الضارة المعروفة وحظرها."
+          }
+        }
+      }
+    },
+    "Application Support": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دعم التطبيقات"
+          }
+        }
+      }
+    },
+    "Applications": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التطبيقات"
+          }
+        }
+      }
+    },
+    "Archives": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأرشيفات"
+          }
+        }
+      }
+    },
+    "Are you sure you want to quit %@? Unsaved changes may be lost.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل أنت متأكد من أنك تريد إنهاء %@؟ قد تُفقد التغييرات غير المحفوظة."
+          }
+        }
+      }
+    },
+    "At least": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الأقل"
+          }
+        }
+      }
+    },
+    "At least one copy is always kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم الاحتفاظ دائمًا بنسخة واحدة على الأقل."
+          }
+        }
+      }
+    },
+    "At login": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Attention": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنبيه"
+          }
+        }
+      }
+    },
+    "Audio": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصوت"
+          }
+        }
+      }
+    },
+    "Available Memory": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذاكرة المتوفرة"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجوع"
+          }
+        }
+      }
+    },
+    "Batch Stopped": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توقّفت الدُفعة"
+          }
+        }
+      }
+    },
+    "Battery": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البطارية"
+          }
+        }
+      }
+    },
+    "Battery: %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البطارية: %@"
+          }
+        }
+      }
+    },
+    "Blocks unwanted incoming network connections and services.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحظر الاتصالات والخدمات الشبكية الواردة غير المرغوب فيها."
+          }
+        }
+      }
+    },
+    "Browser": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المستعرض"
+          }
+        }
+      }
+    },
+    "Browser Caches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت للمتصفحات"
+          }
+        }
+      }
+    },
+    "Build data and device support files. Xcode recreates them; the next build is slower.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات البناء وملفات دعم الأجهزة. يعيد Xcode إنشاءها، لكن البناء التالي سيكون أبطأ."
+          }
+        }
+      }
+    },
+    "Bun": {
+      "shouldTranslate": false
+    },
+    "CPU": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المعالج"
+          }
+        }
+      }
+    },
+    "CPU Usage": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدام المعالج"
+          }
+        }
+      }
+    },
+    "Cache": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت"
+          }
+        }
+      }
+    },
+    "Cached web content. History, passwords and sign-ins are kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محتوى الويب المخزّن مؤقتًا. يُحتفظ بالسجل وكلمات المرور وجلسات تسجيل الدخول."
+          }
+        }
+      }
+    },
+    "Caches, logs and other junk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت والسجلات والملفات غير الضرورية"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء"
+          }
+        }
+      }
+    },
+    "Cargo has no built-in command to clear its registry cache. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوفّر Cargo أمرًا مدمجًا لمسح ذاكرة التخزين المؤقت للسجل. معروض للعلم فقط."
+          }
+        }
+      }
+    },
+    "Cargo registry": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجل Cargo"
+          }
+        }
+      }
+    },
+    "Certain": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مؤكد"
+          }
+        }
+      }
+    },
+    "Charge": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشحن"
+          }
+        }
+      }
+    },
+    "Check Again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص مجددًا"
+          }
+        }
+      }
+    },
+    "Check that the disk is connected and that Clenvra has Full Disk Access.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقق من أن القرص متصل وأن Clenvra لديه وصول كامل إلى القرص."
+          }
+        }
+      }
+    },
+    "Checking developer tools…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ فحص أدوات المطوّر…"
+          }
+        }
+      }
+    },
+    "Choose Copies": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختيار النسخ"
+          }
+        }
+      }
+    },
+    "Choose an app in the list, or drag one from Finder onto this window.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر تطبيقًا من القائمة، أو اسحب تطبيقًا من Finder إلى هذه النافذة."
+          }
+        }
+      }
+    },
+    "Cleanup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التنظيف"
+          }
+        }
+      }
+    },
+    "Cleanup and other actions Clenvra performs will appear here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تظهر هنا إجراءات التنظيف والإجراءات الأخرى التي ينفّذها Clenvra."
+          }
+        }
+      }
+    },
+    "Clean…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنظيف…"
+          }
+        }
+      }
+    },
+    "Clenvra could not read this app. It may have been moved.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على Clenvra قراءة هذا التطبيق. ربما تم نقله."
+          }
+        }
+      }
+    },
+    "Clenvra never lists or removes anything inside these folders. Changes apply immediately.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يعرض Clenvra أي شيء داخل هذه المجلدات ولا يزيله. تُطبَّق التغييرات فورًا."
+          }
+        }
+      }
+    },
+    "Clenvra will run this command:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيشغّل Clenvra هذا الأمر:"
+          }
+        }
+      }
+    },
+    "CocoaPods": {
+      "shouldTranslate": false
+    },
+    "Comparing file sizes…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ مقارنة أحجام الملفات…"
+          }
+        }
+      }
+    },
+    "Compressed Memory": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذاكرة المضغوطة"
+          }
+        }
+      }
+    },
+    "Condition": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة"
+          }
+        }
+      }
+    },
+    "Container registered to": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حاوية مسجّلة باسم"
+          }
+        }
+      }
+    },
+    "Containers & Virtual Machines": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحاويات والأجهزة الافتراضية"
+          }
+        }
+      }
+    },
+    "Contains protected files, such as keys, so it can't be removed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتوي على ملفات محمية، مثل المفاتيح، لذا لا يمكن إزالته."
+          }
+        }
+      }
+    },
+    "Copy Path": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ المسار"
+          }
+        }
+      }
+    },
+    "Could Not Export": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر التصدير"
+          }
+        }
+      }
+    },
+    "Could Not Put Back": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الإرجاع"
+          }
+        }
+      }
+    },
+    "Could not read this location": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذرت قراءة هذا الموقع"
+          }
+        }
+      }
+    },
+    "Crash Reports": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقارير الأعطال"
+          }
+        }
+      }
+    },
+    "Critical": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حرج"
+          }
+        }
+      }
+    },
+    "Cycle Count": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدد الدورات"
+          }
+        }
+      }
+    },
+    "Dependencies and build output inside your projects. Reinstall or rebuild to get them back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التبعيات ومخرجات البناء داخل مشاريعك. أعد التثبيت أو البناء لاستعادتها."
+          }
+        }
+      }
+    },
+    "Deselect All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء تحديد الكل"
+          }
+        }
+      }
+    },
+    "Developer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدوات المطوّر"
+          }
+        }
+      }
+    },
+    "Developer Tools": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدوات المطوّر"
+          }
+        }
+      }
+    },
+    "Developer build data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات البناء الخاصة بالمطوّرين"
+          }
+        }
+      }
+    },
+    "Developer tool storage": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساحة أدوات المطوّر"
+          }
+        }
+      }
+    },
+    "Diagnostic logs older than a week. Apps keep writing new ones.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجلات تشخيصية أقدم من أسبوع. تستمر التطبيقات في كتابة سجلات جديدة."
+          }
+        }
+      }
+    },
+    "Disk images and installer packages in Downloads. Check you no longer need them.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صور الأقراص وحزم التثبيت في مجلد التنزيلات. تأكد من أنك لم تعد بحاجة إليها."
+          }
+        }
+      }
+    },
+    "Docker": {
+      "shouldTranslate": false
+    },
+    "Docker build cache": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت لبناء Docker"
+          }
+        }
+      }
+    },
+    "Docker images": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صور Docker"
+          }
+        }
+      }
+    },
+    "Docker is not running.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker لا يعمل."
+          }
+        }
+      }
+    },
+    "Documents": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المستندات"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم"
+          }
+        }
+      }
+    },
+    "Done.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم."
+          }
+        }
+      }
+    },
+    "Downloaded packages kept by package managers. They are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حزم نزّلتها مديرات الحزم. يُعاد تنزيلها عند الحاجة."
+          }
+        }
+      }
+    },
+    "Downloads & Screenshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التنزيلات ولقطات الشاشة"
+          }
+        }
+      }
+    },
+    "Downloads is empty and there are no screenshots.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد التنزيلات فارغ ولا توجد لقطات شاشة."
+          }
+        }
+      }
+    },
+    "Duplicates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات المكررة"
+          }
+        }
+      }
+    },
+    "Editor Caches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت للمحررات"
+          }
+        }
+      }
+    },
+    "Editor caches. Settings, extensions and workspaces are kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت للمحررات. يُحتفظ بالإعدادات والإضافات ومساحات العمل."
+          }
+        }
+      }
+    },
+    "Encrypts the system volume to prevent unauthorized access to your data.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يشفر قرص النظام لمنع الوصول غير المصرح به إلى بياناتك."
+          }
+        }
+      }
+    },
+    "Enforces signature and notarization checks before opening downloaded apps.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتحقق من التوقيع والمصادقة قبل فتح التطبيقات التي تم تنزيلها."
+          }
+        }
+      }
+    },
+    "Ensures critical security updates and system definitions install automatically.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يضمن تثبيت تحديثات الأمان المهمة وتعريفات النظام تلقائيًا."
+          }
+        }
+      }
+    },
+    "Every item is checked again just before it is moved. You can put items back from Activity.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُفحص كل عنصر مرة أخرى قبل نقله مباشرة. يمكنك إرجاع العناصر من السجل."
+          }
+        }
+      }
+    },
+    "Excluded": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستثنى"
+          }
+        }
+      }
+    },
+    "Excluded Folders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجلدات المستثناة"
+          }
+        }
+      }
+    },
+    "Export…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصدير…"
+          }
+        }
+      }
+    },
+    "Failed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فشل"
+          }
+        }
+      }
+    },
+    "Fair": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معتدل"
+          }
+        }
+      }
+    },
+    "FileVault": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FileVault"
+          }
+        }
+      }
+    },
+    "Files outside your home folder are not removed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لن تُزال الملفات الموجودة خارج مجلد الإقامة."
+          }
+        }
+      }
+    },
+    "Filter by Section": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصفية حسب القسم"
+          }
+        }
+      }
+    },
+    "Find Duplicates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث عن الملفات المكررة"
+          }
+        }
+      }
+    },
+    "Finding the app's files…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن ملفات التطبيق…"
+          }
+        }
+      }
+    },
+    "Finished": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتمل"
+          }
+        }
+      }
+    },
+    "Firewall": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جدار الحماية"
+          }
+        }
+      }
+    },
+    "Folder named like the app:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد يحمل اسم التطبيق:"
+          }
+        }
+      }
+    },
+    "Folders in your home folder are saved relative to it, so they work for any user name.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُحفظ المجلدات الموجودة في مجلد المنزل بالنسبة إليه، لذا تعمل مع أي اسم مستخدم."
+          }
+        }
+      }
+    },
+    "Folders to Search": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجلدات المراد البحث فيها"
+          }
+        }
+      }
+    },
+    "Force Quit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فرض الإنهاء"
+          }
+        }
+      }
+    },
+    "Force Quit Application": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فرض إنهاء التطبيق"
+          }
+        }
+      }
+    },
+    "Force quitting immediately terminates %@. Any unsaved data will be lost.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يؤدي فرض الإنهاء إلى إيقاف %@ فورًا. ستُفقد أي بيانات غير محفوظة."
+          }
+        }
+      }
+    },
+    "Found through the app's group or its exact name. Selected only when no other app may use it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عُثر عليه من خلال مجموعة التطبيق أو اسمه المطابق. يُحدَّد فقط إذا لم يكن أي تطبيق آخر قد يستخدمه."
+          }
+        }
+      }
+    },
+    "Found through the app's identifier or system records.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عُثر عليه من خلال معرّف التطبيق أو سجلات النظام."
+          }
+        }
+      }
+    },
+    "Free %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متاح %@"
+          }
+        }
+      }
+    },
+    "Freed %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تحرير %@"
+          }
+        }
+      }
+    },
+    "Freed about %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تحرير نحو %@."
+          }
+        }
+      }
+    },
+    "Frees about %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحرر حوالي %@"
+          }
+        }
+      }
+    },
+    "Frees ≈": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحرر ≈"
+          }
+        }
+      }
+    },
+    "Full Disk Access": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول الكامل إلى القرص"
+          }
+        }
+      }
+    },
+    "Full Disk Access is off": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول الكامل إلى القرص غير مفعّل"
+          }
+        }
+      }
+    },
+    "Full Disk Access is on": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول الكامل إلى القرص مفعّل"
+          }
+        }
+      }
+    },
+    "Full Disk Access status is unknown": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حالة الوصول الكامل إلى القرص غير معروفة"
+          }
+        }
+      }
+    },
+    "Gatekeeper": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gatekeeper"
+          }
+        }
+      }
+    },
+    "Go": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتقال"
+          }
+        }
+      }
+    },
+    "Go modules": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وحدات Go"
+          }
+        }
+      }
+    },
+    "Good": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سليم"
+          }
+        }
+      }
+    },
+    "Gradle": {
+      "shouldTranslate": false
+    },
+    "Gradle has no safe command to clear its global cache. Cleanup rules can remove it instead.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوفّر Gradle أمرًا آمنًا لمسح ذاكرة التخزين المؤقت العامة. يمكن لقواعد التنظيف إزالتها بدلًا من ذلك."
+          }
+        }
+      }
+    },
+    "Group Container": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حاوية مجموعة"
+          }
+        }
+      }
+    },
+    "Group by": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التجميع حسب"
+          }
+        }
+      }
+    },
+    "Health": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة"
+          }
+        }
+      }
+    },
+    "Heavy Processes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العمليات المستهلكة"
+          }
+        }
+      }
+    },
+    "Hidden files, apps and photo libraries are not searched.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يتم البحث في الملفات المخفية والتطبيقات ومكتبات الصور."
+          }
+        }
+      }
+    },
+    "Holds keys, certificates or passwords. Clenvra never removes it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتوي على مفاتيح أو شهادات أو كلمات سر. لا يزيله Clenvra أبدًا."
+          }
+        }
+      }
+    },
+    "Holds mail, messages, photos or cloud files. Clenvra never removes it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتوي على البريد أو الرسائل أو الصور أو ملفات السحابة. لا يزيله Clenvra أبدًا."
+          }
+        }
+      }
+    },
+    "Home folder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد الصفحة الرئيسية"
+          }
+        }
+      }
+    },
+    "Homebrew": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew"
+          }
+        }
+      },
+      "shouldTranslate": false
+    },
+    "Homebrew could not remove the app": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على Homebrew إزالة التطبيق"
+          }
+        }
+      }
+    },
+    "Homebrew removed the app": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزال Homebrew التطبيق"
+          }
+        }
+      }
+    },
+    "Homebrew removes the app permanently. It does not go to the Trash and can't be put back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل Homebrew التطبيق نهائيًا. لن يُنقل إلى سلة المهملات ولا يمكن استعادته."
+          }
+        }
+      }
+    },
+    "Ignore files smaller than": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تجاهل الملفات الأصغر من"
+          }
+        }
+      }
+    },
+    "Images": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور"
+          }
+        }
+      }
+    },
+    "Import…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استيراد…"
+          }
+        }
+      }
+    },
+    "In use": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيد الاستخدام"
+          }
+        }
+      }
+    },
+    "Installed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المثبّتة"
+          }
+        }
+      }
+    },
+    "Installed by package": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثبّتته الحزمة"
+          }
+        }
+      }
+    },
+    "Installed with Homebrew": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثبّت باستخدام Homebrew"
+          }
+        }
+      }
+    },
+    "Installers & Disk Images": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المثبّتات وصور الأقراص"
+          }
+        }
+      }
+    },
+    "It changed after you reviewed it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر بعد أن راجعته."
+          }
+        }
+      }
+    },
+    "It is locked or protected by macOS.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقفل أو محمي بواسطة macOS."
+          }
+        }
+      }
+    },
+    "It is on another disk.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موجود على قرص آخر."
+          }
+        }
+      }
+    },
+    "It is protected or contains protected items.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محمي أو يحتوي على عناصر محمية."
+          }
+        }
+      }
+    },
+    "It is stopped now and will not start again. Its file goes to the Trash, so you can put it back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيتوقف الآن ولن يبدأ مرة أخرى. ينتقل ملفه إلى سلة المهملات، لذا يمكنك إرجاعه."
+          }
+        }
+      }
+    },
+    "It no longer exists.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد موجودًا."
+          }
+        }
+      }
+    },
+    "Items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العناصر"
+          }
+        }
+      }
+    },
+    "Items already in the Trash. Emptying it cannot be undone.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عناصر موجودة في سلة المهملات. لا يمكن التراجع عن إفراغها."
+          }
+        }
+      }
+    },
+    "Keep": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ"
+          }
+        }
+      }
+    },
+    "Keep Copies in Folder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بالنسخ الموجودة في مجلد"
+          }
+        }
+      }
+    },
+    "Keep Newest in Each Group": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بالأحدث في كل مجموعة"
+          }
+        }
+      }
+    },
+    "Keep Oldest in Each Group": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بالأقدم في كل مجموعة"
+          }
+        }
+      }
+    },
+    "Keep only this copy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بهذه النسخة فقط"
+          }
+        }
+      }
+    },
+    "Keys & passwords": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المفاتيح وكلمات السر"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النوع"
+          }
+        }
+      }
+    },
+    "Large & Old": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكبيرة والقديمة"
+          }
+        }
+      }
+    },
+    "Large item to review": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنصر كبير يحتاج إلى مراجعة"
+          }
+        }
+      }
+    },
+    "Last 12 Months": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر اثني عشر شهرًا"
+          }
+        }
+      }
+    },
+    "Last 30 Days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر ثلاثين يومًا"
+          }
+        }
+      }
+    },
+    "Last 7 Days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر سبعة أيام"
+          }
+        }
+      }
+    },
+    "Last Used": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر استخدام"
+          }
+        }
+      }
+    },
+    "Last opened %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر فتح: %@"
+          }
+        }
+      }
+    },
+    "Launch Agent": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وكيل تشغيل"
+          }
+        }
+      }
+    },
+    "Launch item declares": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنصر التشغيل يُعلن"
+          }
+        }
+      }
+    },
+    "Leftovers": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البقايا"
+          }
+        }
+      }
+    },
+    "Leftovers of removed apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بقايا التطبيقات المحذوفة"
+          }
+        }
+      }
+    },
+    "Lets scans include protected folders such as Safari and Mail data. Clenvra only reads them; nothing is deleted without your review.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتيح للفحص تضمين المجلدات المحمية، مثل بيانات Safari والبريد. يكتفي Clenvra بقراءتها، ولا يُحذف أي شيء دون مراجعتك."
+          }
+        }
+      }
+    },
+    "Likely": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرجّح"
+          }
+        }
+      }
+    },
+    "Lima (%@)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lima (%@)"
+          }
+        }
+      }
+    },
+    "Local backups of iPhone and iPad. Removing one deletes that backup.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ احتياطية محلية لأجهزة iPhone وiPad. إزالة نسخة تعني حذفها."
+          }
+        }
+      }
+    },
+    "Login Items Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعدادات عناصر تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Logs": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات السجل"
+          }
+        }
+      }
+    },
+    "Looking for apps…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن التطبيقات…"
+          }
+        }
+      }
+    },
+    "Looking for developer tools…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن أدوات المطوّرين…"
+          }
+        }
+      }
+    },
+    "Looking for files…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن الملفات…"
+          }
+        }
+      }
+    },
+    "Looking for leftovers…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن البقايا…"
+          }
+        }
+      }
+    },
+    "Looks through caches, developer data, startup items and security settings. It only reads: nothing is deleted until you review it in its section.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يفحص ذاكرة التخزين المؤقت وبيانات المطوّرين وعناصر بدء التشغيل وإعدادات الأمان. يقرأ فقط: لا يُحذف أي شيء قبل أن تراجعه في قسمه."
+          }
+        }
+      }
+    },
+    "Managed by macOS": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يديره macOS"
+          }
+        }
+      }
+    },
+    "Managed by your organisation": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تديره مؤسستك"
+          }
+        }
+      }
+    },
+    "Maximum Capacity": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقصى سعة"
+          }
+        }
+      }
+    },
+    "Memory": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذاكرة"
+          }
+        }
+      }
+    },
+    "Memory Pressure": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضغط الذاكرة"
+          }
+        }
+      }
+    },
+    "Memory Usage": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدام الذاكرة"
+          }
+        }
+      }
+    },
+    "Memory pressure: %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضغط الذاكرة: %@"
+          }
+        }
+      }
+    },
+    "Modified": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تاريخ التعديل"
+          }
+        }
+      }
+    },
+    "Modified %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر تعديل: %@"
+          }
+        }
+      }
+    },
+    "Move %lld items to the Trash?": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد نقل %lld عناصر إلى سلة المهملات؟"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد نقل %lld عنصرًا إلى سلة المهملات؟"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد نقل عنصر واحد إلى سلة المهملات؟"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد نقل %lld عنصر إلى سلة المهملات؟"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد نقل عنصرين إلى سلة المهملات؟"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد نقل %lld عنصر إلى سلة المهملات؟"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld item to the Trash?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld items to the Trash?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Move to Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقل إلى سلة المهملات"
+          }
+        }
+      }
+    },
+    "Moved %lld items to the Trash": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل %lld عناصر إلى سلة المهملات"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل %lld عنصرًا إلى سلة المهملات"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل عنصر واحد إلى سلة المهملات"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل %lld عنصر إلى سلة المهملات"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل عنصرين إلى سلة المهملات"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يُنقل أي عنصر إلى سلة المهملات"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Moved %lld item to the Trash"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Moved %lld items to the Trash"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Moved to Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نُقل إلى سلة المهملات"
+          }
+        }
+      }
+    },
+    "Moving the item back did not succeed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر نقل العنصر إلى موقعه الأصلي."
+          }
+        }
+      }
+    },
+    "Moving to the Trash…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ النقل إلى سلة المهملات…"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم"
+          }
+        }
+      }
+    },
+    "Name contains the app's name:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم يتضمن اسم التطبيق:"
+          }
+        }
+      }
+    },
+    "Named after the identifier": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحمل اسم المعرّف"
+          }
+        }
+      }
+    },
+    "Needs Attention": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتاج إلى انتباه"
+          }
+        }
+      }
+    },
+    "No Activity Yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا نشاط بعد"
+          }
+        }
+      }
+    },
+    "No Results": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد نتائج"
+          }
+        }
+      }
+    },
+    "No apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد تطبيقات"
+          }
+        }
+      }
+    },
+    "No apps match the current search or filter.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد تطبيقات تطابق البحث أو عامل التصفية الحالي."
+          }
+        }
+      }
+    },
+    "No developer tool data found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على بيانات لأدوات المطوّرين"
+          }
+        }
+      }
+    },
+    "No duplicates found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم العثور على ملفات مكررة"
+          }
+        }
+      }
+    },
+    "No excluded folders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مجلدات مستثناة"
+          }
+        }
+      }
+    },
+    "No files from removed apps were found, or they were changed in the last 30 days.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على ملفات من تطبيقات محذوفة، أو أنها تغيّرت خلال آخر 30 يومًا."
+          }
+        }
+      }
+    },
+    "No files match": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد ملفات مطابقة"
+          }
+        }
+      }
+    },
+    "No heavy processes detected": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم رصد عمليات مستهلكة"
+          }
+        }
+      }
+    },
+    "No identical files were found in the folders you chose.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم العثور على ملفات متطابقة في المجلدات التي اخترتها."
+          }
+        }
+      }
+    },
+    "No issues found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على مشكلات"
+          }
+        }
+      }
+    },
+    "No items were found in this section on this Mac.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على أي عناصر في هذا القسم على جهاز Mac هذا."
+          }
+        }
+      }
+    },
+    "No leftovers found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على بقايا"
+          }
+        }
+      }
+    },
+    "No other files were found for this app.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على ملفات أخرى لهذا التطبيق."
+          }
+        }
+      }
+    },
+    "Normal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طبيعي"
+          }
+        }
+      }
+    },
+    "Not Attempted": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُجرّب"
+          }
+        }
+      }
+    },
+    "Not attempted because the cleanup was stopped.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تتم المحاولة لأن التنظيف توقّف."
+          }
+        }
+      }
+    },
+    "Not available yet.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير متاح بعد."
+          }
+        }
+      }
+    },
+    "Not modified in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعدَّل منذ"
+          }
+        }
+      }
+    },
+    "Not scanned yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم الفحص بعد"
+          }
+        }
+      }
+    },
+    "Nothing else was changed. The output below explains what went wrong.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتغيّر أي شيء آخر. يوضّح الناتج أدناه ما الخطأ الذي حدث."
+          }
+        }
+      }
+    },
+    "Nothing needs your attention right now.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء يحتاج إلى انتباهك الآن."
+          }
+        }
+      }
+    },
+    "Nothing to clean": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد ما يمكن تنظيفه"
+          }
+        }
+      }
+    },
+    "Nothing to review": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد ما يحتاج إلى مراجعة"
+          }
+        }
+      }
+    },
+    "Nothing was changed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم تغيير أي شيء."
+          }
+        }
+      }
+    },
+    "Nothing was removed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تتم إزالة أي شيء"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حسنًا"
+          }
+        }
+      }
+    },
+    "Older": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقدم"
+          }
+        }
+      }
+    },
+    "On a schedule": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وفق جدول زمني"
+          }
+        }
+      }
+    },
+    "One copy of every file is always kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم الاحتفاظ دائمًا بنسخة واحدة من كل ملف."
+          }
+        }
+      }
+    },
+    "Only %@ is free. See what uses the most space.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساحة المتاحة %@ فقط. اعرف ما الذي يشغل أكبر مساحة."
+          }
+        }
+      }
+    },
+    "Only your own startup items can be removed here. Use Show in Finder for system items.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكن هنا إزالة عناصر بدء التشغيل الخاصة بك فقط. استخدم «إظهار في Finder» لعناصر النظام."
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح"
+          }
+        }
+      }
+    },
+    "Open Privacy & Security Settings…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات الخصوصية والأمن…"
+          }
+        }
+      }
+    },
+    "Open Settings…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح الإعدادات…"
+          }
+        }
+      }
+    },
+    "Open System Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات النظام"
+          }
+        }
+      }
+    },
+    "Other Files": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات أخرى"
+          }
+        }
+      }
+    },
+    "Outside your home folder. Needs an administrator, so it is only shown.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خارج مجلد الإقامة. يتطلب مسؤولًا، لذا يُعرض فقط."
+          }
+        }
+      }
+    },
+    "Overview": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نظرة عامة"
+          }
+        }
+      }
+    },
+    "Package Caches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت للحزم"
+          }
+        }
+      }
+    },
+    "Part of macOS. Clenvra never removes it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من macOS. لا يزيله Clenvra أبدًا."
+          }
+        }
+      }
+    },
+    "Partial results: the scan was stopped before it finished, so sizes may be too small.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نتائج جزئية: تم إيقاف الفحص قبل اكتماله، لذا قد تكون الأحجام أصغر من الحقيقية."
+          }
+        }
+      }
+    },
+    "Personal data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات شخصية"
+          }
+        }
+      }
+    },
+    "Possible": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محتمل"
+          }
+        }
+      }
+    },
+    "Preferences": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التفضيلات"
+          }
+        }
+      }
+    },
+    "Preview": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة"
+          }
+        }
+      }
+    },
+    "Preview: %lld items can be moved to the Trash": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "معاينة: يمكن نقل %lld عناصر إلى سلة المهملات"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "معاينة: يمكن نقل %lld عنصرًا إلى سلة المهملات"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "معاينة: يمكن نقل عنصر واحد إلى سلة المهملات"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "معاينة: يمكن نقل %lld عنصر إلى سلة المهملات"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "معاينة: يمكن نقل عنصرين إلى سلة المهملات"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "معاينة: لا توجد عناصر يمكن نقلها إلى سلة المهملات"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Preview: %lld item can be moved to the Trash"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Preview: %lld items can be moved to the Trash"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Process": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العملية"
+          }
+        }
+      }
+    },
+    "Program missing — left behind by an app that was removed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البرنامج مفقود — خلّفه تطبيق تمت إزالته"
+          }
+        }
+      }
+    },
+    "Project Build Folders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلدات بناء المشاريع"
+          }
+        }
+      }
+    },
+    "Protected": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محمي"
+          }
+        }
+      }
+    },
+    "Protected by Clenvra.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محمي بواسطة Clenvra."
+          }
+        }
+      }
+    },
+    "Protects system-owned files and directories against unauthorized modification.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحمي ملفات ومجلدات النظام من أي تعديل غير مصرح به."
+          }
+        }
+      }
+    },
+    "Purgeable ≈ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قابل للإزالة تلقائيًا ≈ %@"
+          }
+        }
+      }
+    },
+    "Put Back": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إرجاع"
+          }
+        }
+      }
+    },
+    "Quick Look": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نظرة سريعة"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء"
+          }
+        }
+      }
+    },
+    "Quit %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء %@"
+          }
+        }
+      }
+    },
+    "Quit %@ to uninstall it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قم بإنهاء %@ لإلغاء تثبيته."
+          }
+        }
+      }
+    },
+    "Quit Application": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء التطبيق"
+          }
+        }
+      }
+    },
+    "Reading possible duplicates…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ قراءة الملفات التي قد تكون مكررة…"
+          }
+        }
+      }
+    },
+    "Recommendations": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توصيات"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديث"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة"
+          }
+        }
+      }
+    },
+    "Remove this startup item?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد إزالة عنصر بدء التشغيل هذا؟"
+          }
+        }
+      }
+    },
+    "Remove unused runtimes in Xcode › Settings › Components.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزل بيئات التشغيل غير المستخدمة من Xcode › الإعدادات › المكونات."
+          }
+        }
+      }
+    },
+    "Removed Permanently": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت الإزالة نهائيًا"
+          }
+        }
+      }
+    },
+    "Removes Bun's download cache. Packages are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرة التخزين المؤقت لتنزيلات Bun. يُعاد تنزيل الحزم عند الحاجة."
+          }
+        }
+      }
+    },
+    "Removes Yarn's download cache. Packages are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرة التخزين المؤقت لتنزيلات Yarn. يُعاد تنزيل الحزم عند الحاجة."
+          }
+        }
+      }
+    },
+    "Removes dangling images only: untagged layers that no image or container uses.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل الصور المعلّقة فقط: طبقات بلا وسم لا تستخدمها أي صورة أو حاوية."
+          }
+        }
+      }
+    },
+    "Removes downloaded pods. They are downloaded again on the next pod install.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل حزم Pods المنزّلة. يُعاد تنزيلها عند تنفيذ pod install التالي."
+          }
+        }
+      }
+    },
+    "Removes every downloaded Go module. Builds download them again, which can take a while.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل كل وحدات Go المنزّلة. يعيد البناء تنزيلها، وقد يستغرق ذلك بعض الوقت."
+          }
+        }
+      }
+    },
+    "Removes npm's download cache. Packages are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرة التخزين المؤقت لتنزيلات npm. يُعاد تنزيل الحزم عند الحاجة."
+          }
+        }
+      }
+    },
+    "Removes old versions of installed packages and cached downloads.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل الإصدارات القديمة من الحزم المثبتة والتنزيلات المخزّنة مؤقتًا."
+          }
+        }
+      }
+    },
+    "Removes packages no project references. They are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل الحزم التي لا يشير إليها أي مشروع. يُعاد تنزيلها عند الحاجة."
+          }
+        }
+      }
+    },
+    "Removes pip's cache of downloaded and built packages. They are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرة pip المؤقتة للحزم المنزّلة والمبنية. يُعاد تنزيلها عند الحاجة."
+          }
+        }
+      }
+    },
+    "Removes the build cache. Later builds may take longer.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرة التخزين المؤقت للبناء. قد تستغرق عمليات البناء اللاحقة وقتًا أطول."
+          }
+        }
+      }
+    },
+    "Removes uv's cache. Packages are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرة uv المؤقتة. يُعاد تنزيل الحزم عند الحاجة."
+          }
+        }
+      }
+    },
+    "Remove…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة…"
+          }
+        }
+      }
+    },
+    "Repeats": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتكرر"
+          }
+        }
+      }
+    },
+    "Reports from past app crashes, older than a week.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقارير أعطال التطبيقات السابقة الأقدم من أسبوع."
+          }
+        }
+      }
+    },
+    "Rescan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة الفحص"
+          }
+        }
+      }
+    },
+    "Restored": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الإرجاع"
+          }
+        }
+      }
+    },
+    "Review": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتاج إلى مراجعة"
+          }
+        }
+      }
+    },
+    "Run": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل"
+          }
+        }
+      }
+    },
+    "Run Command": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل الأمر"
+          }
+        }
+      }
+    },
+    "Run this command?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد تشغيل هذا الأمر؟"
+          }
+        }
+      }
+    },
+    "Runs a program inside the app:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يشغّل برنامجًا داخل التطبيق:"
+          }
+        }
+      }
+    },
+    "Safe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آمن"
+          }
+        }
+      }
+    },
+    "Sampling active host processes…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ فحص العمليات النشطة…"
+          }
+        }
+      }
+    },
+    "Sandbox Container": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حاوية العزل"
+          }
+        }
+      }
+    },
+    "Saved Window State": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حالة النوافذ المحفوظة"
+          }
+        }
+      }
+    },
+    "Scan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص"
+          }
+        }
+      }
+    },
+    "Scan Again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص مرة أخرى"
+          }
+        }
+      }
+    },
+    "Scan Everything": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص كل شيء"
+          }
+        }
+      }
+    },
+    "Scan to see what uses space.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قم بالفحص لمعرفة ما يشغل المساحة."
+          }
+        }
+      }
+    },
+    "Scanning…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ الفحص…"
+          }
+        }
+      }
+    },
+    "Screen Recordings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيلات الشاشة"
+          }
+        }
+      }
+    },
+    "Screenshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقطات الشاشة"
+          }
+        }
+      }
+    },
+    "Screenshots folder:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد لقطات الشاشة:"
+          }
+        }
+      }
+    },
+    "Search Options": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خيارات البحث"
+          }
+        }
+      }
+    },
+    "Search apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في التطبيقات"
+          }
+        }
+      }
+    },
+    "Search by Path": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث حسب المسار"
+          }
+        }
+      }
+    },
+    "Security": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأمان"
+          }
+        }
+      }
+    },
+    "Security Check": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص الأمان"
+          }
+        }
+      }
+    },
+    "Security Protections": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حمايات الأمان"
+          }
+        }
+      }
+    },
+    "Security Updates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديثات الأمان"
+          }
+        }
+      }
+    },
+    "Security and management software must be removed with its own uninstaller, or by your IT department.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يجب إزالة برامج الأمان والإدارة باستخدام أداة إلغاء التثبيت الخاصة بها، أو بواسطة قسم تقنية المعلومات لديك."
+          }
+        }
+      }
+    },
+    "Security setting needs attention": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعداد أمان يحتاج إلى انتباه"
+          }
+        }
+      }
+    },
+    "Select All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد الكل"
+          }
+        }
+      }
+    },
+    "Select an app": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر تطبيقًا"
+          }
+        }
+      }
+    },
+    "Serious": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرتفع"
+          }
+        }
+      }
+    },
+    "Setapp": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setapp"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإعدادات"
+          }
+        }
+      }
+    },
+    "Settings imported.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم استيراد الإعدادات."
+          }
+        }
+      }
+    },
+    "Settings imported. %lld invalid entries were skipped.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم استيراد الإعدادات. تم تخطي %lld إدخالات غير صالحة."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم استيراد الإعدادات. تم تخطي %lld إدخالًا غير صالح."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم استيراد الإعدادات. تم تخطي إدخال واحد غير صالح."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم استيراد الإعدادات. تم تخطي %lld إدخال غير صالح."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم استيراد الإعدادات. تم تخطي إدخالين غير صالحين."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم استيراد الإعدادات."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Settings imported. %lld invalid entry was skipped."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Settings imported. %lld invalid entries were skipped."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Shared app group": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجموعة تطبيقات مشتركة"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض"
+          }
+        }
+      }
+    },
+    "Show %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض %@"
+          }
+        }
+      }
+    },
+    "Show Uninstaller in Finder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار أداة إلغاء التثبيت في Finder"
+          }
+        }
+      }
+    },
+    "Show in %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض في %@"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار في Finder"
+          }
+        }
+      }
+    },
+    "Simulator caches and devices that no longer have a runtime.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة التخزين المؤقت للمحاكيات والأجهزة التي لم تعد لها بيئة تشغيل."
+          }
+        }
+      }
+    },
+    "Simulator runtime": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيئة تشغيل المحاكي"
+          }
+        }
+      }
+    },
+    "Simulators": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المحاكيات"
+          }
+        }
+      }
+    },
+    "Size": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحجم"
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تجاهله"
+          }
+        }
+      }
+    },
+    "Sort By": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفرز حسب"
+          }
+        }
+      }
+    },
+    "Sort Order": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترتيب الفرز"
+          }
+        }
+      }
+    },
+    "Sort by": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فرز حسب"
+          }
+        }
+      }
+    },
+    "Space managed by your tools. Cleaning runs the tool's own command, which does not use the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساحة تديرها أدواتك. يشغّل التنظيف الأمر الخاص بكل أداة، ولا يستخدم سلة المهملات."
+          }
+        }
+      }
+    },
+    "Space map": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خريطة المساحة"
+          }
+        }
+      }
+    },
+    "Space used by container tools and virtual machines.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساحة التي تستخدمها أدوات الحاويات والأجهزة الافتراضية."
+          }
+        }
+      }
+    },
+    "Startup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عناصر بدء التشغيل"
+          }
+        }
+      }
+    },
+    "Startup disk is almost full": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص بدء التشغيل ممتلئ تقريبًا"
+          }
+        }
+      }
+    },
+    "Startup item": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنصر بدء التشغيل"
+          }
+        }
+      }
+    },
+    "Startup items left behind": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عناصر بدء تشغيل متبقية"
+          }
+        }
+      }
+    },
+    "Still scanning…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يزال الفحص جاريًا…"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        }
+      }
+    },
+    "Stop Scan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف الفحص"
+          }
+        }
+      }
+    },
+    "Stop and Move to Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف ونقل إلى سلة المهملات"
+          }
+        }
+      }
+    },
+    "Storage": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التخزين"
+          }
+        }
+      }
+    },
+    "Swap Used": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساحة التبديل المستخدمة"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النظام"
+          }
+        }
+      }
+    },
+    "System Agents": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وكلاء النظام"
+          }
+        }
+      }
+    },
+    "System Daemons": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خدمات النظام الخلفية"
+          }
+        }
+      }
+    },
+    "System File": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملف نظام"
+          }
+        }
+      }
+    },
+    "System Integrity Protection": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حماية تكامل النظام"
+          }
+        }
+      }
+    },
+    "System Performance": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أداء النظام"
+          }
+        }
+      }
+    },
+    "System View": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض النظام"
+          }
+        }
+      }
+    },
+    "Temporary files apps create to load faster. Apps rebuild them when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات مؤقتة تنشئها التطبيقات لتعمل بسرعة أكبر. تعيد التطبيقات إنشاءها عند الحاجة."
+          }
+        }
+      }
+    },
+    "The CSV file could not be written.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر إنشاء ملف CSV."
+          }
+        }
+      }
+    },
+    "The app and %lld of its items will be moved to the Trash.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيُنقل التطبيق و%lld عناصر من عناصره إلى سلة المهملات."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيُنقل التطبيق و%lld عنصرًا من عناصره إلى سلة المهملات."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيُنقل التطبيق وعنصر واحد من عناصره إلى سلة المهملات."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيُنقل التطبيق و%lld عنصر من عناصره إلى سلة المهملات."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيُنقل التطبيق وعنصران من عناصره إلى سلة المهملات."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيُنقل التطبيق وحده إلى سلة المهملات، دون أي عناصر أخرى."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "The app and %lld of its items will be moved to the Trash."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "The app and %lld of its items will be moved to the Trash."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "The app is open, or it changed after you reviewed it. Quit it and try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التطبيق مفتوح، أو تغيّر بعد مراجعتك له. قم بإنهائه وحاول مرة أخرى."
+          }
+        }
+      }
+    },
+    "The app that uses it is open.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التطبيق الذي يستخدمه مفتوح."
+          }
+        }
+      }
+    },
+    "The command did not finish successfully": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يكتمل الأمر بنجاح"
+          }
+        }
+      }
+    },
+    "The folder it came from no longer exists.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد المجلد الذي كان فيه هذا العنصر موجودًا."
+          }
+        }
+      }
+    },
+    "The item in the Trash was not the one checked, so the cleanup was stopped.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العنصر الموجود في سلة المهملات ليس العنصر الذي تم فحصه، لذلك أُوقف التنظيف."
+          }
+        }
+      }
+    },
+    "The item was stopped and moved to the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إيقاف العنصر ونقله إلى سلة المهملات."
+          }
+        }
+      }
+    },
+    "The name looks related. Never selected automatically, so check before removing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبدو الاسم مرتبطًا. لا يُحدَّد تلقائيًا أبدًا، لذا تحقّق منه قبل الإزالة."
+          }
+        }
+      }
+    },
+    "The scan was stopped before it finished.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إيقاف الفحص قبل اكتماله."
+          }
+        }
+      }
+    },
+    "The scan was stopped. Results may be incomplete.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إيقاف الفحص. قد تكون النتائج غير مكتملة."
+          }
+        }
+      }
+    },
+    "The settings could not be exported.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تصدير الإعدادات."
+          }
+        }
+      }
+    },
+    "The settings could not be saved.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر حفظ الإعدادات."
+          }
+        }
+      }
+    },
+    "The tool’s own command can shrink it: ⁦%@⁩": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكن للأمر الخاص بالأداة تقليصه: ⁦%@⁩"
+          }
+        }
+      }
+    },
+    "Thermal State": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة الحرارية"
+          }
+        }
+      }
+    },
+    "These copies share storage; removing them frees almost nothing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتشارك هذه النسخ مساحة التخزين نفسها، لذا لن تؤدي إزالتها إلى تحرير مساحة تُذكر."
+          }
+        }
+      }
+    },
+    "These files are named after apps that are no longer installed and haven't changed for 30 days. Check each one before removing it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحمل هذه الملفات أسماء تطبيقات لم تعد مثبّتة ولم تتغيّر منذ 30 يومًا. تحقّق من كل ملف قبل إزالته."
+          }
+        }
+      }
+    },
+    "This app is part of macOS or Clenvra, so it can't be removed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا التطبيق جزء من macOS أو من Clenvra، لذا لا يمكن إزالته."
+          }
+        }
+      }
+    },
+    "This does not use the Trash and cannot be undone.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يستخدم هذا سلة المهملات ولا يمكن التراجع عنه."
+          }
+        }
+      }
+    },
+    "This entry does not describe an item in the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يصف هذا السجل عنصرًا في سلة المهملات."
+          }
+        }
+      }
+    },
+    "This file is not a Clenvra settings file.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الملف ليس ملف إعدادات Clenvra."
+          }
+        }
+      }
+    },
+    "This file was made by a newer version of Clenvra.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُنشئ هذا الملف بإصدار أحدث من Clenvra."
+          }
+        }
+      }
+    },
+    "This folder is empty": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المجلد فارغ"
+          }
+        }
+      }
+    },
+    "This frees about %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيؤدي ذلك إلى تحرير نحو %@."
+          }
+        }
+      }
+    },
+    "This item is no longer in the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد هذا العنصر موجودًا في سلة المهملات."
+          }
+        }
+      }
+    },
+    "This location is not allowed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الموقع غير مسموح به."
+          }
+        }
+      }
+    },
+    "Total RAM": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي الذاكرة"
+          }
+        }
+      }
+    },
+    "Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سلة المهملات"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة المحاولة"
+          }
+        }
+      }
+    },
+    "Try a different path or another section.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرّب مسارًا مختلفًا أو قسمًا آخر."
+          }
+        }
+      }
+    },
+    "Try a smaller size or a shorter time.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرّب حجمًا أصغر أو مدة أقصر."
+          }
+        }
+      }
+    },
+    "Unavailable simulators": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المحاكيات غير المتاحة"
+          }
+        }
+      }
+    },
+    "Uninstall": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء التثبيت"
+          }
+        }
+      }
+    },
+    "Uninstall %@ with Homebrew?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد إلغاء تثبيت %@ باستخدام Homebrew؟"
+          }
+        }
+      }
+    },
+    "Uninstall %@?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد إلغاء تثبيت %@؟"
+          }
+        }
+      }
+    },
+    "Uninstall with Homebrew…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء التثبيت باستخدام Homebrew…"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير معروف"
+          }
+        }
+      }
+    },
+    "Unmark All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء تحديد الكل"
+          }
+        }
+      }
+    },
+    "Unused for 6 Months": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير مستخدمة منذ 6 أشهر"
+          }
+        }
+      }
+    },
+    "Updating sizes after the cleanup…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحديث الأحجام بعد التنظيف…"
+          }
+        }
+      }
+    },
+    "Uptime": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مدة التشغيل"
+          }
+        }
+      }
+    },
+    "Use on Another Mac": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاستخدام على جهاز Mac آخر"
+          }
+        }
+      }
+    },
+    "Used %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستخدم %@"
+          }
+        }
+      }
+    },
+    "Used %@, purgeable %@, free %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستخدم %@، قابل للتفريغ %@، متاح %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Used %1$@, purgeable %2$@, free %3$@"
+          }
+        }
+      }
+    },
+    "Verifies macOS security configuration.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتحقق من إعدادات أمان macOS."
+          }
+        }
+      }
+    },
+    "Verifying identical files…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ التحقق من الملفات المتطابقة…"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإصدار %@"
+          }
+        }
+      }
+    },
+    "Videos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفيديوهات"
+          }
+        }
+      }
+    },
+    "View": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العرض"
+          }
+        }
+      }
+    },
+    "Warning": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحذير"
+          }
+        }
+      }
+    },
+    "Web Data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات الويب"
+          }
+        }
+      }
+    },
+    "When needed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند الحاجة"
+          }
+        }
+      }
+    },
+    "Wired Memory": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذاكرة المحجوزة"
+          }
+        }
+      }
+    },
+    "Without it, scans skip some protected folders, such as Safari and Mail data. Clenvra only reads them, and nothing is deleted without your review.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من دونه، يتخطى الفحص بعض المجلدات المحمية، مثل بيانات Safari والبريد. يكتفي Clenvra بقراءتها، ولا يُحذف أي شيء دون مراجعتك."
+          }
+        }
+      }
+    },
+    "Would Remove": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كان سيزال"
+          }
+        }
+      }
+    },
+    "XProtect": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "XProtect"
+          }
+        }
+      }
+    },
+    "Xcode": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode"
+          }
+        }
+      }
+    },
+    "Yarn": {
+      "shouldTranslate": false
+    },
+    "You can let Homebrew remove it instead of moving it to the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك أن تترك Homebrew يزيله بدلًا من نقله إلى سلة المهملات."
+          }
+        }
+      }
+    },
+    "You excluded this folder in Settings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقد استثنيت هذا المجلد في الإعدادات."
+          }
+        }
+      }
+    },
+    "Your Login Agents": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وكلاء تسجيل الدخول الخاصة بك"
+          }
+        }
+      }
+    },
+    "free of %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متاح من %@"
+          }
+        }
+      }
+    },
+    "iPhone & iPad Backups": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ iPhone وiPad الاحتياطية"
+          }
+        }
+      }
+    },
+    "macOS": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS"
+          }
+        }
+      }
+    },
+    "macOS could not move this item.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على macOS نقل هذا العنصر."
+          }
+        }
+      }
+    },
+    "macOS could not stop this item, so it was kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على macOS إيقاف هذا العنصر، لذلك تم الإبقاء عليه."
+          }
+        }
+      }
+    },
+    "macOS did not allow access.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يسمح macOS بالوصول."
+          }
+        }
+      }
+    },
+    "macOS manages memory dynamically. High used memory is normal and keeps the system responsive; memory pressure is the true indicator of memory constraint.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يدير macOS الذاكرة تلقائيًا. الذاكرة المستهلكة العالية أمر طبيعي وتبقي النظام سريع الاستجابة؛ ضغط الذاكرة هو المقياس الفعلي لنقص الذاكرة."
+          }
+        }
+      }
+    },
+    "macOS reported an error.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أبلغ macOS عن خطأ."
+          }
+        }
+      }
+    },
+    "npm": {
+      "shouldTranslate": false
+    },
+    "pip": {
+      "shouldTranslate": false
+    },
+    "pnpm": {
+      "shouldTranslate": false
+    },
+    "uv": {
+      "shouldTranslate": false
+    },
+    "⁨%@⁩ is not selected automatically. Check whether you still need it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُحدَّد ⁨%@⁩ تلقائيًا. تحقّق مما إذا كنت لا تزال بحاجة إليه."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

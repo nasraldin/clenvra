@@ -1,0 +1,118 @@
+{
+  "Activity": {
+    "ar": "النشاط"
+  },
+  "Refresh": {
+    "ar": "تحديث"
+  },
+  "Export…": {
+    "ar": "تصدير…"
+  },
+  "Search by Path": {
+    "ar": "البحث حسب المسار"
+  },
+  "Filter by Section": {
+    "ar": "تصفية حسب القسم"
+  },
+  "All Sections": {
+    "ar": "كل الأقسام"
+  },
+  "Overview": {
+    "ar": "نظرة عامة"
+  },
+  "Storage": {
+    "ar": "التخزين"
+  },
+  "Cleanup": {
+    "ar": "التنظيف"
+  },
+  "Applications": {
+    "ar": "التطبيقات"
+  },
+  "Startup": {
+    "ar": "عناصر بدء التشغيل"
+  },
+  "System": {
+    "ar": "النظام"
+  },
+  "No Activity Yet": {
+    "ar": "لا نشاط بعد"
+  },
+  "Cleanup and other actions Clenvra performs will appear here.": {
+    "ar": "تظهر هنا إجراءات التنظيف والإجراءات الأخرى التي ينفّذها Clenvra."
+  },
+  "No Results": {
+    "ar": "لا توجد نتائج"
+  },
+  "Try a different path or another section.": {
+    "ar": "جرّب مسارًا مختلفًا أو قسمًا آخر."
+  },
+  "%lld items": {
+    "en_plural": {
+      "one": "%lld item",
+      "other": "%lld items"
+    },
+    "ar_plural": {
+      "zero": "لا عناصر",
+      "one": "عنصر واحد",
+      "two": "عنصران",
+      "few": "%lld عناصر",
+      "many": "%lld عنصرًا",
+      "other": "%lld عنصر"
+    }
+  },
+  "Freed %@": {
+    "ar": "تم تحرير %@"
+  },
+  "Moved to Trash": {
+    "ar": "نُقل إلى سلة المهملات"
+  },
+  "Removed Permanently": {
+    "ar": "تمت الإزالة نهائيًا"
+  },
+  "Would Remove": {
+    "ar": "كان سيزال"
+  },
+  "Skipped": {
+    "ar": "تم تجاهله"
+  },
+  "Failed": {
+    "ar": "فشل"
+  },
+  "Batch Stopped": {
+    "ar": "توقّفت الدُفعة"
+  },
+  "Not Attempted": {
+    "ar": "لم يُجرّب"
+  },
+  "Put Back": {
+    "ar": "إرجاع"
+  },
+  "Restored": {
+    "ar": "تم الإرجاع"
+  },
+  "Could Not Put Back": {
+    "ar": "تعذّر الإرجاع"
+  },
+  "This entry does not describe an item in the Trash.": {
+    "ar": "لا يصف هذا السجل عنصرًا في سلة المهملات."
+  },
+  "This item is no longer in the Trash.": {
+    "ar": "لم يعد هذا العنصر موجودًا في سلة المهملات."
+  },
+  "The folder it came from no longer exists.": {
+    "ar": "لم يعد المجلد الذي كان فيه هذا العنصر موجودًا."
+  },
+  "Another item now occupies its original location, so it was left in the Trash.": {
+    "ar": "يوجد عنصر آخر الآن في موقعه الأصلي، لذلك بقي في سلة المهملات."
+  },
+  "Moving the item back did not succeed.": {
+    "ar": "تعذّر نقل العنصر إلى موقعه الأصلي."
+  },
+  "Could Not Export": {
+    "ar": "تعذّر التصدير"
+  },
+  "The CSV file could not be written.": {
+    "ar": "تعذّر إنشاء ملف CSV."
+  }
+}
