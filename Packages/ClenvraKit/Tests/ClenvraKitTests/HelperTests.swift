@@ -17,6 +17,7 @@ struct HelperTests {
         scratch = try TemporaryDirectory()
         fixture = FixtureBuilder(root: scratch.url)
         try fixture.directory("home/.Trash")
+        try fixture.directory("staging")
     }
 
     private var system: String { String(scratch.url.path(percentEncoded: false).dropLast()) + "/system" }
@@ -38,7 +39,8 @@ struct HelperTests {
     ) -> HelperService {
         HelperService(
             allowlist: allowlist, clientHome: home, clientUID: getuid(),
-            log: ActivityLog(directory: fixture.url("helper-log")), ownPaths: ownPaths, processPaths: processPaths)
+            log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"), ownPaths: ownPaths,
+            processPaths: processPaths)
     }
 
     private func request(_ items: [DeletionItem], owners: [String: String] = [:]) -> HelperRequest {
@@ -239,6 +241,28 @@ struct HelperTests {
 
         #expect(await service.restore(record) == nil)
         #expect(FileManager.default.fileExists(atPath: cache.path + "/blob"))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: path("staging")).isEmpty)
+    }
+
+    @Test("an object swapped into the Trash is checked in root's staging folder and never reaches the system folder")
+    func restoreSwapCaughtInStaging() async throws {
+        try fixture.file("system/Library/LaunchDaemons/com.vendor.helper.plist", bytes: 10)
+        let service = service()
+        _ = await service.perform(
+            request([try item("Library/LaunchDaemons/com.vendor.helper.plist", root: "Library/LaunchDaemons")]))
+        let logged = try #require(try await ActivityLog(directory: fixture.url("helper-log")).readAll().records.last)
+        guard case .movedToTrash(let trashPath) = logged.outcome else {
+            Issue.record("expected a move first")
+            return
+        }
+        // The user replaces the trashed plist with their own file of the same name.
+        try FileManager.default.removeItem(atPath: trashPath)
+        try fixture.file("home/.Trash/com.vendor.helper.plist", bytes: 99)
+
+        #expect(await service.restore(logged) == .notInTrash)
+        #expect(!FileManager.default.fileExists(atPath: system + "/Library/LaunchDaemons/com.vendor.helper.plist"))
+        #expect(try Data(contentsOf: URL(filePath: trashPath)).count == 99)  // handed back, untouched
+        #expect(try FileManager.default.contentsOfDirectory(atPath: path("staging")).isEmpty)
     }
 
     @Test("Put Back only restores what the helper itself moved: a forged record is refused (privilege escalation)")
@@ -315,7 +339,7 @@ struct HelperTests {
         let cache = try item("Library/Caches/com.vendor.app", root: "Library/Caches")
         let stranger = HelperService(
             allowlist: allowlist, clientHome: home, clientUID: getuid() + 1,
-            log: ActivityLog(directory: fixture.url("helper-log")), processPaths: { [] })
+            log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"), processPaths: { [] })
 
         let response = await stranger.perform(request([cache]))
 

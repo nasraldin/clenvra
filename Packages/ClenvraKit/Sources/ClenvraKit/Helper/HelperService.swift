@@ -54,6 +54,7 @@ public struct HelperService: Sendable {
     private let clientHome: String
     private let clientUID: uid_t
     private let log: ActivityLog
+    private let staging: String
     private let ownPaths: [String]
     private let processPaths: @Sendable () -> [String]?
     private let fileSystem: FSExecutor
@@ -62,10 +63,11 @@ public struct HelperService: Sendable {
     ///   - clientHome: home folder of the user whose app connected (from the connection's user ID, never from the
     ///     request).
     ///   - clientUID: that user's ID; their Trash must belong to them.
+    ///   - staging: a root-only folder on the same volume where Put Back checks an item before placing it.
     ///   - log: the helper's own activity log, in a root-owned folder.
     ///   - ownPaths: Clenvra's own files (the helper's log folder, the app bundle), never removed.
     public init(
-        allowlist: HelperAllowlist, clientHome: String, clientUID: uid_t, log: ActivityLog,
+        allowlist: HelperAllowlist, clientHome: String, clientUID: uid_t, log: ActivityLog, staging: String,
         ownPaths: [String] = [],
         processPaths: @escaping @Sendable () -> [String]? = OwnerActivity.currentProcessPaths,
         fileSystem: FSExecutor = .shared
@@ -74,6 +76,7 @@ public struct HelperService: Sendable {
         self.clientHome = clientHome
         self.clientUID = clientUID
         self.log = log
+        self.staging = staging
         self.ownPaths = ownPaths
         self.processPaths = processPaths
         self.fileSystem = fileSystem
@@ -139,27 +142,43 @@ public struct HelperService: Sendable {
             return .notInTrash
         }
         let trashName = (trashPath as NSString).lastPathComponent
-        guard let kind = Self.kind(of: trash, child: trashName, expected: expected) else { return .notInTrash }
-        guard allowlist.permitsRestore(originalPath: logged.itemPath, kind: kind) else { return .notRestorable }
-        let parentPath = (logged.itemPath as NSString).deletingLastPathComponent
         let originalName = (logged.itemPath as NSString).lastPathComponent
+        let parentPath = (logged.itemPath as NSString).deletingLastPathComponent
+        let stage: OpenDirectory
         let parent: OpenDirectory
+        do {
+            stage = try SafeWalk.openDirectory(staging)
+        } catch {
+            return .failed(errno: EIO)
+        }
         do {
             parent = try SafeWalk.openDirectory(parentPath)
         } catch {
             return .originalFolderMissing
         }
 
+        // Take the entry out of the user's reach first, then check it: a check in the user-writable Trash could be
+        // raced by a swap before the move.
+        let stagedName = UUID().uuidString
+        do {
+            try trash.moveChild(named: trashName, into: stage, as: stagedName)
+        } catch {
+            return .notInTrash
+        }
+        let staged = Self.kind(of: stage, child: stagedName, expected: expected)
+        guard let kind = staged, allowlist.permitsRestore(originalPath: logged.itemPath, kind: kind) else {
+            // Not the logged object, or not allowed back: hand it back. If that fails it stays in root's folder,
+            // never in a system location.
+            try? stage.moveChild(named: stagedName, into: trash, as: trashName)
+            return staged == nil ? .notInTrash : .notRestorable
+        }
+
         // RENAME_EXCL: never replace what now occupies the original location.
         do {
-            try trash.moveChild(named: trashName, into: parent, as: originalName)
+            try stage.moveChild(named: stagedName, into: parent, as: originalName)
         } catch {
+            try? stage.moveChild(named: stagedName, into: trash, as: trashName)
             return error.code == EEXIST ? .originalPathOccupied : .failed(errno: error.code)
-        }
-        // Verify what landed is the logged object; undo if anything was swapped in between.
-        guard Self.kind(of: parent, child: originalName, expected: expected) == kind else {
-            try? parent.moveChild(named: originalName, into: trash, as: trashName)
-            return .notInTrash
         }
         try? await log.append(
             ActivityRecord(

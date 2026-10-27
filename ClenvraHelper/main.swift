@@ -9,6 +9,8 @@ import Synchronization
 
 /// Root-owned folder for the helper's own activity log.
 let logDirectory = "/Library/Application Support/Clenvra/Helper"
+/// Root-only folder where Put Back checks an item before placing it; on the same volume as users' Trash folders.
+let stagingDirectory = logDirectory + "/Staging"
 
 /// The app bundle this helper ships in (…/Clenvra.app/Contents/MacOS/ClenvraHelper), protected from removal.
 let appBundlePath: String? = {
@@ -98,6 +100,7 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
         let service = HelperService(
             allowlist: HelperAllowlist(), clientHome: home, clientUID: uid,
             log: ActivityLog(directory: URL(filePath: logDirectory, directoryHint: .isDirectory)),
+            staging: stagingDirectory,
             ownPaths: ["/Library/Application Support/Clenvra"] + (appBundlePath.map { [$0] } ?? []))
         connection.exportedInterface = NSXPCInterface(with: (any ClenvraHelperProtocol).self)
         connection.exportedObject = HelperEndpoint(service: service)
@@ -120,6 +123,7 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
 // The log folder belongs to root and nobody else can write to it.
 mkdir("/Library/Application Support/Clenvra", 0o755)
 mkdir(logDirectory, 0o700)
+mkdir(stagingDirectory, 0o700)
 
 let delegate = ListenerDelegate()
 let listener = NSXPCListener(machServiceName: HelperIdentity.machServiceName)
