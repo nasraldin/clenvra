@@ -29,7 +29,11 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var systemSession = SystemSession(
         politeTerminator: { pid in NSRunningApplication(processIdentifier: pid)?.terminate() ?? false },
         forceTerminator: { pid in NSRunningApplication(processIdentifier: pid)?.forceTerminate() ?? false })
-    @ObservationIgnored private(set) lazy var activitySession = ActivitySession(activityLog: activityLog)
+    /// Plug-in bundles are not apps, so no owner check applies; the gate still checks identity and protection.
+    @ObservationIgnored private(set) lazy var pluginsSession = PluginsSession(
+        reader: PluginReader(home: home), deleter: makeDeleter { _ in .notRunning })
+    @ObservationIgnored private(set) lazy var activitySession = ActivitySession(
+        activityLog: activityLog, reenabler: LaunchAgentReenabler(runner: ProcessCommandRunner()))
     @ObservationIgnored private(set) lazy var startupSession = StartupSession(
         reader: LaunchItemReader(), runner: ProcessCommandRunner(),
         deleter: makeDeleter { _ in .notRunning })

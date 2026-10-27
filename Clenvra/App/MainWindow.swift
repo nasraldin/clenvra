@@ -37,7 +37,7 @@ struct MainWindow: View {
             case .duplicates:
                 DuplicatesView(session: environment.duplicatesSession)
             case .applications:
-                ApplicationsView(session: environment.appsSession)
+                ApplicationsView(session: environment.appsSession, plugins: environment.pluginsSession)
             case .activity:
                 ActivityView(session: environment.activitySession)
             case .system:

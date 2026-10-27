@@ -2,19 +2,22 @@ import AppKit
 import ClenvraKit
 import SwiftUI
 
-/// Applications: installed apps with uninstall-by-evidence, and leftovers of apps already removed.
+/// Applications: installed apps with uninstall-by-evidence, leftovers of apps already removed, and extensions.
 struct ApplicationsView: View {
     private enum Tab: Hashable {
         case installed
         case leftovers
+        case extensions
     }
 
     let session: AppsSession
+    let plugins: PluginsSession
     @State private var tab = Tab.installed
     @State private var selectedID: String?
 
-    init(session: AppsSession) {
+    init(session: AppsSession, plugins: PluginsSession) {
         self.session = session
+        self.plugins = plugins
     }
 
     var body: some View {
@@ -27,6 +30,7 @@ struct ApplicationsView: View {
                     Picker(selection: $tab) {
                         Text("Installed").tag(Tab.installed)
                         Text("Leftovers").tag(Tab.leftovers)
+                        Text("Extensions").tag(Tab.extensions)
                     } label: {
                         Text("View")
                     }
@@ -63,6 +67,8 @@ struct ApplicationsView: View {
             }
         case .leftovers:
             LeftoversView(session: session)
+        case .extensions:
+            PluginsView(session: plugins)
         }
     }
 }
