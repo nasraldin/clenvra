@@ -55,6 +55,12 @@ public struct HelperAllowlist: Sendable {
         return fits(item.path, root: root, kind: item.expected.kind)
     }
 
+    /// Whether `item` may be deleted for good: only rotated system logs; everything else goes to the Trash.
+    public func permitsIrreversible(_ item: DeletionItem) -> Bool {
+        guard permits(item), let rootParts = try? PathPolicy.components(of: item.ruleRoot) else { return false }
+        return roots.first { $0.components == rootParts }?.shape == .logArchive
+    }
+
     /// Whether putting an item of `kind` back at `originalPath` would land inside an allowlisted folder.
     public func permitsRestore(originalPath: String, kind: FileKind) -> Bool {
         guard let parts = try? PathPolicy.components(of: originalPath) else { return false }

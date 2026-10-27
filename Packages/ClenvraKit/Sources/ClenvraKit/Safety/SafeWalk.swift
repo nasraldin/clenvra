@@ -85,6 +85,25 @@ public enum SafeWalk {
         }
     }
 
+    /// Opens a directory by walking every component without following symlinks.
+    static func openDirectory(_ path: String) throws(SafetyRefusal) -> OpenDirectory {
+        let components: [String]
+        do {
+            components = try PathPolicy.components(of: path)
+        } catch {
+            throw .invalidPath(error)
+        }
+        do {
+            var directory = try OpenDirectory(path: "/")
+            for component in components {
+                directory = try directory.openChild(named: component)
+            }
+            return directory
+        } catch {
+            throw refusal(for: error)
+        }
+    }
+
     static func refusal(for error: FileSystemError) -> SafetyRefusal {
         switch error.code {
         case ENOENT: .notFound

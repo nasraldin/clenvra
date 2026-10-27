@@ -92,10 +92,11 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
         // Checked again on every message, not only when connecting (S25).
         connection.setCodeSigningRequirement(HelperIdentity.clientRequirement)
-        // The home comes from the connecting process's user, never from the request.
-        guard let home = Self.home(of: connection.effectiveUserIdentifier) else { return false }
+        // The user comes from the connection, never from the request; only administrators may use the helper.
+        let uid = connection.effectiveUserIdentifier
+        guard HelperAuthorization.isAdministrator(uid: uid), let home = Self.home(of: uid) else { return false }
         let service = HelperService(
-            allowlist: HelperAllowlist(), clientHome: home,
+            allowlist: HelperAllowlist(), clientHome: home, clientUID: uid,
             log: ActivityLog(directory: URL(filePath: logDirectory, directoryHint: .isDirectory)),
             ownPaths: ["/Library/Application Support/Clenvra"] + (appBundlePath.map { [$0] } ?? []))
         connection.exportedInterface = NSXPCInterface(with: (any ClenvraHelperProtocol).self)

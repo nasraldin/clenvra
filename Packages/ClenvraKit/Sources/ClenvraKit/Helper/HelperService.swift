@@ -52,6 +52,7 @@ public struct HelperResponse: Codable, Sendable, Equatable {
 public struct HelperService: Sendable {
     private let allowlist: HelperAllowlist
     private let clientHome: String
+    private let clientUID: uid_t
     private let log: ActivityLog
     private let ownPaths: [String]
     private let processPaths: @Sendable () -> [String]?
@@ -60,15 +61,18 @@ public struct HelperService: Sendable {
     /// - Parameters:
     ///   - clientHome: home folder of the user whose app connected (from the connection's user ID, never from the
     ///     request).
+    ///   - clientUID: that user's ID; their Trash must belong to them.
     ///   - log: the helper's own activity log, in a root-owned folder.
     ///   - ownPaths: Clenvra's own files (the helper's log folder, the app bundle), never removed.
     public init(
-        allowlist: HelperAllowlist, clientHome: String, log: ActivityLog, ownPaths: [String] = [],
+        allowlist: HelperAllowlist, clientHome: String, clientUID: uid_t, log: ActivityLog,
+        ownPaths: [String] = [],
         processPaths: @escaping @Sendable () -> [String]? = OwnerActivity.currentProcessPaths,
         fileSystem: FSExecutor = .shared
     ) {
         self.allowlist = allowlist
         self.clientHome = clientHome
+        self.clientUID = clientUID
         self.log = log
         self.ownPaths = ownPaths
         self.processPaths = processPaths
@@ -79,7 +83,7 @@ public struct HelperService: Sendable {
         var outcomes = [ActivityRecord.Outcome?](repeating: nil, count: request.items.count)
         var accepted: [(index: Int, item: DeletionItem)] = []
         for (index, item) in request.items.enumerated() {
-            if !allowlist.permits(item) {
+            if !allowlist.permits(item) || (request.mode == .irreversible && !allowlist.permitsIrreversible(item)) {
                 outcomes[index] = .skipped(.outsideRoot)
             } else if Self.belongsToManagedSoftware(item) {
                 outcomes[index] = .skipped(.protected(.custom))
@@ -93,7 +97,7 @@ public struct HelperService: Sendable {
             gate: DeletionGate(
                 policy: ProtectionPolicy(home: clientHome, additionalProtected: ownPaths),
                 ownerState: activity.state(of:)),
-            log: log, trash: UserTrash(home: clientHome), fileSystem: fileSystem)
+            log: log, trash: UserTrash(home: clientHome, uid: clientUID), fileSystem: fileSystem)
         let items = accepted.map(\.item)
         let results: [DeletionResult]
         switch request.mode {
@@ -126,19 +130,35 @@ public struct HelperService: Sendable {
             trashParts.count == trashFolder.count + 1, trashParts.starts(with: trashFolder)
         else { return .notRestorable }
 
-        // The Trash entry must still be the very object the helper moved: no link, no special file, same identity.
-        guard let kind = Self.kind(at: trashPath, expected: expected) else { return .notInTrash }
+        // Everything below goes through file descriptors opened without following links, so a symlink planted in
+        // the user's (user-writable) Trash, or swapped in for it, cannot redirect root.
+        let trash: OpenDirectory
+        do {
+            trash = try UserTrash(home: clientHome, uid: clientUID).open()
+        } catch {
+            return .notInTrash
+        }
+        let trashName = (trashPath as NSString).lastPathComponent
+        guard let kind = Self.kind(of: trash, child: trashName, expected: expected) else { return .notInTrash }
         guard allowlist.permitsRestore(originalPath: logged.itemPath, kind: kind) else { return .notRestorable }
         let parentPath = (logged.itemPath as NSString).deletingLastPathComponent
-        guard (try? SafeWalk.resolve(parentPath))?.snapshot.kind == .directory else { return .originalFolderMissing }
+        let originalName = (logged.itemPath as NSString).lastPathComponent
+        let parent: OpenDirectory
+        do {
+            parent = try SafeWalk.openDirectory(parentPath)
+        } catch {
+            return .originalFolderMissing
+        }
 
         // RENAME_EXCL: never replace what now occupies the original location.
-        guard renamex_np(trashPath, logged.itemPath, UInt32(RENAME_EXCL)) == 0 else {
-            return errno == EEXIST ? .originalPathOccupied : .failed(errno: errno)
+        do {
+            try trash.moveChild(named: trashName, into: parent, as: originalName)
+        } catch {
+            return error.code == EEXIST ? .originalPathOccupied : .failed(errno: error.code)
         }
-        // Something may have swapped the entry between the check and the move: verify what landed, and undo if not.
-        guard Self.kind(at: logged.itemPath, expected: expected) == kind else {
-            _ = renamex_np(logged.itemPath, trashPath, UInt32(RENAME_EXCL))
+        // Verify what landed is the logged object; undo if anything was swapped in between.
+        guard Self.kind(of: parent, child: originalName, expected: expected) == kind else {
+            try? parent.moveChild(named: originalName, into: trash, as: trashName)
             return .notInTrash
         }
         try? await log.append(
@@ -148,13 +168,13 @@ public struct HelperService: Sendable {
         return nil
     }
 
-    /// The kind of the object at `path` if it is a regular file or folder with identity `expected`; never follows a
+    /// The kind of a directory's child if it is a regular file or folder with identity `expected`; never follows a
     /// link.
-    private static func kind(at path: String, expected: FileIdentity) -> FileKind? {
-        var info = stat()
-        guard lstat(path, &info) == 0, FileIdentity(device: info.st_dev, inode: info.st_ino) == expected else {
-            return nil
-        }
+    private static func kind(of directory: borrowing OpenDirectory, child: String, expected: FileIdentity) -> FileKind?
+    {
+        guard let info = try? directory.statChild(named: child),
+            FileIdentity(device: info.st_dev, inode: info.st_ino) == expected
+        else { return nil }
         switch info.st_mode & S_IFMT {
         case S_IFDIR: return .directory
         case S_IFREG: return .file
@@ -177,18 +197,37 @@ public struct HelperService: Sendable {
 }
 
 /// The requesting user's Trash. Items keep their owner, so a launch daemon put back still belongs to root.
+///
+/// The Trash lives in a folder the user controls, so root never resolves a path into it: the folder is opened
+/// component by component without following links, must be a real folder owned by the user and writable by nobody
+/// else, and items are moved relative to file descriptors.
 struct UserTrash: TrashOperations {
     let home: String
+    let uid: uid_t
+
+    func open() throws -> OpenDirectory {
+        let trash = try SafeWalk.openDirectory(home + "/.Trash")
+        let owner = try trash.ownerID()
+        let mode = try trash.mode()
+        guard owner == uid, mode & (S_IWGRP | S_IWOTH) == 0 else {
+            throw FileSystemError(code: EPERM, operation: "open", path: home + "/.Trash")
+        }
+        return trash
+    }
 
     func moveToTrash(path: String) throws -> String {
-        let folder = home + "/.Trash"
-        let name = (path as NSString).lastPathComponent
+        let trash = try open()
+        let source = try SafeWalk.resolve(path)
         for attempt in 1...1_000 {
-            let destination = folder + "/" + (attempt == 1 ? name : "\(name) \(attempt)")
-            // RENAME_EXCL: never replace something already in the Trash; a failed rename never falls back to delete.
-            if renamex_np(path, destination, UInt32(RENAME_EXCL)) == 0 { return destination }
-            guard errno == EEXIST else { throw FileSystemError.current("rename", path) }
+            let name = attempt == 1 ? source.name : "\(source.name) \(attempt)"
+            do {
+                // RENAME_EXCL: never replace something already in the Trash; a failed move never falls back to delete.
+                try source.parent.moveChild(named: source.name, into: trash, as: name)
+                return home + "/.Trash/" + name
+            } catch  where error.code == EEXIST {
+                continue
+            }
         }
-        throw FileSystemError(code: EEXIST, operation: "rename", path: path)
+        throw FileSystemError(code: EEXIST, operation: "renameat", path: path)
     }
 }

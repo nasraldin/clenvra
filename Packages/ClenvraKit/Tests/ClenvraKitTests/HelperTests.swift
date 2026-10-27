@@ -37,8 +37,8 @@ struct HelperTests {
         protecting ownPaths: [String] = [], processPaths: @escaping @Sendable () -> [String]? = { [] }
     ) -> HelperService {
         HelperService(
-            allowlist: allowlist, clientHome: home, log: ActivityLog(directory: fixture.url("helper-log")),
-            ownPaths: ownPaths, processPaths: processPaths)
+            allowlist: allowlist, clientHome: home, clientUID: getuid(),
+            log: ActivityLog(directory: fixture.url("helper-log")), ownPaths: ownPaths, processPaths: processPaths)
     }
 
     private func request(_ items: [DeletionItem], owners: [String: String] = [:]) -> HelperRequest {
@@ -290,6 +290,87 @@ struct HelperTests {
 
         #expect(await service.restore(logged) == .notInTrash)
         #expect(!FileManager.default.fileExists(atPath: system + "/Library/Caches/com.vendor.app"))
+    }
+
+    // MARK: - The user's Trash is the user's, not root's
+
+    @Test("if the user's Trash is a symlink, nothing is moved through it (root would follow it anywhere)")
+    func trashSymlinkRefused() async throws {
+        try fixture.file("system/Library/Caches/com.vendor.app/blob", bytes: 10)
+        try fixture.directory("system/Library/LaunchDaemons")
+        try FileManager.default.removeItem(atPath: home + "/.Trash")
+        #expect(symlink(system + "/Library/LaunchDaemons", home + "/.Trash") == 0)
+        let cache = try item("Library/Caches/com.vendor.app", root: "Library/Caches")
+
+        let response = await service().perform(request([cache]))
+
+        #expect(!(response.outcomes.first?.isMovedToTrash ?? true))
+        #expect(FileManager.default.fileExists(atPath: cache.path))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: system + "/Library/LaunchDaemons").isEmpty)
+    }
+
+    @Test("if the user's Trash belongs to someone else, nothing is moved into it")
+    func trashOwnerChecked() async throws {
+        try fixture.file("system/Library/Caches/com.vendor.app/blob", bytes: 10)
+        let cache = try item("Library/Caches/com.vendor.app", root: "Library/Caches")
+        let stranger = HelperService(
+            allowlist: allowlist, clientHome: home, clientUID: getuid() + 1,
+            log: ActivityLog(directory: fixture.url("helper-log")), processPaths: { [] })
+
+        let response = await stranger.perform(request([cache]))
+
+        #expect(!(response.outcomes.first?.isMovedToTrash ?? true))
+        #expect(FileManager.default.fileExists(atPath: cache.path))
+    }
+
+    @Test("Put Back refuses when the user's Trash was swapped for a symlink after the move")
+    func restoreThroughSymlinkedTrash() async throws {
+        try fixture.file("system/Library/Caches/com.vendor.app", bytes: 10)
+        let service = service()
+        _ = await service.perform(request([try item("Library/Caches/com.vendor.app", root: "Library/Caches")]))
+        let logged = try #require(try await ActivityLog(directory: fixture.url("helper-log")).readAll().records.last)
+        // Move the real Trash aside and point ~/.Trash at it through a symlink.
+        #expect(rename(home + "/.Trash", home + "/RealTrash") == 0)
+        #expect(symlink(home + "/RealTrash", home + "/.Trash") == 0)
+
+        #expect(await service.restore(logged) != nil)
+        #expect(!FileManager.default.fileExists(atPath: system + "/Library/Caches/com.vendor.app"))
+    }
+
+    // MARK: - Irreversible removal and who may connect
+
+    @Test("permanent removal is allowed only for rotated system logs")
+    func irreversibleOnlyForLogArchives() async throws {
+        try fixture.file("system/Library/Caches/com.vendor.app/blob", bytes: 10)
+        try fixture.file("system/private/var/log/system.log.0.gz", bytes: 10)
+        let cache = try item("Library/Caches/com.vendor.app", root: "Library/Caches")
+        let archive = try item("private/var/log/system.log.0.gz", root: "private/var/log")
+
+        let response = await service().perform(
+            HelperRequest(operationID: UUID(), mode: .irreversible, items: [cache, archive], ownerBundlePaths: [:]))
+
+        #expect(response.outcomes == [.skipped(.outsideRoot), .removedPermanently])
+        #expect(FileManager.default.fileExists(atPath: cache.path))
+        #expect(!FileManager.default.fileExists(atPath: archive.path))
+    }
+
+    @Test("only administrators may use the helper")
+    func administratorsOnly() throws {
+        let groups = try #require(groupNames(of: getuid()))
+        #expect(HelperAuthorization.isAdministrator(uid: getuid()) == groups.contains("admin"))
+        #expect(!HelperAuthorization.isAdministrator(uid: 4_000_000))  // no such user
+    }
+
+    private func groupNames(of uid: uid_t) -> Set<String>? {
+        let process = Process()
+        let output = Pipe()
+        process.executableURL = URL(filePath: "/usr/bin/id")
+        process.arguments = ["-Gn", String(uid)]
+        process.standardOutput = output
+        guard (try? process.run()) != nil else { return nil }
+        process.waitUntilExit()
+        let text = String(decoding: output.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        return Set(text.split(whereSeparator: \.isWhitespace).map(String.init))
     }
 
     // MARK: - Transport and identity
