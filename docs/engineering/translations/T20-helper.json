@@ -1,0 +1,15 @@
+{
+  "Approve in System Settings…": {"ar": "الموافقة في إعدادات النظام…"},
+  "Check": {"ar": "تحقّق"},
+  "Helper is installed": {"ar": "المساعد مثبّت"},
+  "Helper is missing from this copy of Clenvra": {"ar": "المساعد غير موجود في هذه النسخة من Clenvra"},
+  "Helper is not installed": {"ar": "المساعد غير مثبّت"},
+  "Helper is waiting for your approval": {"ar": "المساعد بانتظار موافقتك"},
+  "Install…": {"ar": "تثبيت…"},
+  "Optional. Lets Clenvra clean system caches and logs, and remove leftovers outside your home folder. It runs only while working, acts only on a short list of system folders, checks every item again itself, and moves items to your Trash. macOS asks for your approval.": {"ar": "اختياري. يتيح لـClenvra تنظيف ذاكرات النظام المؤقتة وسجلاته، وإزالة البقايا خارج مجلد المستخدم. يعمل فقط أثناء التنفيذ، ولا يتعامل إلا مع قائمة قصيرة من مجلدات النظام، ويتحقق بنفسه من كل عنصر مرة أخرى، وينقل العناصر إلى سلة المهملات. يطلب macOS موافقتك."},
+  "System Helper": {"ar": "مساعد النظام"},
+  "The helper is installed but did not answer.": {"ar": "المساعد مثبّت لكنه لم يستجب."},
+  "The installed helper is from another version of Clenvra. Remove it and install it again.": {"ar": "المساعد المثبّت من إصدار آخر من Clenvra. أزله ثم ثبّته مرة أخرى."},
+  "macOS did not install the helper. Make sure Clenvra is in the Applications folder.": {"ar": "لم يثبّت macOS المساعد. تأكد من وجود Clenvra في مجلد التطبيقات."},
+  "macOS did not remove the helper.": {"ar": "لم يُزل macOS المساعد."}
+}

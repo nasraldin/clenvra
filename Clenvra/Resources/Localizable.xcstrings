@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@": {
+      "shouldTranslate": false
+    },
     "%@ (whole disk)": {
       "localizations": {
         "ar": {
@@ -1373,6 +1376,16 @@
         }
       }
     },
+    "A Colima virtual machine and its disk. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آلة افتراضية لـColima وقرصها. معروضة للاطلاع فقط."
+          }
+        }
+      }
+    },
     "A Lima virtual machine and its disk. Shown for information.": {
       "localizations": {
         "ar": {
@@ -1399,6 +1412,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مجلد رئيسي في مجلد الصفحة الرئيسية. افتحه لمراجعة محتوياته."
+          }
+        }
+      }
+    },
+    "About macOS Permission Prompts…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حول طلبات الأذونات في macOS…"
           }
         }
       }
@@ -1533,6 +1556,26 @@
         }
       }
     },
+    "App Extensions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امتدادات التطبيقات"
+          }
+        }
+      }
+    },
+    "App Management": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إدارة التطبيقات"
+          }
+        }
+      }
+    },
     "App Memory": {
       "localizations": {
         "ar": {
@@ -1614,6 +1657,16 @@
         }
       }
     },
+    "Approve in System Settings…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموافقة في إعدادات النظام…"
+          }
+        }
+      }
+    },
     "Archives": {
       "localizations": {
         "ar": {
@@ -1684,6 +1737,26 @@
         }
       }
     },
+    "Audio Drivers": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برامج تشغيل الصوت"
+          }
+        }
+      }
+    },
+    "Audio Units": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وحدات الصوت (Audio Units)"
+          }
+        }
+      }
+    },
     "Available Memory": {
       "localizations": {
         "ar": {
@@ -1730,6 +1803,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "البطارية: %@"
+          }
+        }
+      }
+    },
+    "Before you start": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل أن تبدأ"
           }
         }
       }
@@ -1877,6 +1960,16 @@
         }
       }
     },
+    "Check": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقّق"
+          }
+        }
+      }
+    },
     "Check Again": {
       "localizations": {
         "ar": {
@@ -1927,6 +2020,26 @@
         }
       }
     },
+    "Clean Up": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنظيف"
+          }
+        }
+      }
+    },
+    "Clean up %lld items?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد تنظيف %lld من العناصر؟"
+          }
+        }
+      }
+    },
     "Cleanup": {
       "localizations": {
         "ar": {
@@ -1967,6 +2080,16 @@
         }
       }
     },
+    "Clenvra never asks for your password, never runs in the background, and sends nothing off your Mac.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يطلب Clenvra كلمة السر أبدًا، ولا يعمل في الخلفية، ولا يرسل أي شيء خارج جهاز Mac."
+          }
+        }
+      }
+    },
     "Clenvra never lists or removes anything inside these folders. Changes apply immediately.": {
       "localizations": {
         "ar": {
@@ -1989,6 +2112,19 @@
     },
     "CocoaPods": {
       "shouldTranslate": false
+    },
+    "Colima (%@)": {
+      "shouldTranslate": false
+    },
+    "Colima downloads": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنزيلات Colima"
+          }
+        }
+      }
     },
     "Comparing file sizes…": {
       "localizations": {
@@ -2050,12 +2186,32 @@
         }
       }
     },
+    "Continue": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متابعة"
+          }
+        }
+      }
+    },
     "Copy Path": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "نسخ المسار"
+          }
+        }
+      }
+    },
+    "Could Not Enable": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر التفعيل"
           }
         }
       }
@@ -2116,6 +2272,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عدد الدورات"
+          }
+        }
+      }
+    },
+    "Deleted %lld items from the Trash permanently.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حُذف %lld من العناصر من سلة المهملات نهائيًا."
           }
         }
       }
@@ -2263,6 +2429,16 @@
         }
       }
     },
+    "Downloaded from %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نُزِّل من %@"
+          }
+        }
+      }
+    },
     "Downloaded packages kept by package managers. They are downloaded again when needed.": {
       "localizations": {
         "ar": {
@@ -2319,6 +2495,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "ذاكرة التخزين المؤقت للمحررات. يُحتفظ بالإعدادات والإضافات ومساحات العمل."
+          }
+        }
+      }
+    },
+    "Enable at Login": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التفعيل عند تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Enabled": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفعّل"
           }
         }
       }
@@ -2383,12 +2579,42 @@
         }
       }
     },
+    "Export Report as Markdown…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصدير التقرير بتنسيق Markdown…"
+          }
+        }
+      }
+    },
+    "Export as CSV…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصدير بتنسيق CSV…"
+          }
+        }
+      }
+    },
     "Export…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تصدير…"
+          }
+        }
+      }
+    },
+    "Extensions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الامتدادات"
           }
         }
       }
@@ -2489,6 +2715,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مجلد يحمل اسم التطبيق:"
+          }
+        }
+      }
+    },
+    "Folder prompts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طلبات الوصول إلى المجلدات"
           }
         }
       }
@@ -2623,6 +2859,16 @@
         }
       }
     },
+    "Full Disk Access (recommended)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول الكامل إلى القرص (موصى به)"
+          }
+        }
+      }
+    },
     "Full Disk Access is off": {
       "localizations": {
         "ar": {
@@ -2659,16 +2905,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gatekeeper"
-          }
-        }
-      }
-    },
-    "Go": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "انتقال"
           }
         }
       }
@@ -2742,6 +2978,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "العمليات المستهلكة"
+          }
+        }
+      }
+    },
+    "Helper is installed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعد مثبّت"
+          }
+        }
+      }
+    },
+    "Helper is missing from this copy of Clenvra": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعد غير موجود في هذه النسخة من Clenvra"
+          }
+        }
+      }
+    },
+    "Helper is not installed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعد غير مثبّت"
+          }
+        }
+      }
+    },
+    "Helper is waiting for your approval": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعد بانتظار موافقتك"
           }
         }
       }
@@ -2907,12 +3183,42 @@
         }
       }
     },
+    "Install…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تثبيت…"
+          }
+        }
+      }
+    },
+    "Internet Plug-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافات الإنترنت"
+          }
+        }
+      }
+    },
     "It changed after you reviewed it.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تغيّر بعد أن راجعته."
+          }
+        }
+      }
+    },
+    "It is enabled again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصبح مفعّلًا مرة أخرى."
           }
         }
       }
@@ -2977,12 +3283,32 @@
         }
       }
     },
+    "Items already in the Trash are deleted permanently. This cannot be undone.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العناصر الموجودة في سلة المهملات تُحذف نهائيًا، ولا يمكن التراجع عن ذلك."
+          }
+        }
+      }
+    },
     "Items already in the Trash. Emptying it cannot be undone.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "عناصر موجودة في سلة المهملات. لا يمكن التراجع عن إفراغها."
+          }
+        }
+      }
+    },
+    "Its settings file is not valid, so it was not enabled.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملف إعداداته غير صالح، لذلك لم يُفعَّل."
           }
         }
       }
@@ -3167,6 +3493,16 @@
         }
       }
     },
+    "Lets scans include folders macOS protects, such as Safari, Mail and Messages data. Clenvra only reads them to measure space; nothing is removed without your review.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتيح للفحص تضمين المجلدات التي يحميها macOS، مثل بيانات Safari والبريد والرسائل. يكتفي Clenvra بقراءتها لقياس المساحة، ولا يُزال أي شيء دون مراجعتك."
+          }
+        }
+      }
+    },
     "Lets scans include protected folders such as Safari and Mail data. Clenvra only reads them; nothing is deleted without your review.": {
       "localizations": {
         "ar": {
@@ -3193,6 +3529,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lima (%@)"
+          }
+        }
+      }
+    },
+    "Loads this startup item again, as it was before Clenvra removed it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعيد تحميل عنصر بدء التشغيل هذا كما كان قبل أن يزيله Clenvra."
           }
         }
       }
@@ -3247,6 +3593,16 @@
         }
       }
     },
+    "Looking for extensions and plug-ins…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ البحث عن الامتدادات والإضافات…"
+          }
+        }
+      }
+    },
     "Looking for files…": {
       "localizations": {
         "ar": {
@@ -3277,6 +3633,16 @@
         }
       }
     },
+    "MAS Plug-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافات MAS"
+          }
+        }
+      }
+    },
     "Managed by macOS": {
       "localizations": {
         "ar": {
@@ -3293,6 +3659,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "تديره مؤسستك"
+          }
+        }
+      }
+    },
+    "Maven has no command to clear its local repository. Shown for information.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوفر Maven أمرًا لمسح مستودعه المحلي. معروض للاطلاع فقط."
+          }
+        }
+      }
+    },
+    "Maven repository": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستودع Maven"
           }
         }
       }
@@ -3645,6 +4031,16 @@
         }
       }
     },
+    "No extensions or plug-ins found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على امتدادات أو إضافات"
+          }
+        }
+      }
+    },
     "No files from removed apps were found, or they were changed in the last 30 days.": {
       "localizations": {
         "ar": {
@@ -3845,12 +4241,25 @@
         }
       }
     },
+    "NuGet": {
+      "shouldTranslate": false
+    },
     "OK": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "حسنًا"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوقف"
           }
         }
       }
@@ -3895,6 +4304,16 @@
         }
       }
     },
+    "Only startup items you put back from the Trash can be enabled again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن إعادة تفعيل إلا عناصر بدء التشغيل التي أعدتها من سلة المهملات."
+          }
+        }
+      }
+    },
     "Only your own startup items can be removed here. Use Show in Finder for system items.": {
       "localizations": {
         "ar": {
@@ -3925,6 +4344,16 @@
         }
       }
     },
+    "Open Privacy & Security…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح الخصوصية والأمن…"
+          }
+        }
+      }
+    },
     "Open Settings…": {
       "localizations": {
         "ar": {
@@ -3941,6 +4370,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح إعدادات النظام"
+          }
+        }
+      }
+    },
+    "Optional. Lets Clenvra clean system caches and logs, and remove leftovers outside your home folder. It runs only while working, acts only on a short list of system folders, checks every item again itself, and moves items to your Trash. macOS asks for your approval.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختياري. يتيح لـClenvra تنظيف ذاكرات النظام المؤقتة وسجلاته، وإزالة البقايا خارج مجلد المستخدم. يعمل فقط أثناء التنفيذ، ولا يتعامل إلا مع قائمة قصيرة من مجلدات النظام، ويتحقق بنفسه من كل عنصر مرة أخرى، وينقل العناصر إلى سلة المهملات. يطلب macOS موافقتك."
+          }
+        }
+      }
+    },
+    "OrbStack": {
+      "shouldTranslate": false
+    },
+    "OrbStack's machines, containers and volumes. Shown for information; unused Docker images are pruned in the Docker rows.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أجهزة OrbStack وحاوياته ووحدات تخزينه. معروضة للاطلاع فقط؛ تُحذف صور Docker غير المستخدمة من صفوف Docker."
           }
         }
       }
@@ -3985,6 +4437,16 @@
         }
       }
     },
+    "Part of %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من %@"
+          }
+        }
+      }
+    },
     "Part of macOS. Clenvra never removes it.": {
       "localizations": {
         "ar": {
@@ -4011,6 +4473,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيانات شخصية"
+          }
+        }
+      }
+    },
+    "Podman": {
+      "shouldTranslate": false
+    },
+    "Podman images": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صور Podman"
+          }
+        }
+      }
+    },
+    "Podman is not running.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podman لا يعمل."
           }
         }
       }
@@ -4199,6 +4684,16 @@
         }
       }
     },
+    "Quick Look Plug-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافات النظرة السريعة"
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "ar": {
@@ -4319,12 +4814,52 @@
         }
       }
     },
+    "Removes Colima's cached downloads, such as VM images. Virtual machines and their disks are not touched.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل تنزيلات Colima المخزنة مؤقتًا، مثل صور الآلات الافتراضية. لا تُمس الآلات الافتراضية ولا أقراصها."
+          }
+        }
+      }
+    },
+    "Removes NuGet's package and download caches. Packages are downloaded again on the next restore.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل ذاكرات NuGet المؤقتة للحزم والتنزيلات. تُنزَّل الحزم مجددًا عند الاستعادة التالية."
+          }
+        }
+      }
+    },
+    "Removes SwiftPM's shared cache of package checkouts. Packages are downloaded again when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل الذاكرة المؤقتة المشتركة لنسخ حزم SwiftPM. تُنزَّل الحزم مجددًا عند الحاجة."
+          }
+        }
+      }
+    },
     "Removes Yarn's download cache. Packages are downloaded again when needed.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "يزيل ذاكرة التخزين المؤقت لتنزيلات Yarn. يُعاد تنزيل الحزم عند الحاجة."
+          }
+        }
+      }
+    },
+    "Removes conda's cached package downloads and packages no environment uses. Environments are not changed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل تنزيلات الحزم المخزنة مؤقتًا في conda والحزم التي لا تستخدمها أي بيئة. لا تتغير البيئات."
           }
         }
       }
@@ -4719,6 +5254,16 @@
         }
       }
     },
+    "Security or management software": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامج أمان أو إدارة"
+          }
+        }
+      }
+    },
     "Security setting needs attention": {
       "localizations": {
         "ar": {
@@ -4775,6 +5320,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإعدادات"
+          }
+        }
+      }
+    },
+    "Settings Panes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أجزاء الإعدادات"
           }
         }
       }
@@ -4883,6 +5438,16 @@
         }
       }
     },
+    "Show Apple Items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار عناصر Apple"
+          }
+        }
+      }
+    },
     "Show Uninstaller in Finder": {
       "localizations": {
         "ar": {
@@ -4963,6 +5528,16 @@
         }
       }
     },
+    "Some extensions could not be listed, so this list may be incomplete.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر سرد بعض الامتدادات، لذا قد تكون هذه القائمة غير مكتملة."
+          }
+        }
+      }
+    },
     "Sort By": {
       "localizations": {
         "ar": {
@@ -4993,6 +5568,16 @@
         }
       }
     },
+    "Source": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المصدر"
+          }
+        }
+      }
+    },
     "Space managed by your tools. Cleaning runs the tool's own command, which does not use the Trash.": {
       "localizations": {
         "ar": {
@@ -5019,6 +5604,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المساحة التي تستخدمها أدوات الحاويات والأجهزة الافتراضية."
+          }
+        }
+      }
+    },
+    "Spotlight Importers": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستوردات Spotlight"
           }
         }
       }
@@ -5123,6 +5718,9 @@
         }
       }
     },
+    "Swift Package Manager": {
+      "shouldTranslate": false
+    },
     "System": {
       "localizations": {
         "ar": {
@@ -5153,12 +5751,32 @@
         }
       }
     },
+    "System Extensions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امتدادات النظام"
+          }
+        }
+      }
+    },
     "System File": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "ملف نظام"
+          }
+        }
+      }
+    },
+    "System Helper": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساعد النظام"
           }
         }
       }
@@ -5199,16 +5817,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ملفات مؤقتة تنشئها التطبيقات لتعمل بسرعة أكبر. تعيد التطبيقات إنشاءها عند الحاجة."
-          }
-        }
-      }
-    },
-    "The CSV file could not be written.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر إنشاء ملف CSV."
           }
         }
       }
@@ -5307,12 +5915,42 @@
         }
       }
     },
+    "The file could not be written.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت كتابة الملف."
+          }
+        }
+      }
+    },
     "The folder it came from no longer exists.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "لم يعد المجلد الذي كان فيه هذا العنصر موجودًا."
+          }
+        }
+      }
+    },
+    "The helper is installed but did not answer.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعد مثبّت لكنه لم يستجب."
+          }
+        }
+      }
+    },
+    "The installed helper is from another version of Clenvra. Remove it and install it again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعد المثبّت من إصدار آخر من Clenvra. أزله ثم ثبّته مرة أخرى."
           }
         }
       }
@@ -5567,6 +6205,16 @@
         }
       }
     },
+    "Turn on Show Apple Items to see the ones built into macOS.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعّل «إظهار عناصر Apple» لرؤية العناصر المضمّنة في macOS."
+          }
+        }
+      }
+    },
     "Unavailable simulators": {
       "localizations": {
         "ar": {
@@ -5623,6 +6271,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "غير معروف"
+          }
+        }
+      }
+    },
+    "Unknown source": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مصدر غير معروف"
           }
         }
       }
@@ -5699,6 +6357,26 @@
           "stringUnit": {
             "state": "new",
             "value": "Used %1$@, purgeable %2$@, free %3$@"
+          }
+        }
+      }
+    },
+    "VST Plug-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافات VST"
+          }
+        }
+      }
+    },
+    "VST3 Plug-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافات VST3"
           }
         }
       }
@@ -5783,12 +6461,32 @@
         }
       }
     },
+    "When you uninstall an app, macOS may ask whether Clenvra may change or delete other apps. Allow it only if you want Clenvra to remove apps.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند إلغاء تثبيت تطبيق، قد يسألك macOS عمّا إذا كان مسموحًا لـClenvra بتعديل التطبيقات الأخرى أو حذفها. اسمح بذلك فقط إذا أردت أن يزيل Clenvra التطبيقات."
+          }
+        }
+      }
+    },
     "Wired Memory": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الذاكرة المحجوزة"
+          }
+        }
+      }
+    },
+    "Without Full Disk Access, macOS asks separately for Desktop, Documents, Downloads and external disks the first time a scan reaches them. If you decline, Clenvra skips those folders and says so.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من دون الوصول الكامل إلى القرص، يطلب macOS إذنًا منفصلًا لسطح المكتب والمستندات والتنزيلات والأقراص الخارجية عند أول فحص يصل إليها. إذا رفضت، يتخطى Clenvra هذه المجلدات ويُعلمك بذلك."
           }
         }
       }
@@ -5866,6 +6564,9 @@
         }
       }
     },
+    "conda": {
+      "shouldTranslate": false
+    },
     "free of %@": {
       "localizations": {
         "ar": {
@@ -5892,6 +6593,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "macOS"
+          }
+        }
+      }
+    },
+    "macOS asks before an app can look at some of your files. Here is what you may see, and why.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يطلب macOS إذنك قبل أن يتمكن أي تطبيق من الاطلاع على بعض ملفاتك. إليك ما قد يظهر لك، وسببه."
           }
         }
       }
@@ -5926,6 +6637,36 @@
         }
       }
     },
+    "macOS did not install the helper. Make sure Clenvra is in the Applications folder.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يثبّت macOS المساعد. تأكد من وجود Clenvra في مجلد التطبيقات."
+          }
+        }
+      }
+    },
+    "macOS did not load it. It will still start the next time you log in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يحمّله macOS. سيبدأ مع ذلك في المرة القادمة التي تسجّل فيها الدخول."
+          }
+        }
+      }
+    },
+    "macOS did not remove the helper.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُزل macOS المساعد."
+          }
+        }
+      }
+    },
     "macOS manages memory dynamically. High used memory is normal and keeps the system responsive; memory pressure is the true indicator of memory constraint.": {
       "localizations": {
         "ar": {
@@ -5942,6 +6683,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "أبلغ macOS عن خطأ."
+          }
+        }
+      }
+    },
+    "menu.go": {
+      "comment": "Menu that switches between sections",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتقال"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go"
           }
         }
       }
