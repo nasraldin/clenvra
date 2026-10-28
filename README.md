@@ -72,7 +72,8 @@ From the command line:
 
 ```sh
 scripts/check.sh          # format lint + package tests + Release build
-scripts/check.sh --ui     # … plus UI tests (English/Arabic × light/dark) and the accessibility audit
+scripts/check.sh --ui     # … plus UI tests (English/Arabic × light/dark) and the accessibility audit, on this Mac's screen
+scripts/ui-tests-vm.sh    # the same UI tests in a macOS 26 VM, in the background (see docs/STATUS.md)
 ```
 
 For complete scans, give Clenvra **Full Disk Access** in System Settings › Privacy & Security. Without it, macOS hides some folders (Safari, Mail and others), and Clenvra skips them.

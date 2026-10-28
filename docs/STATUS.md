@@ -27,6 +27,19 @@ Read this first when you pick the project up on another Mac. It says where the w
 
 How the work was done: features were built test-first, partly by delegated agents (Claude subagents, Antigravity `agy`, opencode) in separate worktrees, then reviewed, merged and re-verified here. Automated security reviews of the helper led to six fixes (forged Put Back, Trash symlinks, irreversible mode, admin-only, staged Put Back, gate before `launchctl`).
 
+### UI redesign (2026-10-28, work Mac)
+
+Plan: [`superpowers/specs/2026-10-28-ui-redesign-design.md`](superpowers/specs/2026-10-28-ui-redesign-design.md). Owner's findings F1–F10: [`product/field-issues.md`](product/field-issues.md) (all fixed; two partial notes there).
+
+- **Navigation:** 18 pages in a two-level sidebar (Overview · Clean Up · Storage · Applications · System · History); no segmented tabs. Window titles name the page; Go menu with ⌘1–⌘9; View has sidebar, toolbar and inspector commands.
+- **Scan on request:** no page scans when opened (F3). Each shows a Scan button first, then "Scanned 5 minutes ago".
+- **System Junk / Developer Junk:** a sortable `Table` with collapsible categories, a checkbox per item (highlight shows details, the checkbox decides what is cleaned), inspector (⌃⌘I), context menu (Show Details, Show in Finder, Copy Path, Include, Exclude from Scans), one prominent Move to Trash…, search. **Developer Tools** (npm, pnpm, Docker… cleaned by their own command) is its own page.
+- **Startup Items:** readable names and icons, collapsible groups, inspector, Stop / Start for this login, Remove.
+- **Downloads:** Age and Size filters, Select All Shown, collapsible groups; hidden files are never listed.
+- **Space Map:** folders you created at the top of home can be selected and moved to the Trash (safety model updated); disks are re-read after every cleanup; the result explains that Trash space is freed once it is emptied.
+- **Settings:** toolbar tabs with icons (General, Schedule, Menu Bar, Exclusions, Custom Rules, System Helper), two-column pages, Open at Login.
+- **Not redesigned yet** (work as before, on the new navigation): Overview, Applications, Leftovers, Extensions, Duplicates, Similar Photos, Large & Old Files, Health, Processes, Security, Snapshots, Activity. They move to the same table + inspector pattern next.
+
 ### Fixed on 2026-10-28 (work Mac verification)
 
 - **Launch freeze (serious, also hit real users):** `MenuBarExtra(isInserted:)` was bound to `@AppStorage`. MenuBarExtra writes the binding back on every scene update, so the App body re-ran forever: main thread at 100%, memory over 1 GB, beach ball, UI tests failing with "has not loaded accessibility". It happened on most launches, not all. Fixed in `1024588`; found by bisecting to `55ec750`. **Rule: never bind `MenuBarExtra(isInserted:)` without dropping no-op writes, and never put `.task` or state writes in menu-style menu bar content.**
@@ -39,7 +52,7 @@ How the work was done: features were built test-first, partly by delegated agent
 1. Install Xcode 27.1 or later (macOS 26+, Apple Silicon).
 2. `git clone` the repo, then `open Clenvra.xcworkspace`. Always open the workspace, not the project.
 3. Run `scripts/check.sh`. It should pass without changes. It signs with team `CZU6ZC4LYQ` when this Mac has that team's signing certificate, and ad hoc otherwise, so it also works for contributors. Verified on a second Mac (user ID 502) on 2026-10-28.
-4. **UI tests, one-time setup:** macOS asks for permission the first time UI tests drive the app. Run them once from Xcode (⌘U) and approve, or run `sudo DevToolsSecurity -enable`. After that, `scripts/check.sh --ui` works.
+4. **UI tests run in a VM, never on your screen:** install Tart from its official release (`https://github.com/openai/tart/releases`; the Homebrew tap is broken), then `tart clone ghcr.io/cirruslabs/macos-tahoe-xcode:27.1 clenvra-ui` (about 80 GB). `scripts/ui-tests-vm.sh` runs every UI test in that macOS 26 VM and copies `Results.xcresult` back; `CLENVRA_SCREENSHOTS=1 scripts/ui-tests-vm.sh ClenvraUITests/ScreenshotUITests` captures every page. `scripts/check.sh --ui` still works on the Mac itself but takes over the screen for about 20 minutes.
 5. **Signing:** the project signs with the owner's team `CZU6ZC4LYQ` (Automatic). To run the app, the helper or `scripts/release.sh`, sign in to that team in Xcode › Settings › Accounts and download its certificates. The bundle IDs are `com.nasraldin.clenvra` and `com.nasraldin.clenvra.helper`.
 6. Give the app Full Disk Access for realistic manual testing.
 
