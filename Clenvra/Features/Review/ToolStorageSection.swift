@@ -73,7 +73,7 @@ private struct ToolRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(row.tool)
                 if let note = row.note {
-                    Text(note).font(.caption).foregroundStyle(.secondary)
+                    Text(note).font(.callout).foregroundStyle(.secondary)
                 }
                 if let location = row.location { PathText(path: location) }
             }
