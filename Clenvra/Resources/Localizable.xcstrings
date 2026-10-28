@@ -626,6 +626,70 @@
         }
       }
     },
+    "%lld items included": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عناصر مُضمَّنة"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصرًا مُضمَّنًا"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصر واحد مُضمَّن"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld عنصر مُضمَّن"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "عنصران مُضمَّنان"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يُضمَّن أي عنصر"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item included"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items included"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld items left behind by removed apps": {
       "localizations": {
         "ar": {
@@ -1570,22 +1634,22 @@
         }
       }
     },
-    "About macOS Permission Prompts…": {
+    "About %@ is now in the Trash. Empty the Trash to free that space; until then you can put items back.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "حول طلبات الأذونات في macOS…"
+            "value": "أصبح نحو %@ في سلة المهملات. أفرغ سلة المهملات لتحرير هذه المساحة؛ وحتى ذلك الحين يمكنك إعادة العناصر."
           }
         }
       }
     },
-    "Action": {
+    "About Permission Prompts…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الإجراء"
+            "value": "عن طلبات الأذونات…"
           }
         }
       }
@@ -1626,6 +1690,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة قاعدة"
+          }
+        }
+      }
+    },
+    "Add a folder Clenvra never touches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة مجلد لا يلمسه Clenvra أبدًا"
           }
         }
       }
@@ -1820,12 +1894,42 @@
         }
       }
     },
+    "Any Age": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي عمر"
+          }
+        }
+      }
+    },
+    "Any Size": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي حجم"
+          }
+        }
+      }
+    },
     "Any time": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "أي وقت"
+          }
+        }
+      }
+    },
+    "App": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تطبيق"
           }
         }
       }
@@ -1890,12 +1994,12 @@
         }
       }
     },
-    "App Updates": {
+    "App Updates:": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تحديثات التطبيقات"
+            "value": "تحديثات التطبيقات:"
           }
         }
       }
@@ -2121,6 +2225,16 @@
         }
       }
     },
+    "Belongs To": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتبع"
+          }
+        }
+      }
+    },
     "Blocks unwanted incoming network connections and services.": {
       "localizations": {
         "ar": {
@@ -2147,6 +2261,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سجل المتصفح وملفات تعريف الارتباط"
+          }
+        }
+      }
+    },
+    "Browser History & Cookies…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجل المتصفح وملفات تعريف الارتباط…"
           }
         }
       }
@@ -2234,16 +2358,6 @@
         }
       }
     },
-    "Can’t be quit": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن إنهاؤه"
-          }
-        }
-      }
-    },
     "Cargo has no built-in command to clear its registry cache. Shown for information.": {
       "localizations": {
         "ar": {
@@ -2304,6 +2418,16 @@
         }
       }
     },
+    "Check Tools": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص الأدوات"
+          }
+        }
+      }
+    },
     "Check for Updates": {
       "localizations": {
         "ar": {
@@ -2330,6 +2454,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تحقق من أن القرص متصل وأن Clenvra لديه وصول كامل إلى القرص."
+          }
+        }
+      }
+    },
+    "Check your tools again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص أدواتك مرة أخرى (⌘R)"
           }
         }
       }
@@ -2523,12 +2657,12 @@
         }
       }
     },
-    "Clenvra never lists or removes anything inside these folders. Changes apply immediately.": {
+    "Clenvra never lists or removes anything inside these folders. Changes apply immediately. You can also exclude an item from any scan result with its right-click menu.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا يعرض Clenvra أي شيء داخل هذه المجلدات ولا يزيله. تُطبَّق التغييرات فورًا."
+            "value": "لا يعرض Clenvra أي شيء داخل هذه المجلدات ولا يزيله أبدًا. تُطبَّق التغييرات فورًا. يمكنك أيضًا استبعاد أي عنصر من نتائج الفحص عبر قائمة النقر بزر الماوس الأيمن."
           }
         }
       }
@@ -2709,6 +2843,16 @@
         }
       }
     },
+    "Copy Paths": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ المسارات"
+          }
+        }
+      }
+    },
     "Could Not Enable": {
       "localizations": {
         "ar": {
@@ -2765,6 +2909,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "حرج"
+          }
+        }
+      }
+    },
+    "Custom Range": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نطاق مخصص"
+          }
+        }
+      }
+    },
+    "Custom Rules": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القواعد المخصصة"
           }
         }
       }
@@ -2835,16 +2999,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "التبعيات ومخرجات البناء داخل مشاريعك. أعد التثبيت أو البناء لاستعادتها."
-          }
-        }
-      }
-    },
-    "Deselect All": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إلغاء تحديد الكل"
           }
         }
       }
@@ -2978,6 +3132,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم."
+          }
+        }
+      }
+    },
+    "Don’t Include": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدم التضمين"
           }
         }
       }
@@ -3152,6 +3316,16 @@
         }
       }
     },
+    "Exclude from Scans": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استبعاد من الفحص"
+          }
+        }
+      }
+    },
     "Excluded": {
       "localizations": {
         "ar": {
@@ -3162,12 +3336,12 @@
         }
       }
     },
-    "Excluded Folders": {
+    "Exclusions": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المجلدات المستثناة"
+            "value": "الاستثناءات"
           }
         }
       }
@@ -3302,12 +3476,62 @@
         }
       }
     },
+    "Find Xcode data, simulators, package caches and build folders in your projects. Your tools rebuild them when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن بيانات Xcode والمحاكيات وذاكرة الحزم المؤقتة ومجلدات البناء في مشاريعك. تعيد أدواتك إنشاءها عند الحاجة."
+          }
+        }
+      }
+    },
+    "Find caches, logs, crash reports, old installers and other files that apps recreate. Nothing is removed until you review it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن الذاكرة المؤقتة والسجلات وتقارير الأعطال والمثبّتات القديمة وغيرها من الملفات التي تعيد التطبيقات إنشاءها. لا يُزال أي شيء قبل أن تراجعه."
+          }
+        }
+      }
+    },
+    "Find files that apps you already removed left behind: settings, caches, containers and support files.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن الملفات التي تركتها تطبيقات أزلتها بالفعل: الإعدادات والذاكرة المؤقتة والحاويات وملفات الدعم."
+          }
+        }
+      }
+    },
+    "Find the biggest files you have not opened in a long time.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن أكبر الملفات التي لم تفتحها منذ وقت طويل."
+          }
+        }
+      }
+    },
     "Finding the app's files…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ البحث عن ملفات التطبيق…"
+          }
+        }
+      }
+    },
+    "Finding your developer tools…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ العثور على أدوات المطوّر…"
           }
         }
       }
@@ -3352,6 +3576,26 @@
         }
       }
     },
+    "Folders Clenvra Never Touches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلدات لا يلمسها Clenvra أبدًا"
+          }
+        }
+      }
+    },
+    "Folders and files": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجلدات والملفات"
+          }
+        }
+      }
+    },
     "Folders in Downloads, Desktop and Documents with nothing inside.": {
       "localizations": {
         "ar": {
@@ -3392,6 +3636,16 @@
         }
       }
     },
+    "For all users": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لجميع المستخدمين"
+          }
+        }
+      }
+    },
     "Force Quit": {
       "localizations": {
         "ar": {
@@ -3408,6 +3662,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فرض إنهاء التطبيق"
+          }
+        }
+      }
+    },
+    "Force Quit…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فرض الإنهاء…"
           }
         }
       }
@@ -3482,6 +3746,16 @@
         }
       }
     },
+    "Frees": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحرر"
+          }
+        }
+      }
+    },
     "Frees about %@": {
       "localizations": {
         "ar": {
@@ -3498,16 +3772,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "يحرر ≈"
-          }
-        }
-      }
-    },
-    "Full Disk Access": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوصول الكامل إلى القرص"
           }
         }
       }
@@ -3552,12 +3816,32 @@
         }
       }
     },
+    "Full Disk Access:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول الكامل إلى القرص:"
+          }
+        }
+      }
+    },
     "Gatekeeper": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "Gatekeeper"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عام"
           }
         }
       }
@@ -3695,22 +3979,22 @@
         }
       }
     },
+    "Hide Details": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إخفاء التفاصيل"
+          }
+        }
+      }
+    },
     "History": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "السجل"
-          }
-        }
-      }
-    },
-    "History & Cookies…": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "السجل وملفات تعريف الارتباط…"
           }
         }
       }
@@ -3846,12 +4130,52 @@
         }
       }
     },
-    "Install the System Helper in Settings to remove it": {
+    "Include": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ثبّت مساعد النظام من الإعدادات لإزالته"
+            "value": "تضمين"
+          }
+        }
+      }
+    },
+    "Include %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تضمين %@"
+          }
+        }
+      }
+    },
+    "Include all %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تضمين كل %@"
+          }
+        }
+      }
+    },
+    "Included": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُضمَّن"
+          }
+        }
+      }
+    },
+    "Installed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثبّت"
           }
         }
       }
@@ -3862,6 +4186,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ثبّتته الحزمة"
+          }
+        }
+      }
+    },
+    "Installed by you or your apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثبّتها أنت أو تطبيقاتك"
           }
         }
       }
@@ -4196,7 +4530,27 @@
         }
       }
     },
+    "Label": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المعرّف"
+          }
+        }
+      }
+    },
     "Large & Old Files": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات الكبيرة والقديمة"
+          }
+        }
+      }
+    },
+    "Large and old files": {
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -4246,12 +4600,32 @@
         }
       }
     },
+    "Last Month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشهر الماضي"
+          }
+        }
+      }
+    },
     "Last Used": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "آخر استخدام"
+          }
+        }
+      }
+    },
+    "Last Week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسبوع الماضي"
           }
         }
       }
@@ -4346,6 +4720,26 @@
         }
       }
     },
+    "List Safari extensions, system extensions, Quick Look and Spotlight plug-ins, audio plug-ins and other add-ons.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعرض امتدادات Safari وامتدادات النظام وإضافات Quick Look وSpotlight والإضافات الصوتية وغيرها."
+          }
+        }
+      }
+    },
+    "List the files in Downloads and your screenshots by kind, age and source, so you can remove what you no longer need.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعرض ملفات التنزيلات ولقطات الشاشة حسب النوع والعمر والمصدر، لتزيل ما لم تعد تحتاج إليه."
+          }
+        }
+      }
+    },
     "Loads this startup item again, as it was before Clenvra removed it.": {
       "localizations": {
         "ar": {
@@ -4376,12 +4770,22 @@
         }
       }
     },
-    "Login Items Settings": {
+    "Location": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إعدادات عناصر تسجيل الدخول"
+            "value": "الموقع"
+          }
+        }
+      }
+    },
+    "Login:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول:"
           }
         }
       }
@@ -4392,6 +4796,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ملفات السجل"
+          }
+        }
+      }
+    },
+    "Look for items again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث عن العناصر مرة أخرى (⌘R)"
           }
         }
       }
@@ -4656,6 +5070,16 @@
         }
       }
     },
+    "Menu Bar:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شريط القائمة:"
+          }
+        }
+      }
+    },
     "Modified": {
       "localizations": {
         "ar": {
@@ -4672,6 +5096,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخر تعديل: %@"
+          }
+        }
+      }
+    },
+    "Modified from": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معدّل من"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المزيد"
+          }
+        }
+      }
+    },
+    "More actions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجراءات أخرى"
           }
         }
       }
@@ -4970,6 +5424,16 @@
         }
       }
     },
+    "No Selection": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد تحديد"
+          }
+        }
+      }
+    },
     "No apps": {
       "localizations": {
         "ar": {
@@ -5200,6 +5664,16 @@
         }
       }
     },
+    "Not an App": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليس تطبيقًا"
+          }
+        }
+      }
+    },
     "Not attempted because the cleanup was stopped.": {
       "localizations": {
         "ar": {
@@ -5216,6 +5690,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُعدَّل منذ"
+          }
+        }
+      }
+    },
+    "Not running": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير قيد التشغيل"
           }
         }
       }
@@ -5320,6 +5804,16 @@
         }
       }
     },
+    "Now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الآن"
+          }
+        }
+      }
+    },
     "NuGet": {
       "shouldTranslate": false
     },
@@ -5359,6 +5853,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "أقدم من %lld يومًا"
+          }
+        }
+      }
+    },
+    "Older than 3 Months": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقدم من 3 أشهر"
+          }
+        }
+      }
+    },
+    "Older than a Month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقدم من شهر"
+          }
+        }
+      }
+    },
+    "Older than a Year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقدم من سنة"
           }
         }
       }
@@ -5506,6 +6030,26 @@
         }
       }
     },
+    "Open Clenvra at login": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح Clenvra عند تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Open Login Items Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات عناصر تسجيل الدخول"
+          }
+        }
+      }
+    },
     "Open Privacy & Security": {
       "localizations": {
         "ar": {
@@ -5536,12 +6080,12 @@
         }
       }
     },
-    "Open Settings…": {
+    "Open Privacy Settings…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فتح الإعدادات…"
+            "value": "فتح إعدادات الخصوصية…"
           }
         }
       }
@@ -5562,6 +6106,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "علامات التبويب والجلسات المفتوحة"
+          }
+        }
+      }
+    },
+    "Open Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح سلة المهملات"
           }
         }
       }
@@ -5619,6 +6173,36 @@
         }
       }
     },
+    "Over 1 GB": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكبر من 1 غ.ب"
+          }
+        }
+      }
+    },
+    "Over 10 MB": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكبر من 10 م.ب"
+          }
+        }
+      }
+    },
+    "Over 100 MB": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكبر من 100 م.ب"
+          }
+        }
+      }
+    },
     "Overview": {
       "localizations": {
         "ar": {
@@ -5645,6 +6229,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جزء من %@"
+          }
+        }
+      }
+    },
+    "Part of macOS": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من macOS"
           }
         }
       }
@@ -5728,6 +6322,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "معاينة"
+          }
+        }
+      }
+    },
+    "Preview Cleanup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة التنظيف"
           }
         }
       }
@@ -5816,12 +6420,12 @@
         }
       }
     },
-    "Program missing — left behind by an app that was removed": {
+    "Program missing": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "البرنامج مفقود — خلّفه تطبيق تمت إزالته"
+            "value": "البرنامج مفقود"
           }
         }
       }
@@ -5966,12 +6570,52 @@
         }
       }
     },
+    "Quit the selected app (it is asked to save its work first)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء التطبيق المحدد (يُطلب منه حفظ عمله أولًا)"
+          }
+        }
+      }
+    },
+    "Quit…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنهاء…"
+          }
+        }
+      }
+    },
+    "Read the startup items again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قراءة عناصر بدء التشغيل مرة أخرى (⌘R)"
+          }
+        }
+      }
+    },
     "Reading possible duplicates…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ قراءة الملفات التي قد تكون مكررة…"
+          }
+        }
+      }
+    },
+    "Reading startup items…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ قراءة عناصر بدء التشغيل…"
           }
         }
       }
@@ -6022,6 +6666,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "هل تريد إزالة بيانات المتصفح؟"
+          }
+        }
+      }
+    },
+    "Remove the selected folder from the list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة المجلد المحدد من القائمة"
           }
         }
       }
@@ -6326,12 +6980,12 @@
         }
       }
     },
-    "Review browser history, cookies, open tabs and site data. Removing cookies signs you out of websites.": {
+    "Review and move the included items to the Trash (⌘⌫)": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "راجع سجل المتصفح وملفات تعريف الارتباط وعلامات التبويب المفتوحة وبيانات المواقع. إزالة ملفات تعريف الارتباط تسجّل خروجك من المواقع."
+            "value": "مراجعة العناصر المُضمَّنة ونقلها إلى سلة المهملات (⌘⌫)"
           }
         }
       }
@@ -6362,6 +7016,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "هل تريد تشغيل هذا الأمر؟"
+          }
+        }
+      }
+    },
+    "Running": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيد التشغيل"
+          }
+        }
+      }
+    },
+    "Runs": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعمل"
+          }
+        }
+      }
+    },
+    "Runs This Program": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يشغّل هذا البرنامج"
           }
         }
       }
@@ -6466,12 +7150,28 @@
         }
       }
     },
-    "Scan to see what uses space.": {
+    "Scanned %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "قم بالفحص لمعرفة ما يشغل المساحة."
+            "value": "تم الفحص %@"
+          }
+        }
+      }
+    },
+    "Scanning %lld of %lld locations…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ فحص %1$lld من %2$lld موقع…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Scanning %1$lld of %2$lld locations…"
           }
         }
       }
@@ -6482,6 +7182,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ الفحص…"
+          }
+        }
+      }
+    },
+    "Schedule": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجدولة"
           }
         }
       }
@@ -6536,12 +7246,32 @@
         }
       }
     },
+    "Search Startup Items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في عناصر بدء التشغيل"
+          }
+        }
+      }
+    },
     "Search apps": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "البحث في التطبيقات"
+          }
+        }
+      }
+    },
+    "Search by Name or Location": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث بالاسم أو الموقع"
           }
         }
       }
@@ -6626,12 +7356,42 @@
         }
       }
     },
-    "Select All": {
+    "See how much space npm, pnpm, Homebrew, Docker and your other tools keep, and clean it with each tool’s own command.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تحديد الكل"
+            "value": "اعرف مقدار المساحة التي تحتفظ بها npm وpnpm وHomebrew وDocker وأدواتك الأخرى، ونظّفها بأمر كل أداة الخاص."
+          }
+        }
+      }
+    },
+    "See which folders use the most space, and open any folder to look inside.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعرف المجلدات التي تشغل أكبر مساحة، وافتح أي مجلد لترى محتواه."
+          }
+        }
+      }
+    },
+    "Select All Shown": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد كل المعروض"
+          }
+        }
+      }
+    },
+    "Select a startup item to see what it runs, when, and who made it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد عنصر بدء تشغيل لترى ما يشغّله ومتى ومن صنعه."
           }
         }
       }
@@ -6642,6 +7402,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر تطبيقًا"
+          }
+        }
+      }
+    },
+    "Select an item to see where it is and what removing it frees.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد عنصرًا لترى مكانه وما تحرره إزالته."
+          }
+        }
+      }
+    },
+    "Select every file the filters show": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديد كل ملف تعرضه عوامل التصفية"
           }
         }
       }
@@ -6810,6 +7590,16 @@
         }
       }
     },
+    "Show Details": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار التفاصيل"
+          }
+        }
+      }
+    },
     "Show Uninstaller in Finder": {
       "localizations": {
         "ar": {
@@ -6836,6 +7626,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "إظهار في Finder"
+          }
+        }
+      }
+    },
+    "Show or hide the details of the highlighted item (⌃⌘I)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار تفاصيل العنصر المحدد أو إخفاؤها (⌃⌘I)"
+          }
+        }
+      }
+    },
+    "Show the Trash in Finder, where you can empty it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض سلة المهملات في Finder حيث يمكنك إفراغها"
           }
         }
       }
@@ -6906,6 +7716,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحجم"
+          }
+        }
+      }
+    },
+    "Size on Disk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحجم على القرص"
           }
         }
       }
@@ -7040,6 +7860,26 @@
         }
       }
     },
+    "Start": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل"
+          }
+        }
+      }
+    },
+    "Started.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التشغيل."
+          }
+        }
+      }
+    },
     "Startup": {
       "localizations": {
         "ar": {
@@ -7070,22 +7910,22 @@
         }
       }
     },
-    "Startup item": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "عنصر بدء التشغيل"
-          }
-        }
-      }
-    },
     "Startup items left behind": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "عناصر بدء تشغيل متبقية"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة"
           }
         }
       }
@@ -7126,6 +7966,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "إيقاف ونقل إلى سلة المهملات"
+          }
+        }
+      }
+    },
+    "Stop and Start apply to this login only. Remove stops it and moves its file to the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يسري الإيقاف والتشغيل على جلسة تسجيل الدخول هذه فقط. أما الإزالة فتوقفه وتنقل ملفه إلى سلة المهملات."
+          }
+        }
+      }
+    },
+    "Stopped for now. It starts again at your next login.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُوقف الآن. سيعمل مجددًا عند تسجيل الدخول التالي."
           }
         }
       }
@@ -7977,16 +8837,6 @@
         }
       }
     },
-    "Use on Another Mac": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاستخدام على جهاز Mac آخر"
-          }
-        }
-      }
-    },
     "Used %@": {
       "localizations": {
         "ar": {
@@ -8009,6 +8859,16 @@
           "stringUnit": {
             "state": "new",
             "value": "Used %1$@, purgeable %2$@, free %3$@"
+          }
+        }
+      }
+    },
+    "Useful with scheduled scans, which run only while Clenvra is open.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيد مع الفحص المجدول الذي يعمل فقط أثناء فتح Clenvra."
           }
         }
       }
@@ -8266,6 +9126,16 @@
         }
       }
     },
+    "Your Settings:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعداداتك:"
+          }
+        }
+      }
+    },
     "Your startup disk is almost full.": {
       "localizations": {
         "ar": {
@@ -8349,12 +9219,32 @@
         }
       }
     },
+    "macOS could not start this item.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على macOS تشغيل هذا العنصر."
+          }
+        }
+      }
+    },
     "macOS could not stop this item, so it was kept.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر على macOS إيقاف هذا العنصر، لذلك تم الإبقاء عليه."
+          }
+        }
+      }
+    },
+    "macOS could not stop this item.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على macOS إيقاف هذا العنصر."
           }
         }
       }
@@ -8375,6 +9265,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يسمح macOS بالوصول."
+          }
+        }
+      }
+    },
+    "macOS did not allow this change. You can manage it in System Settings › General › Login Items.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يسمح macOS بهذا التغيير. يمكنك إدارته من إعدادات النظام › عام › عناصر تسجيل الدخول."
           }
         }
       }
@@ -8425,16 +9325,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "يدير macOS الذاكرة تلقائيًا. الذاكرة المستهلكة العالية أمر طبيعي وتبقي النظام سريع الاستجابة؛ ضغط الذاكرة هو المقياس الفعلي لنقص الذاكرة."
-          }
-        }
-      }
-    },
-    "macOS processes and command-line tools can’t be quit here.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن إنهاء عمليات macOS وأدوات سطر الأوامر من هنا."
           }
         }
       }
@@ -8504,6 +9394,16 @@
     },
     "pnpm": {
       "shouldTranslate": false
+    },
+    "to": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلى"
+          }
+        }
+      }
     },
     "uv": {
       "shouldTranslate": false
