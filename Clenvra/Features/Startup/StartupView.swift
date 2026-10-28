@@ -19,7 +19,6 @@ struct StartupView: View {
                 list
             }
         }
-        .navigationTitle(Text(AppSection.startup.title))
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -72,7 +71,6 @@ struct StartupView: View {
         } message: {
             if let removalMessage { Text(removalMessage) }
         }
-        .accessibilityIdentifier("section.startup")
     }
 
     private var list: some View {

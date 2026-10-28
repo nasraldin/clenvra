@@ -17,7 +17,6 @@ struct DuplicatesView: View {
     var body: some View {
         VStack(spacing: 0) { content }
             .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("section.duplicates")
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom) {
                 if !session.groups.isEmpty { statusBar }

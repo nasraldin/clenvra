@@ -13,7 +13,6 @@ struct RuleReviewView<Leading: View>: View {
 
     var body: some View {
         content
-            .navigationTitle(Text(section.title))
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom) {
                 if !session.groups.isEmpty { statusBar }
@@ -33,7 +32,6 @@ struct RuleReviewView<Leading: View>: View {
             .task {
                 if session.phase == .idle { await session.scan() }
             }
-            .accessibilityIdentifier("section.\(section.rawValue)")
     }
 
     @ViewBuilder private var content: some View {

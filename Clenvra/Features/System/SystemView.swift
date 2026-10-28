@@ -1,10 +1,11 @@
 import ClenvraKit
 import SwiftUI
 
-/// Displays system health diagnostics, heavy processes, and macOS security posture.
+/// The System pages: health, heavy processes, security checks and local snapshots. Each is its own sidebar page.
 struct SystemView: View {
     let session: SystemSession
     let snapshots: SnapshotsSession
+    let page: SystemTab
 
     enum SystemTab: String, CaseIterable, Identifiable {
         case health
@@ -13,34 +14,21 @@ struct SystemView: View {
         case snapshots
 
         var id: String { rawValue }
+    }
 
-        var title: LocalizedStringResource {
-            switch self {
-            case .health: "Health"
-            case .processes: "Heavy Processes"
-            case .security: "Security"
-            case .snapshots: "Snapshots"
-            }
-        }
-
-        var symbol: String {
-            switch self {
-            case .health: "heart.text.square"
-            case .processes: "cpu"
-            case .security: "shield"
-            case .snapshots: "clock.arrow.circlepath"
-            }
+    private var pageSection: AppSection {
+        switch page {
+        case .health: .system
+        case .processes: .processes
+        case .security: .security
+        case .snapshots: .snapshots
         }
     }
 
-    @State private var selectedTab: SystemTab = .health
-
     var body: some View {
         VStack(spacing: 0) {
-            tabSelector
-            Divider()
             Group {
-                switch selectedTab {
+                switch page {
                 case .health:
                     SystemHealthView(session: session)
                 case .processes:
@@ -52,8 +40,8 @@ struct SystemView: View {
                 }
             }
             .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(pageSection.title))
         }
-        .navigationTitle(Text("System"))
         .onAppear {
             session.start()
             if session.securityChecks.isEmpty {
@@ -63,24 +51,6 @@ struct SystemView: View {
         .onDisappear {
             session.stop()
         }
-        .accessibilityIdentifier("section.system")
-    }
-
-    private var tabSelector: some View {
-        Picker("System View", selection: $selectedTab) {
-            ForEach(SystemTab.allCases) { tab in
-                Label {
-                    Text(tab.title)
-                } icon: {
-                    Image(systemName: tab.symbol)
-                }
-                .tag(tab)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .padding(.horizontal)
-        .padding(.vertical, 8)
     }
 }
 
@@ -371,10 +341,7 @@ private struct SystemProcessesView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Sort by")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                Picker("Sort Order", selection: $sortOrder) {
+                Picker("Sort by", selection: $sortOrder) {
                     ForEach(ProcessSortOrder.allCases) { order in
                         Text(order.title).tag(order)
                     }
@@ -416,11 +383,8 @@ private struct SystemProcessesView: View {
                     .width(min: 200, ideal: 300)
 
                     TableColumn("CPU") { proc in
-                        HStack(spacing: 2) {
-                            Text(proc.cpuPercent, format: .number.precision(.fractionLength(1)))
-                                .monospacedDigit()
-                            Text(verbatim: "%")
-                        }
+                        Text(proc.cpuPercent / 100, format: .percent.precision(.fractionLength(1)))
+                            .monospacedDigit()
                     }
                     .width(ideal: 80)
 
@@ -433,7 +397,10 @@ private struct SystemProcessesView: View {
                         let failedPolite = session.failedPoliteQuits.contains(proc.id)
                         // Only apps the user runs can be quit; macOS processes and command-line tools cannot.
                         if !proc.isQuittableApp {
-                            EmptyView()
+                            Text(verbatim: "—")
+                                .foregroundStyle(.secondary)
+                                .accessibilityLabel(Text("Can’t be quit"))
+                                .help(Text("macOS processes and command-line tools can’t be quit here."))
                         } else if failedPolite {
                             Button(role: .destructive) {
                                 targetProcessForQuit = proc
@@ -548,8 +515,8 @@ private struct SecurityCheckRow: View {
                     .foregroundStyle(.secondary)
 
                 Text(verbatim: check.detail)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                     .environment(\.layoutDirection, .leftToRight)
 
                 if let url = check.settingsURL {
@@ -585,16 +552,10 @@ private struct SecurityCheckRow: View {
         switch check.status {
         case .good:
             Text("Good")
-                .font(.caption)
-                .foregroundStyle(.green)
         case .attention:
             Text("Attention")
-                .font(.caption)
-                .foregroundStyle(.orange)
         case .unknown:
             Text("Unknown")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -672,7 +633,7 @@ private struct SnapshotsView: View {
                         ? "macOS removes these by itself when space runs low. Deleting one frees space now, but you can no longer restore from it. This cannot be undone."
                         : "macOS removes these by itself when space runs low. To delete one now, install the System Helper in Settings."
                 )
-                .foregroundStyle(.secondary)
+                .font(.callout)
             }
         }
         .formStyle(.grouped)

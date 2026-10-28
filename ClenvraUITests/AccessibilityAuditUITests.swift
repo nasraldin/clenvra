@@ -9,8 +9,9 @@ final class AccessibilityAuditUITests: XCTestCase {
     @MainActor func testEverySectionPassesAuditInLight() throws { try audit(.light) }
     @MainActor func testEverySectionPassesAuditInDark() throws { try audit(.dark) }
 
-    /// Storage goes last: its home-folder scan keeps running in the background and loads the Mac.
-    private static let auditOrder = allSections.filter { $0 != "storage" } + ["storage"]
+    /// The pages that start the home-folder scan go last: it keeps running in the background and loads the Mac.
+    private static let scanPages = ["storage", "largeFiles", "downloads"]
+    private static let auditOrder = allSections.filter { !scanPages.contains($0) } + scanPages
     /// Sections whose read-only scan starts on open; they are audited once results are shown.
     private static let scanningSections: Set<String> = ["cleanup", "developer", "startup"]
 

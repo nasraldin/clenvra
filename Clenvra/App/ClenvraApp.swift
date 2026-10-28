@@ -34,16 +34,21 @@ struct ClenvraApp: App {
         }
         .defaultSize(width: 1100, height: 720)
         .commands {
+            // View › Show/Hide Sidebar (⌃⌘S) and the toolbar items, as in every Mac app.
+            SidebarCommands()
+            ToolbarCommands()
             // Its own key: "Go" alone is also the Go language in Developer, which must not be translated.
             CommandMenu(Text("menu.go", comment: "Menu that switches between sections")) {
-                ForEach(AppSection.allCases) { section in
-                    if let key = section.shortcut {
-                        Button {
-                            selection = section
-                        } label: {
-                            Text(section.title)
+                ForEach(AppSection.Group.allCases, id: \.self) { group in
+                    Section {
+                        ForEach(AppSection.allCases.filter { $0.group == group }) { section in
+                            Button {
+                                selection = section
+                            } label: {
+                                Text(section.title)
+                            }
+                            .keyboardShortcut(section.shortcut.map { KeyboardShortcut($0, modifiers: .command) })
                         }
-                        .keyboardShortcut(key, modifiers: .command)
                     }
                 }
             }

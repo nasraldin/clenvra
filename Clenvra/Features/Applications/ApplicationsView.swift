@@ -2,47 +2,25 @@ import AppKit
 import ClenvraKit
 import SwiftUI
 
-/// Applications: installed apps with uninstall-by-evidence, leftovers of apps already removed, and extensions.
-struct ApplicationsView: View {
-    private enum Tab: Hashable {
-        case installed
-        case leftovers
-        case extensions
-    }
+/// The application pages: installed apps with uninstall-by-evidence, leftovers of apps already removed, and
+/// extensions. Each is its own sidebar page.
+enum ApplicationsPage: Hashable {
+    case installed, leftovers, extensions
+}
 
+struct ApplicationsView: View {
     let session: AppsSession
     let plugins: PluginsSession
     let updates: UpdateCheckSession
     /// The "Check for app updates" setting; off by default, and nothing is contacted while it is off.
     let checksForUpdates: Bool
-    @State private var tab = Tab.installed
+    let page: ApplicationsPage
     @State private var selectedID: String?
-
-    init(session: AppsSession, plugins: PluginsSession, updates: UpdateCheckSession, checksForUpdates: Bool) {
-        self.session = session
-        self.plugins = plugins
-        self.updates = updates
-        self.checksForUpdates = checksForUpdates
-    }
 
     var body: some View {
         VStack(spacing: 0) { content }
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("section.applications")
-            .navigationTitle(Text(AppSection.applications.title))
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Picker(selection: $tab) {
-                        Text("Installed").tag(Tab.installed)
-                        Text("Leftovers").tag(Tab.leftovers)
-                        Text("Extensions").tag(Tab.extensions)
-                    } label: {
-                        Text("View")
-                    }
-                    .pickerStyle(.segmented)
-                    .fixedSize()
-                }
-                if tab == .installed {
+                if page == .installed {
                     ToolbarItem {
                         CheckForUpdatesButton(session: session, updates: updates, isEnabled: checksForUpdates)
                     }
@@ -52,19 +30,18 @@ struct ApplicationsView: View {
                 if session.phase == .idle { await session.load() }
             }
             .dropDestination(for: URL.self) { urls, _ in
-                guard let url = urls.first(where: { $0.pathExtension.lowercased() == "app" }) else { return false }
+                guard page == .installed,
+                    let url = urls.first(where: { $0.pathExtension.lowercased() == "app" })
+                else { return false }
                 Task {
-                    if await session.select(bundleURL: url) {
-                        tab = .installed
-                        selectedID = session.detail?.app.id
-                    }
+                    if await session.select(bundleURL: url) { selectedID = session.detail?.app.id }
                 }
                 return true
             }
     }
 
     @ViewBuilder private var content: some View {
-        switch tab {
+        switch page {
         case .installed:
             HSplitView {
                 AppListView(

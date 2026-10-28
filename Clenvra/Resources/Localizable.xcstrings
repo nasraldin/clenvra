@@ -2131,16 +2131,6 @@
         }
       }
     },
-    "Browser": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المستعرض"
-          }
-        }
-      }
-    },
     "Browser Caches": {
       "localizations": {
         "ar": {
@@ -2240,6 +2230,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إلغاء"
+          }
+        }
+      }
+    },
+    "Can’t be quit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن إنهاؤه"
           }
         }
       }
@@ -2859,6 +2859,16 @@
         }
       }
     },
+    "Developer Junk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات المطوّرين غير الضرورية"
+          }
+        }
+      }
+    },
     "Developer Tools": {
       "localizations": {
         "ar": {
@@ -3002,12 +3012,12 @@
         }
       }
     },
-    "Downloads & Screenshots": {
+    "Downloads": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التنزيلات ولقطات الشاشة"
+            "value": "التنزيلات"
           }
         }
       }
@@ -3625,16 +3635,6 @@
         }
       }
     },
-    "Heavy Processes": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "العمليات المستهلكة"
-          }
-        }
-      }
-    },
     "Helper is installed": {
       "localizations": {
         "ar": {
@@ -3852,16 +3852,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ثبّت مساعد النظام من الإعدادات لإزالته"
-          }
-        }
-      }
-    },
-    "Installed": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "المثبّتة"
           }
         }
       }
@@ -4206,12 +4196,12 @@
         }
       }
     },
-    "Large & Old": {
+    "Large & Old Files": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الكبيرة والقديمة"
+            "value": "الملفات الكبيرة والقديمة"
           }
         }
       }
@@ -5220,16 +5210,6 @@
         }
       }
     },
-    "Not available yet.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "غير متاح بعد."
-          }
-        }
-      }
-    },
     "Not modified in": {
       "localizations": {
         "ar": {
@@ -5822,6 +5802,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "العملية"
+          }
+        }
+      }
+    },
+    "Processes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العمليات"
           }
         }
       }
@@ -6980,16 +6970,6 @@
         }
       }
     },
-    "Sort Order": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ترتيب الفرز"
-          }
-        }
-      }
-    },
     "Sort by": {
       "localizations": {
         "ar": {
@@ -7006,6 +6986,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المصدر"
+          }
+        }
+      }
+    },
+    "Space Map": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خريطة المساحة"
           }
         }
       }
@@ -7051,6 +7041,16 @@
       }
     },
     "Startup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عناصر بدء التشغيل"
+          }
+        }
+      }
+    },
+    "Startup Items": {
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -7263,6 +7263,16 @@
         }
       }
     },
+    "System Junk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات النظام غير الضرورية"
+          }
+        }
+      }
+    },
     "System Logs": {
       "localizations": {
         "ar": {
@@ -7279,16 +7289,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "أداء النظام"
-          }
-        }
-      }
-    },
-    "System View": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "عرض النظام"
           }
         }
       }
@@ -8073,16 +8073,6 @@
         }
       }
     },
-    "View": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "العرض"
-          }
-        }
-      }
-    },
     "Warning": {
       "localizations": {
         "ar": {
@@ -8435,6 +8425,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يدير macOS الذاكرة تلقائيًا. الذاكرة المستهلكة العالية أمر طبيعي وتبقي النظام سريع الاستجابة؛ ضغط الذاكرة هو المقياس الفعلي لنقص الذاكرة."
+          }
+        }
+      }
+    },
+    "macOS processes and command-line tools can’t be quit here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن إنهاء عمليات macOS وأدوات سطر الأوامر من هنا."
           }
         }
       }

@@ -91,6 +91,7 @@ struct LeftoversView: View {
                 Text("No files from removed apps were found, or they were changed in the last 30 days.")
             }
             .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.leftovers.title))
         } else {
             List {
                 Section {
@@ -115,6 +116,7 @@ struct LeftoversView: View {
             }
             .disabled(session.isWorking)
             .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.leftovers.title))
         }
     }
 

@@ -1,9 +1,10 @@
 import AppKit
 import XCTest
 
-/// The sidebar sections in display order, as their `sidebar.<id>` / `section.<id>` identifiers.
+/// The sidebar pages in display order, as their `sidebar.<id>` / `section.<id>` identifiers.
 let allSections = [
-    "overview", "storage", "duplicates", "cleanup", "developer", "applications", "startup", "system", "activity",
+    "overview", "cleanup", "developer", "largeFiles", "downloads", "duplicates", "similarPhotos", "storage",
+    "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "snapshots", "activity",
 ]
 
 enum Appearance: String, CaseIterable {

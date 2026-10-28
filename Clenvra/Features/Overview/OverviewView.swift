@@ -25,7 +25,6 @@ struct OverviewView: View {
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle(Text(AppSection.overview.title))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -47,7 +46,6 @@ struct OverviewView: View {
             await refreshVolumes()
             fullDiskAccess = await FullDiskAccess.currentStatus(home: environment.home)
         }
-        .accessibilityIdentifier("section.overview")
     }
 
     // MARK: - Disks
@@ -220,7 +218,7 @@ extension OverviewRecommendations.Destination {
         case .cleanup: .cleanup
         case .developer: .developer
         case .startup: .startup
-        case .system: .system
+        case .system: .security
         }
     }
 }

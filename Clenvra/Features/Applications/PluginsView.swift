@@ -81,6 +81,7 @@ struct PluginsView: View {
                 Text("Turn on Show Apple Items to see the ones built into macOS.")
             }
             .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.extensions.title))
         } else {
             List {
                 if !session.issues.isEmpty {
@@ -105,6 +106,7 @@ struct PluginsView: View {
             }
             .disabled(session.phase == .removing)
             .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.extensions.title))
         }
     }
 
@@ -147,7 +149,7 @@ private struct PluginRow: View {
                         .lineLimit(1)
                     if let version = item.version {
                         Text(verbatim: version)
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.secondary)
                     }
                     handlingBadge
@@ -161,7 +163,7 @@ private struct PluginRow: View {
                 }
                 if let app = item.containingApp {
                     Text("Part of \(app)")
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -192,13 +194,16 @@ private struct PluginRow: View {
         case .removable:
             EmptyView()
         case .managed:
-            Text("Security or management software")
-                .font(.caption)
-                .foregroundStyle(.orange)
+            Label {
+                Text("Security or management software")
+            } icon: {
+                Image(systemName: "lock.shield").foregroundStyle(.orange)
+            }
+            .font(.callout)
         case .revealOnly:
             if item.isEnabled == false {
                 Text("Off")
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
         }

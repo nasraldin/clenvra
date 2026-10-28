@@ -20,11 +20,7 @@ final class ScreenshotUITests: XCTestCase {
                 app.launchArguments += ["-NSForceRightToLeftWritingDirection", "YES", "-AppleTextDirection", "YES"]
             }
             app.launch()
-            let sections = [
-                "overview", "storage", "duplicates", "cleanup", "developer", "applications", "startup", "system",
-                "activity",
-            ]
-            for section in sections {
+            for section in allSections {
                 app.outlines.cells.containing(.any, identifier: "sidebar.\(section)").firstMatch.click()
                 // Wait for the read-only scan to finish and results to appear.
                 _ = app.descendants(matching: .any)["section.\(section)"].waitForExistence(timeout: 10)

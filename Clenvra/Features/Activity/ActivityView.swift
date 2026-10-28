@@ -15,7 +15,6 @@ struct ActivityView: View {
 
     var body: some View {
         content
-            .navigationTitle(Text("Activity"))
             .toolbar { toolbar }
             .searchable(text: $session.searchText, prompt: Text("Search by Path"))
             .alert(
@@ -47,7 +46,6 @@ struct ActivityView: View {
                 }
             }
             .task { await loadIfNeeded() }
-            .accessibilityIdentifier("section.activity")
     }
 
     @ViewBuilder private var content: some View {
