@@ -37,9 +37,10 @@ struct StatusBadge: View {
             Text(title)
         } icon: {
             Image(systemName: symbol)
+                .foregroundStyle(tint)
         }
-        .font(.caption)
-        .foregroundStyle(tint)
+        .font(.callout)
+        .foregroundStyle(.secondary)
         .labelStyle(.titleAndIcon)
     }
 
@@ -204,5 +205,44 @@ extension FullDiskAccess {
     /// Probes off the main thread; the probe touches the filesystem.
     static func currentStatus(home: String) async -> Status {
         await Task.detached { probe(paths: probePaths(home: home)) }.value
+    }
+}
+
+/// What a page shows before its first scan: what it looks for, and one Scan button. Pages never scan on their own
+/// (field issue F3); the person starts every scan.
+struct ScanPrompt: View {
+    let section: AppSection
+    let description: LocalizedStringResource
+    var buttonTitle: LocalizedStringResource = "Scan"
+    let action: () -> Void
+
+    var body: some View {
+        ContentUnavailableView {
+            Label {
+                Text(section.title)
+            } icon: {
+                Image(systemName: section.symbol)
+            }
+        } description: {
+            Text(description)
+        } actions: {
+            Button(action: action) {
+                Text(buttonTitle)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .accessibilityIdentifier("review.scan")
+        }
+    }
+}
+
+extension View {
+    /// A control with its label drawn at full strength beside it. macOS draws a picker's own label faint, which fails
+    /// text contrast; VoiceOver still reads the control's own label.
+    func visibleLabel(_ title: LocalizedStringResource) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+            labelsHidden()
+        }
     }
 }

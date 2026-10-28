@@ -118,6 +118,31 @@ public enum ClutterAge: Sendable, Hashable, CaseIterable {
     }
 }
 
+/// Narrows Downloads & Screenshots before grouping (F7): by when a file last changed and by how much it frees.
+public struct ClutterFilter: Sendable, Equatable {
+    /// Only files last changed before this date ("older than a month"). Files without a date count as old.
+    public var modifiedBefore: Date?
+    /// Only files changed after this date ("last week"). Files without a date are left out.
+    public var modifiedAfter: Date?
+    /// Only files that free at least this many bytes.
+    public var minimumBytes: Int64
+
+    public init(modifiedBefore: Date? = nil, modifiedAfter: Date? = nil, minimumBytes: Int64 = 0) {
+        self.modifiedBefore = modifiedBefore
+        self.modifiedAfter = modifiedAfter
+        self.minimumBytes = minimumBytes
+    }
+
+    public func matches(_ clutter: ClutterItem) -> Bool {
+        let date = clutter.item.modificationDate
+        if let modifiedBefore, let date, date >= modifiedBefore { return false }
+        if let modifiedAfter {
+            guard let date, date > modifiedAfter else { return false }
+        }
+        return clutter.item.allocatedSize >= minimumBytes
+    }
+}
+
 /// Where a reviewed file came from.
 public enum ClutterSource: Sendable, Hashable {
     case downloads, screenshots

@@ -39,6 +39,8 @@ public final class StorageSession {
     public private(set) var children: [StorageItem] = []
     public private(set) var clutter: [ClutterItem] = []
     public private(set) var isLoadingClutter = false
+    /// Downloads and screenshots have been listed at least once; until then the page offers a Scan button.
+    public private(set) var hasLoadedClutter = false
     /// Canonical screenshots folder, once Downloads & Screenshots has been loaded.
     public private(set) var screenshotsPath: String?
     public private(set) var selection: Set<String> = []
@@ -336,7 +338,10 @@ public final class StorageSession {
     /// Reads ~/Downloads (files only) and the screenshots folder (system-named screenshots and recordings only).
     public func loadClutter() async {
         isLoadingClutter = true
-        defer { isLoadingClutter = false }
+        defer {
+            isLoadingClutter = false
+            hasLoadedClutter = true
+        }
         let downloads = Self.join(home, "Downloads")
         let shots = Self.screenshotsFolder(configured: screenshotsLocation, home: home)
         let read = try? await executor.run {
@@ -356,7 +361,8 @@ public final class StorageSession {
         let shotEntries = read?.screenshots ?? []
         let date = now()
         var items: [String: ClutterItem] = [:]
-        for entry in downloadEntries {
+        // Hidden files (.localized, .DS_Store) belong to macOS and Finder, not to the person's downloads.
+        for entry in downloadEntries where !entry.name.hasPrefix(".") {
             let item = fileItem(entry, in: downloads, ruleRoot: downloads)
             items[item.path] = ClutterItem(
                 item: item, kind: ClutterKind.classify(name: entry.name), age: .of(entry.modificationDate, now: date),
@@ -382,20 +388,21 @@ public final class StorageSession {
 
     /// Downloads & Screenshots grouped by kind or by age (fixed order) or by website (largest first, unknown last);
     /// empty groups are left out.
-    public func clutterGroups(by grouping: ClutterGrouping) -> [ClutterGroup] {
+    public func clutterGroups(by grouping: ClutterGrouping, filter: ClutterFilter = ClutterFilter()) -> [ClutterGroup] {
+        let clutter = self.clutter.filter(filter.matches)
         switch grouping {
         case .kind:
-            ClutterKind.allCases.compactMap { kind in
+            return ClutterKind.allCases.compactMap { kind in
                 let items = clutter.filter { $0.kind == kind }
                 return items.isEmpty ? nil : ClutterGroup(key: .kind(kind), items: items)
             }
         case .age:
-            ClutterAge.allCases.compactMap { age in
+            return ClutterAge.allCases.compactMap { age in
                 let items = clutter.filter { $0.age == age }
                 return items.isEmpty ? nil : ClutterGroup(key: .age(age), items: items)
             }
         case .sourceHost:
-            Self.groupedBySourceHost(clutter)
+            return Self.groupedBySourceHost(clutter)
         }
     }
 
@@ -487,6 +494,8 @@ public final class StorageSession {
         } else {
             phase = previousPhase
         }
+        // Free space and the disk bars reflect the cleanup (space in the Trash is freed once it is emptied).
+        await refreshVolumes()
         return summary
     }
 }

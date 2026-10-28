@@ -1,3 +1,4 @@
+import AppKit
 import ClenvraKit
 import SwiftUI
 
@@ -75,7 +76,16 @@ struct CleanupResultSheet: View {
                 if summary.removedPermanentlyCount > 0 {
                     Text("Deleted \(summary.removedPermanentlyCount) items from the Trash permanently.")
                 }
-                Text("Freed about \(summary.freedBytes.formatted(.byteCount(style: .file))).")
+                if summary.movedToTrashCount > 0 {
+                    // Items in the Trash still use the disk until the Trash is emptied (field issue F2).
+                    Text(
+                        "About \(summary.freedBytes.formatted(.byteCount(style: .file))) is now in the Trash. Empty the Trash to free that space; until then you can put items back."
+                    )
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Freed about \(summary.freedBytes.formatted(.byteCount(style: .file))).")
+                }
             }
 
             if !summary.problems.isEmpty {
@@ -91,6 +101,15 @@ struct CleanupResultSheet: View {
             }
 
             HStack {
+                if !isPreview, summary.movedToTrashCount > 0 {
+                    Button {
+                        NSWorkspace.shared.open(
+                            URL(filePath: NSHomeDirectory() + "/.Trash", directoryHint: .isDirectory))
+                    } label: {
+                        Text("Open Trash")
+                    }
+                    .help(Text("Show the Trash in Finder, where you can empty it"))
+                }
                 Spacer()
                 Button {
                     dismiss()

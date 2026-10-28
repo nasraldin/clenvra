@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import Synchronization
 import Testing
 
 @testable import ClenvraKit
@@ -33,6 +34,8 @@ struct StorageSessionTests {
         try fixture.file("Projects/.env", bytes: 10)
         try fixture.file(".ssh/id_ed25519", bytes: 10)
         try fixture.file("Downloads/Installer.dmg", bytes: 5_000)
+        try fixture.file("Downloads/.localized", bytes: 0)
+        try fixture.file("Downloads/.DS_Store", bytes: 600)
         try fixture.file("Downloads/photos.zip", bytes: 4_000)
         try fixture.file("Downloads/Screenshot 2026-01-01 at 10.00.00.png", bytes: 300)
         try fixture.directory("Downloads/Unpacked")
@@ -102,7 +105,9 @@ struct StorageSessionTests {
 
     // MARK: - Scanning and browsing
 
-    @Test("scanning lists the root's children by size; home's own folders are protected and not selectable")
+    @Test(
+        "scanning lists the root's children by size; macOS's home folders and keys are protected, the person's own folders are selectable"
+    )
     func scanAndProtection() async throws {
         let session = session()
 
@@ -119,11 +124,14 @@ struct StorageSessionTests {
         #expect(projects.allocatedSize >= 5_000_000)
         #expect(projects.fileCount == 5)
         #expect(projects.folderCount == 2)
-        #expect(projects.protection == .homeRoot)
-        #expect(!projects.isSelectable)
+        // A folder the person made at the top of home can be reviewed and moved to the Trash (F1).
+        #expect(projects.protection == nil)
+        #expect(projects.isSelectable)
+        let downloads = try #require(session.children.first { $0.name == "Downloads" })
+        #expect(downloads.protection == .homeRoot)
 
-        session.setSelection([projects.path, path(".ssh")])
-        #expect(session.selection.isEmpty)
+        session.setSelection([projects.path, path(".ssh"), downloads.path])
+        #expect(session.selection == [projects.path])
     }
 
     @Test("drill into a folder, see files and subfolders, go back up; breadcrumbs follow")
@@ -251,8 +259,12 @@ struct StorageSessionTests {
     @Test("downloads and screenshots are listed, grouped by kind and age, and never pre-selected")
     func clutter() async throws {
         let session = session()
+        // Hidden files (.localized, .DS_Store) belong to macOS and are never listed.
+        // Nothing is listed until the person asks (F3).
+        #expect(!session.hasLoadedClutter)
 
         await session.loadClutter()
+        #expect(session.hasLoadedClutter)
         session.list = .clutter
 
         #expect(session.screenshotsPath == path("Desktop"))
@@ -273,6 +285,27 @@ struct StorageSessionTests {
         let byAge = session.clutterGroups(by: .age)
         #expect(byAge.map(\.key) == [.age(.thisWeek), .age(.older)])
         #expect(byAge[1].items.map(\.item.name) == ["photos.zip"])
+    }
+
+    @Test("Downloads can be narrowed by age and by size before grouping (F7)")
+    func clutterFilter() async {
+        let session = session()
+        await session.loadClutter()
+        func names(_ filter: ClutterFilter) -> Set<String> {
+            Set(session.clutterGroups(by: .kind, filter: filter).flatMap(\.items).map(\.item.name))
+        }
+
+        #expect(names(ClutterFilter()).count == 6)
+        #expect(names(ClutterFilter(modifiedBefore: now.addingTimeInterval(-30 * 86_400))) == ["photos.zip"])
+        let lastWeek = names(ClutterFilter(modifiedAfter: now.addingTimeInterval(-7 * 86_400)))
+        #expect(lastWeek.count == 5 && !lastWeek.contains("photos.zip"))
+        #expect(names(ClutterFilter(minimumBytes: 6_000)) == ["Installer.dmg"])
+        // A custom range: older than a week but newer than two years.
+        #expect(
+            names(
+                ClutterFilter(
+                    modifiedBefore: now.addingTimeInterval(-7 * 86_400),
+                    modifiedAfter: now.addingTimeInterval(-730 * 86_400))) == ["photos.zip"])
     }
 
     private func setWhereFroms(_ relative: String, _ urls: [String]) throws {
@@ -343,6 +376,36 @@ struct StorageSessionTests {
 
         session.list = .largeFiles
         #expect(session.selection.isEmpty)
+    }
+
+    @Test("after moving items to the Trash, the disks are read again so free space is current (F2)")
+    func volumesRefreshAfterCleanup() async throws {
+        let reads = Mutex(0)
+        let before = volume("/", name: "Before", root: true)
+        let after = volume("/", name: "After", root: true)
+        let policy = ProtectionPolicy(home: home)
+        let session = StorageSession(
+            home: home, policy: policy,
+            deleter: DeletionExecutor(
+                gate: DeletionGate(policy: policy, ownerState: { _ in .notRunning }),
+                log: ActivityLog(directory: fixture.url("log")),
+                trash: StorageScratchTrash(directory: path(".Trash"))),
+            screenshotsLocation: nil, options: sessionOptions,
+            volumes: {
+                reads.withLock { count in
+                    count += 1
+                    return count == 1 ? [before] : [after]
+                }
+            }, now: { [now] in now })
+        await session.refreshVolumes()
+        #expect(session.volumes.map(\.name) == ["Before"])
+        await session.scan()
+        await session.open(path("Projects"))
+        session.setSelection([path("Projects/notes.txt")])
+
+        _ = await session.moveSelectionToTrash()
+
+        #expect(session.volumes.map(\.name) == ["After"])
     }
 
     @Test("moving browser items to the Trash rescans and updates the totals")

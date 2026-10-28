@@ -10,7 +10,6 @@ struct StorageView: View {
 
     @State private var isConfirming = false
     @State private var shownSummary: StorageShownSummary?
-    @State private var didLoadClutter = false
     private var showsSimilarPhotos: Bool { page == .similarPhotos }
 
     private var pageSection: AppSection {
@@ -24,10 +23,12 @@ struct StorageView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VolumeBarsView(session: session)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-            Divider()
+            if !showsSimilarPhotos {
+                VolumeBarsView(session: session, showsTarget: page != .clutter)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                Divider()
+            }
             if session.isPartial, page == .browser || page == .largeFiles {
                 partialNotice
                 Divider()
@@ -56,7 +57,6 @@ struct StorageView: View {
                 session.setSelection([])
             }
             await session.refreshVolumes()
-            if session.phase == .idle, session.snapshot == nil, !showsSimilarPhotos { await session.scan() }
         }
     }
 
@@ -73,25 +73,32 @@ struct StorageView: View {
     @ViewBuilder private var scanContent: some View {
         switch page.list ?? .browser {
         case .clutter:
-            ClutterView(session: session)
-                .accessibilityIdentifier("review.results")
-                .accessibilityLabel(Text(pageSection.title))
-                .task {
-                    if !didLoadClutter {
-                        didLoadClutter = true
-                        await session.loadClutter()
-                    }
+            if session.hasLoadedClutter || session.isLoadingClutter {
+                ClutterView(session: session)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("review.results")
+                    .accessibilityLabel(Text(pageSection.title))
+            } else {
+                ScanPrompt(
+                    section: .downloads,
+                    description:
+                        "List the files in Downloads and your screenshots by kind, age and source, so you can remove what you no longer need."
+                ) {
+                    Task { await session.loadClutter() }
                 }
+            }
         case .browser, .largeFiles:
             if session.snapshot == nil {
                 scanState
             } else if page == .browser {
                 StorageBrowserView(session: session)
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("review.results")
                     .accessibilityLabel(Text(pageSection.title))
                     .disabled(isBusy)
             } else {
                 LargeFilesView(session: session)
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("review.results")
                     .accessibilityLabel(Text(pageSection.title))
                     .disabled(isBusy)
@@ -120,20 +127,13 @@ struct StorageView: View {
                 }
             }
         case .idle, .ready, .deleting:
-            ContentUnavailableView {
-                Label {
-                    Text("Not scanned yet")
-                } icon: {
-                    Image(systemName: "internaldrive")
-                }
-            } description: {
-                Text("Scan to see what uses space.")
-            } actions: {
-                Button {
-                    Task { await session.scan() }
-                } label: {
-                    Text("Scan")
-                }
+            ScanPrompt(
+                section: pageSection,
+                description: page == .largeFiles
+                    ? "Find the biggest files you have not opened in a long time."
+                    : "See which folders use the most space, and open any folder to look inside."
+            ) {
+                Task { await session.scan() }
             }
         }
     }

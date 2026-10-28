@@ -73,6 +73,8 @@ struct StorageBrowserView: View {
             }
         }
         .padding(8)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Space map"))
     }
 
     private var pathBar: some View {
@@ -81,7 +83,7 @@ struct StorageBrowserView: View {
                 ForEach(Array(session.breadcrumbs.enumerated()), id: \.element.id) { index, crumb in
                     if index > 0 {
                         Image(systemName: "chevron.forward")
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.tertiary)
                             .accessibilityHidden(true)
                     }
@@ -167,6 +169,9 @@ struct StorageBrowserView: View {
             return .handled
         }
         .quickLookPreview($previewURL, in: session.children.map { URL(filePath: $0.path) })
+        .accessibilityLabel(Text("Folders and files"))
+        // No floating control overlaps this edge (the map pane follows it), so no fading edge effect.
+        .scrollEdgeEffectHidden(true, for: .bottom)
     }
 
     private var selectionBinding: Binding<Set<String>> {
@@ -194,7 +199,7 @@ struct ItemNameCell: View {
                 } icon: {
                     Image(systemName: "lock")
                 }
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .help(Text(reason.explanation))
             }

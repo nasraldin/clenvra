@@ -34,6 +34,7 @@ struct StorageTreemap: View {
             }
         }
         .accessibilityElement()
+        .accessibilityAddTraits(.isImage)
         .accessibilityLabel(Text("Space map"))
         .accessibilityValue(Text(items.prefix(5).map(\.name).joined(separator: ", ")))
     }

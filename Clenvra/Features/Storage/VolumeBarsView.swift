@@ -4,24 +4,29 @@ import SwiftUI
 /// One capacity bar per mounted volume, plus the scan-target picker.
 struct VolumeBarsView: View {
     let session: StorageSession
+    /// The scan-target picker applies to Space Map and Large & Old Files only.
+    var showsTarget = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(session.volumes) { volume in
                 VolumeRow(volume: volume)
             }
-            HStack {
-                Picker(selection: targetBinding) {
-                    ForEach(session.targets) { target in
-                        TargetLabel(target: target).tag(target)
+            if showsTarget {
+                HStack {
+                    Picker(selection: targetBinding) {
+                        ForEach(session.targets) { target in
+                            TargetLabel(target: target).tag(target)
+                        }
+                    } label: {
+                        Text("Scan")
                     }
-                } label: {
-                    Text("Scan")
+                    .fixedSize()
+                    .disabled(isScanning)
+                    .accessibilityIdentifier("storage.target")
+                    .visibleLabel("Scan")
+                    Spacer()
                 }
-                .fixedSize()
-                .disabled(isScanning)
-                .accessibilityIdentifier("storage.target")
-                Spacer()
             }
         }
     }

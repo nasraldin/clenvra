@@ -51,6 +51,7 @@ struct LargeFilesView: View {
                     }
                     .width(min: 80, ideal: 110)
                 }
+                .accessibilityLabel(Text("Large and old files"))
                 .contextMenu(forSelectionType: StorageItem.ID.self) { paths in
                     ItemActionsMenu(paths: paths, previewURL: $previewURL)
                 }
@@ -74,6 +75,7 @@ struct LargeFilesView: View {
                 Text("At least")
             }
             .fixedSize()
+            .visibleLabel("At least")
             Picker(selection: ageBinding) {
                 ForEach(LargeFileAge.allCases, id: \.self) { age in
                     Text(age.title).tag(age)
@@ -82,6 +84,7 @@ struct LargeFilesView: View {
                 Text("Not modified in")
             }
             .fixedSize()
+            .visibleLabel("Not modified in")
             Spacer()
         }
         .padding(.horizontal, 16)
