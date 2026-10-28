@@ -337,7 +337,7 @@ struct StorageScannerTests {
         let snapshot = try await task.value
         let elapsed = clock.now - start
 
-        #expect(elapsed < .milliseconds(500))
+        #expect(elapsed < TimingBudget.upTo(.milliseconds(500)))
         #expect(!snapshot.isComplete)
         #expect(snapshot.directories.count < 5_051)
         let rootAggregate = try #require(snapshot.aggregate(at: rootPath))

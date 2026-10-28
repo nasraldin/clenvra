@@ -241,7 +241,7 @@ struct CommandRunnerTests {
         let result = try await runner.run(Command(executable: "/bin/sleep", arguments: ["30"], timeout: .seconds(1)))
 
         #expect(result.terminationReason == .timedOut)
-        #expect(clock.now - start < .seconds(4))
+        #expect(clock.now - start < TimingBudget.upTo(.seconds(4)))
     }
 
     @Test("a child that ignores SIGTERM is killed with SIGKILL after the grace period", .timeLimit(.minutes(1)))
@@ -259,7 +259,7 @@ struct CommandRunnerTests {
         let elapsed = clock.now - start
         #expect(result.terminationReason == .timedOut)
         #expect(elapsed >= .seconds(3 + 5))
-        #expect(elapsed < .seconds(3 + 6 + 3))
+        #expect(elapsed < TimingBudget.upTo(.seconds(3 + 6 + 3)))
         #expect(!processExists(try readPid(at: pidFile)))
     }
 
@@ -282,7 +282,7 @@ struct CommandRunnerTests {
         let result = try await task.value
 
         #expect(result.terminationReason == .cancelled)
-        #expect(clock.now - start < .seconds(3))
+        #expect(clock.now - start < TimingBudget.upTo(.seconds(3)))
         #expect(!processExists(try readPid(at: pidFile)))
         // The grandchild shares the process group, so it is signalled too.
         let grandchild = try readPid(at: childPidFile)

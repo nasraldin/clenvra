@@ -26,6 +26,9 @@ else
   XCB+=(CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=)
 fi
 
+# xcodebuild passes only TEST_RUNNER_-prefixed variables to tests; timing tests allow for slow CI runners.
+[[ "${CI:-}" == "true" ]] && export TEST_RUNNER_CI=true
+
 echo "▸ Format"
 xcrun swift-format lint --recursive --strict "${SOURCES[@]}"
 
