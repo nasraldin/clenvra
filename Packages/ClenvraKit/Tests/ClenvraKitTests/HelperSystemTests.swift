@@ -11,6 +11,8 @@ struct HelperSystemTests {
     private let scratch: TemporaryDirectory
     private let fixture: FixtureBuilder
     private let runner = FakeCommandRunner()
+    /// The fixture Trash belongs to whoever runs the tests, and the helper checks that owner, so use the real ID.
+    private let uid = getuid()
 
     init() throws {
         scratch = try TemporaryDirectory()
@@ -27,7 +29,7 @@ struct HelperSystemTests {
 
     private var service: HelperService {
         HelperService(
-            allowlist: HelperAllowlist(systemRoot: system), clientHome: home, clientUID: 501,
+            allowlist: HelperAllowlist(systemRoot: system), clientHome: home, clientUID: uid,
             log: ActivityLog(directory: fixture.url("helper-log")), staging: root + "/staging", processPaths: { [] },
             runner: runner)
     }
@@ -62,12 +64,12 @@ struct HelperSystemTests {
         let item = try writePlist(
             "Library/LaunchAgents/com.vendor.agent.plist",
             ["Label": "com.vendor.agent", "ProgramArguments": ["/Gone/Vendor/agent", "--run"]])
-        runner.stub("/bin/launchctl", ["bootout", "gui/501", item.path])
+        runner.stub("/bin/launchctl", ["bootout", "gui/\(uid)", item.path])
 
         let outcome = await service.removeOrphanedLaunchItem(item, operationID: UUID())
 
         #expect(outcome.isMovedToTrash)
-        #expect(runner.commands.map(\.arguments) == [["bootout", "gui/501", item.path]])
+        #expect(runner.commands.map(\.arguments) == [["bootout", "gui/\(uid)", item.path]])
     }
 
     @Test("an item whose program still exists is not orphaned and is left alone, with nothing run")
