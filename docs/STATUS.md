@@ -31,9 +31,9 @@ How the work was done: features were built test-first, partly by delegated agent
 
 1. Install Xcode 27.1 or later (macOS 26+, Apple Silicon).
 2. `git clone` the repo, then `open Clenvra.xcworkspace`. Always open the workspace, not the project.
-3. Run `scripts/check.sh`. It should pass without changes.
+3. Run `scripts/check.sh`. It should pass without changes. It signs with team `CZU6ZC4LYQ` when this Mac has that team's signing certificate, and ad hoc otherwise, so it also works for contributors. Verified on a second Mac (user ID 502) on 2026-10-28.
 4. **UI tests, one-time setup:** macOS asks for permission the first time UI tests drive the app. Run them once from Xcode (⌘U) and approve, or run `sudo DevToolsSecurity -enable`. After that, `scripts/check.sh --ui` works.
-5. **Signing:** development builds use *Sign to Run Locally*. To work on the helper or on notarisation, sign in to the personal Apple Developer team in Xcode › Settings › Accounts. Then set the team on the `Clenvra` target. The bundle ID is `com.nasraldin.clenvra`, and the helper's will be `com.nasraldin.clenvra.helper`.
+5. **Signing:** the project signs with the owner's team `CZU6ZC4LYQ` (Automatic). To run the app, the helper or `scripts/release.sh`, sign in to that team in Xcode › Settings › Accounts and download its certificates. The bundle IDs are `com.nasraldin.clenvra` and `com.nasraldin.clenvra.helper`.
 6. Give the app Full Disk Access for realistic manual testing.
 
 > Session notes in `.remember/` are local to each Mac and are not in git. This file is the handoff.
