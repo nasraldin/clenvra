@@ -54,9 +54,13 @@ struct MainWindow: View {
         case .cleanup:
             CleanupView(environment: environment)
         case .developer:
-            RuleReviewView(section: .developer, session: environment.developerSession) {
-                if let tools = environment.toolSession { ToolStorageSection(session: tools) }
-            }
+            RuleReviewView(
+                section: .developer, session: environment.developerSession,
+                introduction:
+                    "Find Xcode data, simulators, package caches and build folders in your projects. Your tools rebuild them when needed.",
+                exclude: { environment.exclude($0) })
+        case .developerTools:
+            DeveloperToolsView(session: environment.toolSession)
         case .storage:
             storage(.browser)
         case .largeFiles:

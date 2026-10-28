@@ -63,6 +63,18 @@ struct CleanupSessionTests {
         #expect(session.selectedBytes >= 301_000)
     }
 
+    @Test("the session records when its last scan finished, and has none before the first scan")
+    func recordsScanTime() async throws {
+        let session = session()
+        #expect(session.lastScanned == nil)
+
+        let before = Date()
+        await session.scan()
+
+        let scanned = try #require(session.lastScanned)
+        #expect(scanned >= before && scanned <= Date())
+    }
+
     @Test("rules whose folders do not exist on this Mac are hidden")
     func hidesAbsentRules() async throws {
         try FileManager.default.removeItem(atPath: path("Downloads"))

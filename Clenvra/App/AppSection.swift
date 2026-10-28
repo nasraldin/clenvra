@@ -6,6 +6,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case overview
     case cleanup
     case developer
+    case developerTools
     case largeFiles
     case downloads
     case duplicates
@@ -42,7 +43,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     var group: Group {
         switch self {
         case .overview: .summary
-        case .cleanup, .developer, .largeFiles, .downloads, .duplicates, .similarPhotos: .cleanUp
+        case .cleanup, .developer, .developerTools, .largeFiles, .downloads, .duplicates, .similarPhotos: .cleanUp
         case .storage: .storage
         case .applications, .leftovers, .extensions, .startup: .applications
         case .system, .processes, .security, .snapshots: .system
@@ -56,6 +57,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .overview: "Overview"
         case .cleanup: "System Junk"
         case .developer: "Developer Junk"
+        case .developerTools: "Developer Tools"
         case .largeFiles: "Large & Old Files"
         case .downloads: "Downloads"
         case .duplicates: "Duplicates"
@@ -78,6 +80,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .overview: "gauge.with.dots.needle.67percent"
         case .cleanup: "sparkles"
         case .developer: "hammer"
+        case .developerTools: "terminal"
         case .largeFiles: "doc.badge.clock"
         case .downloads: "arrow.down.circle"
         case .duplicates: "plus.square.on.square"

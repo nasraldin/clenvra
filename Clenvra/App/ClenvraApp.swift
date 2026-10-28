@@ -37,6 +37,7 @@ struct ClenvraApp: App {
             // View › Show/Hide Sidebar (⌃⌘S) and the toolbar items, as in every Mac app.
             SidebarCommands()
             ToolbarCommands()
+            InspectorCommands()
             // Its own key: "Go" alone is also the Go language in Developer, which must not be translated.
             CommandMenu(Text("menu.go", comment: "Menu that switches between sections")) {
                 ForEach(AppSection.Group.allCases, id: \.self) { group in

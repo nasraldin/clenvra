@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 public import Observation
 
 /// What a cleanup did, for the result sheet and the Activity view.
@@ -72,6 +72,8 @@ public final class CleanupSession {
     public private(set) var groups: [Group] = []
     public private(set) var selection: Set<String> = []
     public private(set) var lastSummary: CleanupSummary?
+    /// When the last scan finished. Pages show it ("Scanned 5 minutes ago") instead of scanning on every visit.
+    public private(set) var lastScanned: Date?
     /// Whether the privileged helper is installed and answering; system items can be selected only then.
     public var helperAvailable = false {
         didSet { if !helperAvailable { selection = selection.filter { !isElevated($0) } } }
@@ -139,6 +141,7 @@ public final class CleanupSession {
             }
         }
         apply(results)
+        lastScanned = Date()
         phase = .ready
     }
 

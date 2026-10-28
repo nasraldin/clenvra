@@ -102,6 +102,14 @@ final class AppEnvironment {
     }
 
     /// Asks the helper for its protocol version and tells every section whether system items can be removed.
+    /// Adds a folder or file to Settings › Exclusions; scans skip it from now on.
+    func exclude(_ path: String) {
+        var updated = settings
+        guard !updated.exclusions.contains(path) else { return }
+        updated.exclusions.append(path)
+        try? apply(updated)
+    }
+
     func refreshHelper() async {
         let available = (try? await helper.protocolVersion()) == HelperIdentity.protocolVersion
         helperAvailable = available

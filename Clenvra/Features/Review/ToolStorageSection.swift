@@ -1,6 +1,66 @@
 import ClenvraKit
 import SwiftUI
 
+/// The Developer Tools page: checks tools only when asked, then lists what each one stores.
+struct DeveloperToolsView: View {
+    /// Nil until the login-shell PATH is known (tools from Homebrew, nvm, volta… live there).
+    let session: ToolStorageSession?
+
+    var body: some View {
+        if let session {
+            if session.phase == .idle && session.rows.isEmpty {
+                ContentUnavailableView {
+                    Label {
+                        Text(AppSection.developerTools.title)
+                    } icon: {
+                        Image(systemName: AppSection.developerTools.symbol)
+                    }
+                } description: {
+                    Text(
+                        "See how much space npm, pnpm, Homebrew, Docker and your other tools keep, and clean it with each tool’s own command."
+                    )
+                } actions: {
+                    Button {
+                        Task { await session.inspect() }
+                    } label: {
+                        Text("Check Tools")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .accessibilityIdentifier("review.scan")
+                }
+            } else {
+                List {
+                    ToolStorageSection(session: session)
+                }
+                .accessibilityIdentifier("review.results")
+                .accessibilityLabel(Text(AppSection.developerTools.title))
+                .toolbar {
+                    ToolbarItem {
+                        Button {
+                            Task { await session.inspect() }
+                        } label: {
+                            Label {
+                                Text("Check Again")
+                            } icon: {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                        }
+                        .keyboardShortcut("r", modifiers: .command)
+                        .help(Text("Check your tools again (⌘R)"))
+                        .disabled(session.phase == .inspecting)
+                    }
+                }
+            }
+        } else {
+            ProgressView {
+                Text("Finding your developer tools…")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
 /// Developer tools' own storage, each cleaned by the tool's own command (shown before it runs).
 struct ToolStorageSection: View {
     let session: ToolStorageSession
@@ -22,23 +82,9 @@ struct ToolStorageSection: View {
                 }
                 .disabled(isBusy)
             }
-        } header: {
-            Label {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Developer Tools").font(.headline)
-                    Text(
-                        "Space managed by your tools. Cleaning runs the tool's own command, which does not use the Trash."
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .textCase(nil)
-                }
-            } icon: {
-                Image(systemName: "wrench.and.screwdriver")
-            }
-        }
-        .task {
-            if session.phase == .idle { await session.inspect() }
+        } footer: {
+            Text("Space managed by your tools. Cleaning runs the tool's own command, which does not use the Trash.")
+                .font(.callout)
         }
         .sheet(item: $confirming) { row in
             ConfirmToolCleanupSheet(row: row) {
