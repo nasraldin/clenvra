@@ -111,6 +111,64 @@ struct StartupSessionTests {
         #expect(await session.remove(item) == .removed)
     }
 
+    // MARK: - Stop and start (F9)
+
+    @Test("only the person's own agents whose program exists can be stopped and started")
+    func controllability() async throws {
+        let session = session()
+        await session.load(installedApps: [])
+        func item(_ label: String) throws -> LaunchItem { try #require(session.items.first { $0.label == label }) }
+
+        #expect(session.canControl(try item("com.vendor.ok")))
+        #expect(!session.canControl(try item("com.vendor.orphan")))  // program is gone
+        #expect(!session.canControl(try item("com.apple.something")))
+        #expect(!session.canControl(try item("com.vendor.daemon")))  // system daemon
+    }
+
+    @Test("stopping unloads the agent for this session and keeps its plist; starting loads it again")
+    func stopAndStart() async throws {
+        let plist = path("home/Library/LaunchAgents/com.vendor.ok.plist")
+        runner.stub("/bin/launchctl", ["bootout", "gui/501", plist])
+        runner.stub("/bin/launchctl", ["bootstrap", "gui/501", plist])
+        let session = session()
+        await session.load(installedApps: [])
+        let item = try #require(session.items.first { $0.label == "com.vendor.ok" })
+
+        #expect(await session.stop(item))
+        #expect(FileManager.default.fileExists(atPath: plist))
+        #expect(await session.start(item))
+        #expect(
+            runner.commands.map(\.arguments) == [["bootout", "gui/501", plist], ["bootstrap", "gui/501", plist]])
+    }
+
+    @Test("starting fails visibly when launchctl refuses, and nothing is run for items that cannot be controlled")
+    func startFailureAndRefusal() async throws {
+        let plist = path("home/Library/LaunchAgents/com.vendor.ok.plist")
+        runner.stub("/bin/launchctl", ["bootstrap", "gui/501", plist], stderr: "Bootstrap failed: 5", status: 5)
+        let session = session()
+        await session.load(installedApps: [])
+        let ok = try #require(session.items.first { $0.label == "com.vendor.ok" })
+        let apple = try #require(session.items.first { $0.label == "com.apple.something" })
+
+        #expect(await session.start(ok) == false)
+        #expect(await session.stop(apple) == false)
+        #expect(runner.commands.count == 1)
+    }
+
+    @Test("whether an agent is running comes from launchctl print; unknown when launchctl gives another answer")
+    func runningState() async throws {
+        runner.stub("/bin/launchctl", ["print", "gui/501/com.vendor.ok"])
+        runner.stub(
+            "/bin/launchctl", ["print", "gui/501/com.vendor.orphan"], stderr: "Could not find service", status: 113)
+        let session = session()
+        await session.load(installedApps: [])
+        let ok = try #require(session.items.first { $0.label == "com.vendor.ok" })
+        let orphan = try #require(session.items.first { $0.label == "com.vendor.orphan" })
+
+        #expect(await session.isRunning(ok) == true)
+        #expect(await session.isRunning(orphan) == false)
+    }
+
     @Test("if stopping fails for another reason, the plist is kept")
     func stopFailure() async throws {
         let plist = path("home/Library/LaunchAgents/com.vendor.orphan.plist")

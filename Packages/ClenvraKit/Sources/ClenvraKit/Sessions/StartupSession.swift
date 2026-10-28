@@ -68,6 +68,39 @@ public final class StartupSession {
         ([item.label].compactMap { $0 } + item.associatedBundleIdentifiers).contains(where: ManagedAgents.isManaged)
     }
 
+    /// The person's own agent whose program exists: it can be stopped and started for this login session (F9).
+    public func canControl(_ item: LaunchItem) -> Bool {
+        item.domain == .userAgent && !item.isApple && !isManaged(item) && item.programState != .missing
+    }
+
+    /// Unloads the agent for this login session. Its plist stays, so it starts again at the next login.
+    public func stop(_ item: LaunchItem) async -> Bool {
+        guard canControl(item) else { return false }
+        guard let result = await launchctl(["bootout", "gui/\(userID)", item.plistPath]) else { return false }
+        return result.exitStatus == 0 || Self.notLoadedStatuses.contains(result.exitStatus)
+    }
+
+    /// Loads the agent again for this login session.
+    public func start(_ item: LaunchItem) async -> Bool {
+        guard canControl(item) else { return false }
+        return await launchctl(["bootstrap", "gui/\(userID)", item.plistPath])?.exitStatus == 0
+    }
+
+    /// Whether the agent is loaded in this login session; nil when launchctl cannot tell.
+    public func isRunning(_ item: LaunchItem) async -> Bool? {
+        guard item.domain == .userAgent, let label = item.label,
+            let result = await launchctl(["print", "gui/\(userID)/\(label)"])
+        else { return nil }
+        if result.exitStatus == 0 { return true }
+        return Self.notLoadedStatuses.contains(result.exitStatus) ? false : nil
+    }
+
+    private func launchctl(_ arguments: [String]) async -> CommandResult? {
+        let command = Command(executable: "/bin/launchctl", arguments: arguments, timeout: .seconds(15))
+        guard let result = try? await runner.run(command), result.terminationReason == .exited else { return nil }
+        return result
+    }
+
     /// Stops the agent for this login session, then moves its plist to the Trash (so it does not start again).
     public func remove(_ item: LaunchItem) async -> RemovalOutcome {
         guard canRemove(item) else { return .notAllowed }
