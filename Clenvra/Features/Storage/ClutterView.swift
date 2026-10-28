@@ -87,7 +87,10 @@ struct ClutterView: View {
             }
             Divider()
             content
+                .frame(maxHeight: .infinity)
         }
+        // The filter bar stays at the top whatever the list holds.
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     @ViewBuilder private var content: some View {
