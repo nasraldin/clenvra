@@ -207,30 +207,6 @@ private enum JobOutcome: Sendable {
     case cancelled
 }
 
-/// Sizes of the entries directly inside one directory (or, after roll-up, its whole subtree).
-private struct Totals: Sendable {
-    var allocated: Int64 = 0
-    var reclaimable: Int64 = 0
-    var logical: Int64 = 0
-    var fileCount = 0
-    var directoryCount = 0
-    var latestModification: Date?
-
-    mutating func include(_ date: Date) {
-        if let latest = latestModification, latest >= date { return }
-        latestModification = date
-    }
-
-    mutating func add(_ other: Totals) {
-        allocated += other.allocated
-        reclaimable += other.reclaimable
-        logical += other.logical
-        fileCount += other.fileCount
-        directoryCount += other.directoryCount
-        if let date = other.latestModification { include(date) }
-    }
-}
-
 private struct HardLinkName: Sendable {
     let identity: FileIdentity
     let size: SizeInfo
@@ -240,7 +216,7 @@ private struct DirectoryResult: Sendable {
     let job: DirectoryJob
     let identity: FileIdentity
     /// Directly contained entries, excluding the bytes of hard-linked files (added once per subtree at roll-up).
-    var own = Totals()
+    var own = ScanTotals()
     var hardLinks: [HardLinkName] = []
     var largeFiles: [LargeFile] = []
     var children: [DirectoryJob] = []
@@ -257,13 +233,7 @@ private struct DirectoryNode {
     let name: String
     let depth: Int
     let identity: FileIdentity
-    let own: Totals
-}
-
-private struct HardLinkRecord {
-    let size: SizeInfo
-    /// Directories holding at least one name of this object (may repeat).
-    var directories: [String]
+    let own: ScanTotals
 }
 
 /// Breadth-first FIFO of directories waiting to be read.
@@ -330,17 +300,8 @@ private struct ScanState {
         currentDirectory = job.path
     }
 
-    /// Keeps the biggest `maxLargeFiles`, one entry per identity (hard-link names have equal sizes).
     private mutating func trimLargeFiles() {
-        largeFiles.sort { lhs, rhs in
-            lhs.size.allocated != rhs.size.allocated ? lhs.size.allocated > rhs.size.allocated : lhs.path < rhs.path
-        }
-        var seen = Set<FileIdentity>()
-        var kept: [LargeFile] = []
-        for file in largeFiles where kept.count < maxLargeFiles && seen.insert(file.identity).inserted {
-            kept.append(file)
-        }
-        largeFiles = kept
+        largeFiles = LargeFile.trimmed(largeFiles, limit: maxLargeFiles)
     }
 
     /// Rolls per-directory totals up to their ancestors (deepest first) and adds each hard-linked object once
@@ -350,10 +311,13 @@ private struct ScanState {
         var childNames: [String: [String]] = [:]
         for (path, node) in nodes.sorted(by: { $0.value.depth > $1.value.depth }) {
             guard let parent = node.parent, let subtree = totals[path], totals[parent] != nil else { continue }
-            var carried = subtree
-            carried.directoryCount += 1
-            totals[parent]?.add(carried)
+            totals[parent]?.add(subtree.asChild)
             childNames[parent, default: []].append(node.name)
+        }
+        var subtrees: [String: SubtreeTotals] = [:]
+        subtrees.reserveCapacity(nodes.count)
+        for (path, node) in nodes {
+            subtrees[path] = SubtreeTotals(own: node.own, subtree: totals[path] ?? node.own)
         }
 
         for record in hardLinks.values {
@@ -380,6 +344,7 @@ private struct ScanState {
                 childDirectoryNames: (childNames[path] ?? []).sorted())
         }
         return StorageSnapshot(
-            root: root, directories: directories, largeFiles: largeFiles, skipped: skipped, isComplete: isComplete)
+            root: root, directories: directories, largeFiles: largeFiles, skipped: skipped, isComplete: isComplete,
+            subtrees: subtrees, hardLinks: hardLinks)
     }
 }

@@ -19,7 +19,10 @@ struct RuleReviewView<Leading: View>: View {
                 if !session.groups.isEmpty { statusBar }
             }
             .sheet(isPresented: $isConfirming) {
-                ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
+                ConfirmCleanupSheet(
+                    count: session.selectedCount, bytes: session.selectedBytes,
+                    includesPermanentRemoval: session.selectionIncludesPermanentRemoval
+                ) {
                     isConfirming = false
                     Task { shownSummary = ShownSummary(summary: await session.clean(), isPreview: false) }
                 }
@@ -78,7 +81,8 @@ struct RuleReviewView<Leading: View>: View {
                     }
                     ForEach(group.candidates) { candidate in
                         CandidateRow(
-                            candidate: candidate,
+                            candidate: candidate, isSelectable: session.canSelect(candidate),
+                            needsHelper: session.requiresHelper(candidate) && !session.helperAvailable,
                             isSelected: Binding(
                                 get: { session.selection.contains(candidate.path) },
                                 set: { _ in session.toggle(candidate.path) }))
@@ -88,6 +92,7 @@ struct RuleReviewView<Leading: View>: View {
                 }
             }
         }
+        .accessibilityLabel(Text(section.title))
         .disabled(session.phase == .cleaning)
     }
 
@@ -149,7 +154,7 @@ struct RuleReviewView<Leading: View>: View {
                     .accessibilityIdentifier("review.scanning")
             } else {
                 Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()
@@ -185,7 +190,7 @@ private struct CategoryHeader: View {
                 Image(systemName: group.category.symbol)
             }
             Spacer()
-            let selectable = group.candidates.filter { $0.status == .available }
+            let selectable = group.candidates.filter { session.canSelect($0) }
             if !selectable.isEmpty {
                 let allSelected = selectable.allSatisfy { session.selection.contains($0.path) }
                 Button {
@@ -202,6 +207,8 @@ private struct CategoryHeader: View {
 
 private struct CandidateRow: View {
     let candidate: CleanupCandidate
+    let isSelectable: Bool
+    let needsHelper: Bool
     @Binding var isSelected: Bool
 
     var body: some View {
@@ -211,7 +218,7 @@ private struct CandidateRow: View {
             }
             .toggleStyle(.checkbox)
             .labelsHidden()
-            .disabled(candidate.status != .available)
+            .disabled(!isSelectable)
 
             Image(systemName: candidate.kind == .directory ? "folder" : "doc")
                 .foregroundStyle(.secondary)
@@ -224,7 +231,7 @@ private struct CandidateRow: View {
             }
 
             Spacer(minLength: 12)
-            StatusBadge(candidate: candidate)
+            StatusBadge(candidate: candidate, needsHelper: needsHelper)
             SizeText(bytes: candidate.reclaimableSize)
                 .frame(minWidth: 80, alignment: .trailing)
         }

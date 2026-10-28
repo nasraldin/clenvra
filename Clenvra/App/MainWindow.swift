@@ -25,7 +25,7 @@ struct MainWindow: View {
         } detail: {
             switch selection {
             case .cleanup:
-                RuleReviewView(section: .cleanup, session: environment.cleanupSession)
+                CleanupView(environment: environment)
             case .developer:
                 RuleReviewView(section: .developer, session: environment.developerSession) {
                     if let tools = environment.toolSession { ToolStorageSection(session: tools) }
@@ -33,15 +33,17 @@ struct MainWindow: View {
             case .overview:
                 OverviewView(environment: environment, navigate: { selection = $0 })
             case .storage:
-                StorageView(session: environment.storageSession)
+                StorageView(session: environment.storageSession, similarPhotos: environment.similarPhotosSession)
             case .duplicates:
                 DuplicatesView(session: environment.duplicatesSession)
             case .applications:
-                ApplicationsView(session: environment.appsSession)
+                ApplicationsView(
+                    session: environment.appsSession, plugins: environment.pluginsSession,
+                    updates: environment.updateSession, checksForUpdates: environment.settings.checksForAppUpdates)
             case .activity:
                 ActivityView(session: environment.activitySession)
             case .system:
-                SystemView(session: environment.systemSession)
+                SystemView(session: environment.systemSession, snapshots: environment.snapshotsSession)
             case .startup:
                 StartupView(session: environment.startupSession, installedApps: environment.installedApps)
             case let section?:

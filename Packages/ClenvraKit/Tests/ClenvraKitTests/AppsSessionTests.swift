@@ -276,6 +276,91 @@ struct AppsSessionTests {
         #expect(ManagedAgents.vendorUninstaller(for: app) == app.id + "/Contents/Resources/Uninstall Sentinel.app")
     }
 
+    // MARK: - Reset
+
+    @Test("reset removes selected app data but keeps the bundle, launch items, helpers and Possible items")
+    func resetApp() async throws {
+        let app = try fixture.app("com.example.writer", name: "Writer")
+        _ = try fixture.app("org.other.viewer", name: "Viewer")
+        try fixture.file("Library/Caches/com.example.writer/blob", bytes: 50_000)
+        try fixture.file("Library/Preferences/com.example.writer.plist")
+        try fixture.file("Library/Saved Application State/com.example.writer.savedState/data")
+        try fixture.container("CONTAINER-UUID", identifier: "com.example.writer")
+        try fixture.file("Library/Application Support/Writer/settings.json")
+        try fixture.file("Library/Application Support/Writer Backups/old.json")
+        try fixture.file("Library/Logs/com.example.writer/current.log")
+        try fixture.plist(
+            "Library/LaunchAgents/com.example.writer.helper.plist",
+            [
+                "Label": "com.example.writer.helper", "Program": "/usr/bin/true",
+                "AssociatedBundleIdentifiers": ["com.example.writer"],
+            ])
+        try fixture.plist(
+            "System/LaunchDaemons/com.example.writer.privileged.plist",
+            ["Label": "com.example.writer.privileged", "AssociatedBundleIdentifiers": "com.example.writer"])
+        let session = session()
+        await session.load()
+
+        let items = await session.resetItems(for: app)
+        let paths = Set(items.map(\.path))
+
+        #expect(paths.contains(fixture.path("Library/Caches/com.example.writer")))
+        #expect(paths.contains(fixture.path("Library/Preferences/com.example.writer.plist")))
+        #expect(paths.contains(fixture.path("Library/Saved Application State/com.example.writer.savedState")))
+        #expect(paths.contains(fixture.path("Library/Containers/CONTAINER-UUID")))
+        #expect(paths.contains(fixture.path("Library/Application Support/Writer")))
+        #expect(!paths.contains(fixture.path("Library/Application Support/Writer Backups")))
+        #expect(!paths.contains(fixture.path("Library/LaunchAgents/com.example.writer.helper.plist")))
+        #expect(!paths.contains(fixture.path("System/LaunchDaemons/com.example.writer.privileged.plist")))
+        #expect(items.allSatisfy { $0.confidence != .possible })
+
+        let selected = items.filter { $0.isSelectedByDefault && $0.kind != .logs }
+        let preview = try #require(await session.reset(app, items: selected, dryRun: true))
+        #expect(preview.wouldRemoveCount == selected.count)
+        #expect(fixture.exists("Library/Caches/com.example.writer"))
+
+        let summary = try #require(await session.reset(app, items: selected))
+
+        #expect(summary.movedToTrashCount == selected.count)
+        #expect(summary.problems.isEmpty)
+        #expect(fixture.exists("Applications/Writer.app"))
+        #expect(fixture.exists("Library/Application Support/Writer Backups"))
+        #expect(fixture.exists("Library/LaunchAgents/com.example.writer.helper.plist"))
+        #expect(fixture.exists("System/LaunchDaemons/com.example.writer.privileged.plist"))
+        #expect(fixture.exists("Library/Logs/com.example.writer"))
+        for gone in [
+            "Library/Caches/com.example.writer", "Library/Preferences/com.example.writer.plist",
+            "Library/Saved Application State/com.example.writer.savedState",
+            "Library/Containers/CONTAINER-UUID", "Library/Application Support/Writer",
+        ] {
+            #expect(!fixture.exists(gone), "\(gone) should be in the Trash")
+        }
+    }
+
+    @Test("a running app blocks reset; the existing Quit flow makes it available")
+    func runningAppBlocksReset() async throws {
+        let app = try fixture.app("com.example.writer", name: "Writer")
+        try fixture.file("Library/Caches/com.example.writer/blob")
+        state.running.withLock { $0 = ["com.example.writer"] }
+        let session = session()
+        await session.load()
+        await session.select(app.id)
+        let items = await session.resetItems(for: app)
+
+        #expect(session.detail?.availability == .running)
+        #expect(await session.reset(app, items: items) == nil)
+        #expect(fixture.exists("Library/Caches/com.example.writer"))
+
+        await session.quitSelectedApp()
+
+        #expect(state.quitRequests.withLock { $0 } == [app.id])
+        #expect(session.detail?.availability == .available)
+        let summary = try #require(await session.reset(app, items: items))
+        #expect(summary.movedToTrashCount == 1)
+        #expect(fixture.exists("Applications/Writer.app"))
+        #expect(!fixture.exists("Library/Caches/com.example.writer"))
+    }
+
     // MARK: - Homebrew
 
     @Test("Homebrew cask apps are matched by artifact name and can be removed with brew")
@@ -293,7 +378,7 @@ struct AppsSessionTests {
                 ]}
                 """)
         runner.stub(brew, ["uninstall", "--cask", "firefox"], stdout: "==> Uninstalling Cask firefox\n")
-        let session = session(homebrew: .init(brew: brew, runner: runner))
+        let session = session(homebrew: .init(brew: brew, runner: runner, caskroom: fixture.home + "/Caskroom"))
         await session.load()
 
         session.filter = .homebrew
@@ -312,16 +397,25 @@ struct AppsSessionTests {
         #expect(session.apps.map(\.name) == ["Writer"])
     }
 
-    @Test("brew info output maps targets and drops names claimed by two casks")
-    func caskParsing() {
-        let json = """
-            {"casks": [
-              {"token": "a", "artifacts": [{"app": ["A.app"]}, {"app": ["Shared.app"]}]},
-              {"token": "b", "artifacts": [{"app": ["Shared.app"]}, {"app": ["Src.app", {"target": "Target.app"}]}]},
-              {"token": "c", "artifacts": [{"uninstall": [{"quit": "x"}]}]}
-            ]}
-            """
-        #expect(HomebrewCasks.appTokens(fromInfoJSON: Data(json.utf8)) == ["a.app": "a", "target.app": "b"])
+    @Test("a cask installed with a custom --appdir is matched by the location Homebrew reports, not by name")
+    func homebrewCustomAppdir() async throws {
+        let app = try fixture.app("org.mozilla.firefox", name: "Firefox")
+        let brew = "/opt/homebrew/bin/brew"
+        let runner = FakeCommandRunner()
+        runner.stub(
+            brew, ["info", "--json=v2", "--installed", "--cask"],
+            stdout: """
+                {"casks": [
+                  {"token": "firefox", "artifacts": [{"app": ["Firefox.app"], "target": "\(app.id)"}]},
+                  {"token": "elsewhere", "artifacts": [{"app": ["Writer.app"], "target": "/Applications/Writer.app"}]}
+                ]}
+                """)
+        let writer = try fixture.app("com.example.writer", name: "Writer")
+        let session = session(homebrew: .init(brew: brew, runner: runner, caskroom: fixture.home + "/Caskroom"))
+        await session.load()
+
+        #expect(session.homebrewToken(for: app) == "firefox")
+        #expect(session.homebrewToken(for: writer) == nil)
     }
 
     // MARK: - Leftovers

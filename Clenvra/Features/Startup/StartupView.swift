@@ -82,6 +82,7 @@ struct StartupView: View {
             section(Text("System Agents"), items: present(.systemAgent))
             section(Text("System Daemons"), items: present(.systemDaemon))
         }
+        .accessibilityLabel(Text(AppSection.startup.title))
         .accessibilityIdentifier("review.results")
     }
 
@@ -96,7 +97,8 @@ struct StartupView: View {
                 ForEach(items) { item in
                     LaunchItemRow(
                         item: item, ownerName: ownerName(of: item), canRemove: session.canRemove(item),
-                        isManaged: session.isManaged(item)
+                        isManaged: session.isManaged(item),
+                        needsHelper: session.needsHelper(item) && !session.helperAvailable
                     ) {
                         removing = item
                     }
@@ -118,6 +120,7 @@ private struct LaunchItemRow: View {
     let ownerName: String?
     let canRemove: Bool
     let isManaged: Bool
+    let needsHelper: Bool
     let remove: () -> Void
 
     var body: some View {
@@ -137,6 +140,7 @@ private struct LaunchItemRow: View {
                     }
                     if item.isApple { Text("Apple") }
                     if isManaged { Text("Managed by your organisation") }
+                    if needsHelper { Text("Install the System Helper in Settings to remove it") }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)

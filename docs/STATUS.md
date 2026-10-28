@@ -1,31 +1,31 @@
 # Project status and handoff
 
-_Last updated: 2026-10-27._
+_Last updated: 2026-10-28 (1.0.0, merged into `main`)._
 
 Read this first when you pick the project up on another Mac. It says where the work stands, how to get running, and what to do next.
 
 ## Where we are
 
-All main sections are built end to end: engine, safety, UI, English and Arabic, and tests. `scripts/check.sh --ui` passes (format, about 445 package tests, Release build, UI tests in en/ar).
+**Version 1.0.0 is feature-complete and merged into `main`** (PR #1, branch `feat/gap-fixes-and-helper`). Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). `scripts/check.sh` passes locally: format, 720+ package tests, Release build. `scripts/check.sh --ui` (UI tests in English and Arabic, light and dark, accessibility audit of every section) passed on 2026-10-27; the last re-run only failed because the screen was locked.
+
+**Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A signed but **not notarised** `.build/release/Clenvra-1.0.0.dmg` exists locally (local build output, not in git): notarisation failed because the keychain was locked at the time. The `clenvra-notary` profile works again, so re-running `scripts/release.sh` should produce the notarised, stapled DMG.
+
+**CI is red for an environment reason, not a code one:** `.github/workflows/ci.yml` requires Xcode 27, and GitHub's macOS runners only offer up to Xcode 26.6 (checked 2026-10-27). It will pass once runners get Xcode 27; until then rely on `scripts/check.sh` locally. Do not lower the Xcode requirement: the app targets the macOS 26 SDK features of Xcode 27.
 
 | Area | Status |
 |---|---|
-| Filesystem core (bulk reader, executor, storage scanner) | ✅ Done |
-| Safety core (path policy, safe walk, protection policy, deletion gate, executor, restore, live exclusions) | ✅ Done: safety cases S1–S8, S11–S23, S26, S28 tested |
-| Cleanup and Developer (rule engine, catalog, project build folders, tool commands) | ✅ Done |
-| Storage (disks, browser, treemap, large and old files, Downloads and screenshots) | ✅ Done |
-| Duplicates | ✅ Done |
-| Applications (inventory, ownership evidence, uninstall, Homebrew, leftovers, managed agents) | ✅ Done |
-| Startup (launch items, orphans, safe removal) | ✅ Done |
-| System (health, heavy apps, security checks) | ✅ Done |
-| Activity (history, Put Back, CSV export) | ✅ Done |
-| Settings (exclusions, export/import, Full Disk Access status) | ✅ Done |
-| Overview (disks, Scan Everything, recommendations, health line) | ✅ Done |
-| Privileged helper, system-level cleanup (M12–M13) | ⏳ Not started: needs the personal team signed in |
-| Developer ID signing and notarisation | ⏳ Waiting for the personal team on the build Mac |
-| More cleanup and tools (M14–M15), convenience (M16) | ⏳ Not started |
+| Overview, Storage (treemap, sunburst, large/old, Downloads by source, similar photos), Duplicates | ✅ |
+| Cleanup (caches, logs, crash reports, installers, backups, Trash, browser caches, mail attachments, temp files, empty folders, your own rules), browser history/cookies/sessions (opt-in per type) | ✅ |
+| Developer (Xcode, simulators, editors, build folders, package managers, containers, Android SDK, AI models) | ✅ |
+| Applications (uninstall with evidence, reset, leftovers, extensions, Homebrew, opt-in update check) | ✅ |
+| Startup, System (health, processes, security, Time Machine snapshots), Activity (Put Back, re-enable, CSV/Markdown) | ✅ |
+| System Helper (M12–M13): system caches/logs, orphaned system launch items, snapshots, system leftovers, Put Back | ✅ Built, unit-tested and security-reviewed. **Run it once end to end** (see next steps) |
+| Settings: exclusions, export/import, permissions guide, custom rules, scheduled scans, update opt-in, menu bar extra | ✅ |
+| Safety cases S1–S28 | ✅ All tested |
+| Signing, notarisation, release script | ✅ `scripts/release.sh` (Developer ID, team `CZU6ZC4LYQ`, notary profile `clenvra-notary`) |
+| CL-11 recent-items lists | ✖ Not implemented on purpose: macOS has no supported way, and deleting `sharedfilelist` files does not reliably clear them (the daemon rewrites them) |
 
-The milestone plan with acceptance criteria is in [`architecture/implementation-plan.md`](architecture/implementation-plan.md). Decisions D1–D12 there are final.
+How the work was done: features were built test-first, partly by delegated agents (Claude subagents, Antigravity `agy`, opencode) in separate worktrees, then reviewed, merged and re-verified here. Automated security reviews of the helper led to six fixes (forged Put Back, Trash symlinks, irreversible mode, admin-only, staged Put Back, gate before `launchctl`).
 
 ## Setting up on a new Mac
 
@@ -40,22 +40,22 @@ The milestone plan with acceptance criteria is in [`architecture/implementation-
 
 ## Next steps, in order
 
-1. **M11 release hardening.** This needs no signing:
-   - Accessibility audit (VoiceOver pass on every section) and a native Arabic speaker's review of the strings.
-   - The Overview scan list was just changed to a `Grid` so its columns line up. Check it in the next screenshot pass:
-     `TEST_RUNNER_CLENVRA_SCREENSHOTS=1 xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra -only-testing:ClenvraUITests/ScreenshotUITests -resultBundlePath /tmp/shots.xcresult`
-     Then export the images with `xcrun xcresulttool export attachments --path /tmp/shots.xcresult --output-path /tmp/shots`.
-   - Rescan only the affected folder after deleting in Storage. Today it rescans the whole tree.
-   - Better Homebrew detection: casks installed with a custom `--appdir`.
-   - Onboarding that explains the macOS permission prompts (Full Disk Access, Automation) before they appear.
-   - Benchmarks doc and a run on a managed (MDM) Mac.
-2. **M15 / M16 items that need no signing:** similar photos (ST-5), scheduled scans with notifications (SA-9), menu bar extra (SY-5).
-3. **Once the personal team is signed in on this Mac:** M12 privileged helper (`SMAppService.daemon`, XPC pinned to the Team ID, the deletion gate also inside the helper), then M13 system-level cleanup, then a Developer ID signed and notarised DMG.
+0. **Unlocked Mac:** run `scripts/check.sh --ui`, then `scripts/release.sh`. Confirm `xcrun stapler validate .build/release/Clenvra-1.0.0.dmg` and `spctl -a -t open --context context:primary-signature -v` on the DMG both pass.
+1. **Helper end to end on a real Mac:** install the DMG into /Applications, Settings › System Helper › Install, approve in System Settings › General › Login Items, press Check. Then try Cleanup › System Caches (one item), Put Back from Activity, and System › Snapshots.
+2. **People, not code:** a VoiceOver pass and a native Arabic review of the strings.
+3. **Other Macs:** a run on a managed (MDM) Mac, a Mac without developer tools, and macOS 26 in a VM; a Release-build benchmark (see `testing/benchmarks.md`).
+4. **Publish:** tag `v1.0.0` on `main`, attach the notarised DMG to a GitHub Release (ask the owner first; it is public).
+5. **After 1.0:** verify the vendor Team IDs below, switch CI to Xcode 27 runners when available, and decide whether CL-11 gets a guided manual flow instead of automation.
 
 ## Known caveats
 
 - **Vendor Team IDs in `Apps/ManagedAgents.swift`** (`X9E956P446`, `4AYE5J54KN`, `483DWKW443`, `PXPZ95SK77`) were written from memory and are not yet verified with `codesign -dv` against the real vendor apps. A wrong ID can only make Clenvra refuse to touch an agent, never remove one wrongly. Still, verify them.
 - **Developer scans of very large source trees take time.** About 2M files take around 25 s, which is still about 3.6× faster than `du`. Results appear progressively, and selections are kept across rescans.
+- **Unverified tool assumptions:** conda, Colima, Podman and OrbStack are not installed on this Mac. Their adapters parse output defensively, but the formats come from documentation, not a real run. OrbStack's size is read from its group container, which may trigger the macOS "access data from other apps" prompt without Full Disk Access.
+- **Browser caches of uninstalled browsers** show as "in use", because Clenvra cannot tell whether an unknown app is running. The Leftovers tab is the place for those.
+- **Also unverified on this Mac:** Android SDK, Ollama/LM Studio/Hugging Face, and the Sparkle/App Store/Homebrew update sources were built from documentation with canned test output.
+- **UI tests trigger a folder prompt** on each fresh debug build ("access files in your Desktop folder"). Grant the debug build Desktop access once; the audit skips contrast checks while a prompt is showing.
+- **The accessibility UI tests take about 12 minutes**, mostly waiting for real scans to finish.
 - **Live cleanup on the owner's Macs is never automatic.** Testing deletion uses temporary fixture folders only.
 
 ## Working conventions

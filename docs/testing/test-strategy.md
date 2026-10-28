@@ -45,3 +45,5 @@ let fx = try FixtureBuilder()
 ## 5. CI gates
 
 `swift test` (kit) on every change; `xcodebuild test` (app + UI) before merging UI work; benchmarks on demand. Warnings are errors in ClenvraKit, including strict concurrency.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs format lint, the ClenvraKit tests and an ad-hoc-signed Release build on every push and pull request. UI tests are local only (`scripts/check.sh --ui`): they need a GUI session and Accessibility permission for the test runner. UI tests force the appearance with the debug-only launch argument `-ClenvraUITestAppearance light|dark` (`-AppleInterfaceStyle` in the argument domain does not override the system appearance). The accessibility audit fails on any issue not covered by the documented exclusions in `AccessibilityAuditUITests.swift`.

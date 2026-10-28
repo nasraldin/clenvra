@@ -130,6 +130,8 @@ public struct ClutterItem: Sendable, Hashable, Identifiable {
     public let kind: ClutterKind
     public let age: ClutterAge
     public let source: ClutterSource
+    /// Website the file was downloaded from (e.g. "github.com"); `nil` when unknown.
+    public let sourceHost: String?
 }
 
 /// A section of the Downloads & Screenshots review.
@@ -138,6 +140,8 @@ public struct ClutterGroup: Sendable, Hashable, Identifiable {
     public enum Key: Sendable, Hashable {
         case kind(ClutterKind)
         case age(ClutterAge)
+        /// `nil` collects the files whose website is unknown.
+        case sourceHost(String?)
     }
 
     public var id: Key { key }
@@ -151,6 +155,8 @@ public struct ClutterGroup: Sendable, Hashable, Identifiable {
 /// How the Downloads & Screenshots review is grouped.
 public enum ClutterGrouping: Sendable, Hashable {
     case kind, age
+    /// By the website a download came from, so everything fetched from one place can be judged together.
+    case sourceHost
 }
 
 /// "Not modified in" filter of Large & Old files.

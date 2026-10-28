@@ -41,6 +41,33 @@ public struct OpenDirectory: ~Copyable, Sendable {
         return OpenDirectory(fd: child, label: name)
     }
 
+    /// The user ID that owns this directory itself.
+    func ownerID() throws(FileSystemError) -> uid_t {
+        var info = stat()
+        guard fstat(fd, &info) == 0 else { throw .current("fstat", label) }
+        return info.st_uid
+    }
+
+    /// Permission bits of this directory itself.
+    func mode() throws(FileSystemError) -> mode_t {
+        var info = stat()
+        guard fstat(fd, &info) == 0 else { throw .current("fstat", label) }
+        return info.st_mode & 0o7777
+    }
+
+    /// Moves a direct child into another open directory under `newName`, failing instead of replacing anything
+    /// there. Both folders are file descriptors, so no path is resolved again.
+    func moveChild(named name: String, into destination: borrowing OpenDirectory, as newName: String)
+        throws(FileSystemError)
+    {
+        guard Self.isPlainName(name), Self.isPlainName(newName) else {
+            throw FileSystemError(code: EINVAL, operation: "renameat", path: name)
+        }
+        guard renameatx_np(fd, name, destination.fd, newName, UInt32(RENAME_EXCL)) == 0 else {
+            throw .current("renameat", name)
+        }
+    }
+
     /// `lstat` of a direct child, relative to this directory (never follows a symlink).
     func statChild(named name: String) throws(FileSystemError) -> stat {
         guard Self.isPlainName(name) else {

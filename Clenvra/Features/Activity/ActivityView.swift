@@ -10,6 +10,7 @@ struct ActivityView: View {
     @State private var didLoad = false
     @State private var expanded: Set<UUID> = []
     @State private var restoreFailure: RestoreReason?
+    @State private var reenableFailure: LaunchAgentReenabler.Outcome?
     @State private var exportFailed = false
 
     var body: some View {
@@ -31,7 +32,19 @@ struct ActivityView: View {
             }
             .alert("Could Not Export", isPresented: $exportFailed) {
             } message: {
-                Text("The CSV file could not be written.")
+                Text("The file could not be written.")
+            }
+            .alert(
+                "Could Not Enable",
+                isPresented: Binding(
+                    get: { reenableFailure != nil },
+                    set: { if !$0 { reenableFailure = nil } }
+                )
+            ) {
+            } message: {
+                if let outcome = reenableFailure {
+                    Text(reenableMessage(outcome))
+                }
             }
             .task { await loadIfNeeded() }
             .accessibilityIdentifier("section.activity")
@@ -91,6 +104,18 @@ struct ActivityView: View {
                         ItemRow(
                             item: item,
                             restored: session.isRestored(itemPath: item.path, operationID: operation.id),
+                            canReenable: session.canReenable(itemPath: item.path, operationID: operation.id),
+                            reenabled: session.isReenabled(itemPath: item.path, operationID: operation.id),
+                            onReenable: {
+                                Task {
+                                    let outcome = await session.reenable(
+                                        itemPath: item.path, operationID: operation.id)
+                                    switch outcome {
+                                    case .enabled, .alreadyEnabled: break
+                                    default: reenableFailure = outcome
+                                    }
+                                }
+                            },
                             onRestore: {
                                 Task {
                                     if let failure = await session.restore(
@@ -131,8 +156,17 @@ struct ActivityView: View {
             }
             .keyboardShortcut("r", modifiers: .command)
 
-            Button {
-                exportCSV()
+            Menu {
+                Button {
+                    export(markdown: false)
+                } label: {
+                    Text("Export as CSV…")
+                }
+                Button {
+                    export(markdown: true)
+                } label: {
+                    Text("Export Report as Markdown…")
+                }
             } label: {
                 Label {
                     Text("Export…")
@@ -140,6 +174,7 @@ struct ActivityView: View {
                     Image(systemName: "square.and.arrow.up")
                 }
             }
+            .accessibilityIdentifier("activity.export")
             .disabled(didLoad && session.visibleOperations.isEmpty)
         }
     }
@@ -160,13 +195,23 @@ struct ActivityView: View {
         }
     }
 
-    private func exportCSV() {
+    private func reenableMessage(_ outcome: LaunchAgentReenabler.Outcome) -> LocalizedStringResource {
+        switch outcome {
+        case .enabled, .alreadyEnabled: "It is enabled again."
+        case .notAllowed: "Only startup items you put back from the Trash can be enabled again."
+        case .invalidPlist: "Its settings file is not valid, so it was not enabled."
+        case .failed: "macOS did not load it. It will still start the next time you log in."
+        }
+    }
+
+    private func export(markdown: Bool) {
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [.commaSeparatedText]
-        panel.nameFieldStringValue = "Clenvra-Activity.csv"
+        panel.allowedContentTypes = [markdown ? UTType(filenameExtension: "md") ?? .plainText : .commaSeparatedText]
+        panel.nameFieldStringValue = markdown ? "Clenvra-Activity.md" : "Clenvra-Activity.csv"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            try Data(session.exportCSV().utf8).write(to: url, options: .atomic)
+            let text = markdown ? session.exportMarkdown() : session.exportCSV()
+            try Data(text.utf8).write(to: url, options: .atomic)
         } catch {
             exportFailed = true
         }
@@ -192,7 +237,7 @@ private struct OperationHeader: View {
             Spacer()
             HStack(spacing: 6) {
                 Text("\(operation.items.count) items")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Freed \(operation.freedBytes.formatted(.byteCount(style: .file)))")
             }
             .foregroundStyle(.secondary)
@@ -206,6 +251,9 @@ private struct OperationHeader: View {
 private struct ItemRow: View {
     let item: ActivitySession.Item
     let restored: Bool
+    let canReenable: Bool
+    let reenabled: Bool
+    let onReenable: () -> Void
     let onRestore: () -> Void
 
     var body: some View {
@@ -226,6 +274,23 @@ private struct ItemRow: View {
                     }
                     .font(.caption)
                     .foregroundStyle(.green)
+                    if reenabled {
+                        Label {
+                            Text("Enabled")
+                        } icon: {
+                            Image(systemName: "checkmark.circle")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.green)
+                    } else if canReenable {
+                        Button {
+                            onReenable()
+                        } label: {
+                            Text("Enable at Login")
+                        }
+                        .controlSize(.small)
+                        .help(Text("Loads this startup item again, as it was before Clenvra removed it."))
+                    }
                 } else {
                     Button {
                         onRestore()

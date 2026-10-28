@@ -1,0 +1,64 @@
+# Format lint, ClenvraKit tests and a Release build on every push and pull request.
+#
+# UI tests (navigation in English/Arabic × light/dark, accessibility audit) are NOT run here: they need a logged-in
+# GUI session with Accessibility/Automation permission for the test runner, which hosted runners do not provide.
+# Run them locally with `scripts/check.sh --ui`.
+#
+# CI has no team certificate, so every xcodebuild call passes signing overrides for an ad-hoc signature
+# (the project normally signs with its development team).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, test, build
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 27.x
+        run: |
+          xcode="$(find /Applications -maxdepth 1 -name 'Xcode_27*.app' | sort -V | tail -n 1)"
+          if [[ -z "$xcode" ]]; then
+            echo "::error::No Xcode 27.x found on this runner"
+            find /Applications -maxdepth 1 -name 'Xcode*.app'
+            exit 1
+          fi
+          sudo xcode-select -s "$xcode/Contents/Developer"
+          xcodebuild -version
+
+      - name: Format lint
+        run: >-
+          xcrun swift-format lint --recursive --strict
+          Clenvra ClenvraUITests Packages/ClenvraKit/Sources Packages/ClenvraKit/Tests Packages/ClenvraKit/Package.swift
+
+      - name: ClenvraKit tests
+        run: >-
+          xcodebuild test
+          -workspace Clenvra.xcworkspace -scheme Clenvra
+          -destination 'platform=macOS,arch=arm64'
+          -derivedDataPath .build/DerivedData
+          -only-testing:ClenvraKitTests
+          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
+
+      - name: Release build
+        run: >-
+          xcodebuild build
+          -workspace Clenvra.xcworkspace -scheme Clenvra
+          -configuration Release
+          -destination 'platform=macOS,arch=arm64'
+          -derivedDataPath .build/DerivedData
+          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=

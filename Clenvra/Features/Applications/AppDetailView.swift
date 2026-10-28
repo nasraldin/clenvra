@@ -5,8 +5,11 @@ import SwiftUI
 /// Review of one app: what will be removed (grouped by confidence, with evidence) and how.
 struct AppDetailView: View {
     let session: AppsSession
+    /// The update check's answer for the selected app; `nil` when not checked or checks are off.
+    var update: AppUpdate?
 
     @State private var isConfirmingUninstall = false
+    @State private var resettingApp: InstalledApp?
     @State private var isConfirmingHomebrew = false
     @State private var shownResult: ShownResult?
     @State private var homebrewResult: ShownCommandResult?
@@ -21,6 +24,9 @@ struct AppDetailView: View {
                             AvailabilityNotice(detail: detail, session: session)
                             if let command = session.homebrewCommand, detail.availability == .available {
                                 HomebrewNotice(command: command) { isConfirmingHomebrew = true }
+                            }
+                            if let update, update.id == detail.app.id {
+                                UpdateNotice(update: update)
                             }
                         }
                         if detail.items.isEmpty, detail.availability == .available {
@@ -87,6 +93,18 @@ struct AppDetailView: View {
                 }
                 .disabled(!canUninstall)
 
+                Button {
+                    resettingApp = session.detail?.app
+                } label: {
+                    Label {
+                        Text("Reset…")
+                    } icon: {
+                        Image(systemName: "arrow.counterclockwise")
+                    }
+                }
+                .help(Text("Removes the app's settings, caches and saved state. The app stays installed."))
+                .disabled(!canReset)
+
                 Button(role: .destructive) {
                     isConfirmingUninstall = true
                 } label: {
@@ -119,6 +137,14 @@ struct AppDetailView: View {
                 }
             }
         }
+        .sheet(item: $resettingApp) { app in
+            ResetAppSheet(session: session, app: app) { items in
+                resettingApp = nil
+                Task {
+                    shownResult = ShownResult(summary: await session.reset(app, items: items), isPreview: false)
+                }
+            }
+        }
         .sheet(item: $shownResult) { shown in
             if let summary = shown.summary {
                 CleanupResultSheet(summary: summary, isPreview: shown.isPreview)
@@ -136,6 +162,13 @@ struct AppDetailView: View {
         return detail.availability == .available && detail.bundle != nil && !session.isWorking
     }
 
+    /// Resetting keeps the app, so only protected and managed apps are excluded; a running app is asked to quit
+    /// in the reset sheet.
+    private var canReset: Bool {
+        guard let detail = session.detail, !session.isWorking else { return false }
+        return detail.availability == .available || detail.availability == .running
+    }
+
     private func names(for appIDs: [String]) -> [String] {
         appIDs.map { id in session.apps.first { $0.id == id }?.name ?? (id as NSString).lastPathComponent }
     }
@@ -147,7 +180,7 @@ struct AppDetailView: View {
                 Text("Moving to the Trash…")
             } else {
                 Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()

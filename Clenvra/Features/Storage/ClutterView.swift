@@ -15,6 +15,7 @@ struct ClutterView: View {
                 Picker(selection: $grouping) {
                     Text("Kind").tag(ClutterGrouping.kind)
                     Text("Age").tag(ClutterGrouping.age)
+                    Text("Source").tag(ClutterGrouping.sourceHost)
                 } label: {
                     Text("Group by")
                 }
@@ -98,6 +99,11 @@ private struct ClutterRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 PathText(path: (clutter.item.path as NSString).deletingLastPathComponent)
+                if let host = clutter.sourceHost {
+                    Text("Downloaded from \(host)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer(minLength: 12)
             Label {
@@ -124,6 +130,9 @@ extension ClutterGroup.Key {
         switch self {
         case .kind(let kind): kind.title
         case .age(let age): age.title
+        // A website name is shown as it is; "%@" is not translated.
+        case .sourceHost(let host?): "\(host)"
+        case .sourceHost(nil): "Unknown source"
         }
     }
 }

@@ -1,7 +1,7 @@
 import Darwin
 
 /// Why an item could not be put back from the Trash.
-public enum RestoreError: Error, Sendable, Equatable {
+public enum RestoreError: Error, Sendable, Equatable, Codable {
     /// The log entry is not a move to the Trash (or predates identity logging).
     case notRestorable
     /// The Trash no longer holds the object Clenvra moved (emptied, or replaced by another item).

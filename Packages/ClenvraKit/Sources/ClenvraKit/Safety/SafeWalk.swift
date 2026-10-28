@@ -5,7 +5,7 @@ public import Foundation
 ///
 /// Directories compare by identity only: their modification date and size change whenever their contents do,
 /// which is normal for caches. Files, symlinks and other items also compare content size and modification date.
-public struct FileSnapshot: Sendable, Hashable {
+public struct FileSnapshot: Sendable, Hashable, Codable {
     public let identity: FileIdentity
     public let kind: FileKind
     /// `nil` for directories.
@@ -80,6 +80,25 @@ public enum SafeWalk {
             return ResolvedItem(
                 parent: directory, name: leaf, snapshot: FileSnapshot(info), flags: info.st_flags,
                 linkCount: UInt32(info.st_nlink))
+        } catch {
+            throw refusal(for: error)
+        }
+    }
+
+    /// Opens a directory by walking every component without following symlinks.
+    static func openDirectory(_ path: String) throws(SafetyRefusal) -> OpenDirectory {
+        let components: [String]
+        do {
+            components = try PathPolicy.components(of: path)
+        } catch {
+            throw .invalidPath(error)
+        }
+        do {
+            var directory = try OpenDirectory(path: "/")
+            for component in components {
+                directory = try directory.openChild(named: component)
+            }
+            return directory
         } catch {
             throw refusal(for: error)
         }

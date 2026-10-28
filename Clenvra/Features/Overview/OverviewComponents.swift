@@ -46,6 +46,7 @@ struct OverviewVolumeRow: View {
                     ))
         }
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isStaticText)
         .accessibilityIdentifier("overview.volume")
     }
 }

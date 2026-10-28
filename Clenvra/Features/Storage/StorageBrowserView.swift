@@ -2,11 +2,12 @@ import ClenvraKit
 import QuickLook
 import SwiftUI
 
-/// The space map: path bar, the current folder's children by size, and a treemap of the same children.
+/// The space map: path bar, the current folder's children by size, and a treemap or sunburst of the same folder.
 struct StorageBrowserView: View {
     let session: StorageSession
 
     @State private var previewURL: URL?
+    @AppStorage("storage.mapStyle") private var mapStyle = StorageMapStyle.treemap
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,11 +25,8 @@ struct StorageBrowserView: View {
                 VSplitView {
                     table
                         .frame(minHeight: 200)
-                    StorageTreemap(items: session.children) { item in
-                        Task { await session.open(item.path) }
-                    }
-                    .frame(minHeight: 120, idealHeight: 200)
-                    .padding(8)
+                    map
+                        .frame(minHeight: 160, idealHeight: 240)
                 }
             }
         }
@@ -47,6 +45,34 @@ struct StorageBrowserView: View {
                 .disabled(!session.canGoUp)
             }
         }
+    }
+
+    private var map: some View {
+        VStack(spacing: 4) {
+            HStack {
+                Spacer()
+                Picker(selection: $mapStyle) {
+                    Text("Treemap").tag(StorageMapStyle.treemap)
+                    Text("Sunburst").tag(StorageMapStyle.sunburst)
+                } label: {
+                    Text("Map Style")
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .controlSize(.small)
+                .fixedSize()
+                .accessibilityIdentifier("storage.mapStyle")
+            }
+            switch mapStyle {
+            case .treemap:
+                StorageTreemap(items: session.children) { item in
+                    Task { await session.open(item.path) }
+                }
+            case .sunburst:
+                StorageSunburst(session: session)
+            }
+        }
+        .padding(8)
     }
 
     private var pathBar: some View {
@@ -76,7 +102,7 @@ struct StorageBrowserView: View {
                     .disabled(crumb.path == session.currentPath)
                 }
                 if let aggregate = session.currentAggregate {
-                    Text(verbatim: "·").foregroundStyle(.tertiary)
+                    Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                     SizeText(bytes: aggregate.allocated)
                         .foregroundStyle(.secondary)
                 }
@@ -240,4 +266,9 @@ extension ProtectionReason {
         case .invalid: "This location is not allowed."
         }
     }
+}
+
+/// How the browser draws the current folder below the list.
+enum StorageMapStyle: String {
+    case treemap, sunburst
 }

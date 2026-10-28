@@ -162,14 +162,15 @@ Results go into `docs/testing/benchmarks.md` (created when the first benchmark r
 
 ### 6a. Optional privileged helper (1.1)
 
-- Packaged as `Contents/Library/LaunchDaemons/app.clenvra.helper.plist`, registered with `SMAppService.daemon(plistName:)`. The user approves it in System Settings. It can be uninstalled from Settings, and is unregistered automatically when the app is removed with Clenvra itself.
-- Uses `NSXPCConnection` both ways, with `setCodeSigningRequirement("anchor apple generic and identifier \"app.clenvra.Clenvra\" and certificate leaf[subject.OU] = \"<TEAMID>\"")`. This pins the Team ID so a forged ad-hoc client can't connect. MacSai documents the same need: `Constants.swift:9-24`.
-- **Small fixed protocol, no paths as free-form commands:**
-  - `trash(items: [PlanItem])`
-  - `removeIrreversible(items: [PlanItem])`
-  - `bootout(label:domain:)`
-  - `deleteLocalSnapshot(date:)`
-  - `version()`
+- Packaged as `Contents/Library/LaunchDaemons/com.nasraldin.clenvra.helper.plist` (program `Contents/MacOS/ClenvraHelper`), registered with `SMAppService.daemon(plistName:)`. The user approves it in System Settings. It can be uninstalled from Settings, and is unregistered automatically when the app is removed with Clenvra itself.
+- Uses `NSXPCConnection` both ways, with `setCodeSigningRequirement("anchor apple generic and identifier \"com.nasraldin.clenvra\" and certificate leaf[subject.OU] = \"CZU6ZC4LYQ\"")` (constants in `ClenvraKit/Helper/HelperIdentity.swift`). This pins the Team ID so a forged ad-hoc client can't connect. MacSai documents the same need: `Constants.swift:9-24`.
+- **Small fixed protocol, no paths as free-form commands** (`ClenvraHelperProtocol`):
+  - `protocolVersion()`
+  - `perform(HelperRequest)`: plan items with mode move-to-Trash, irreversible (rotated logs only) or dry run
+  - `restore(ActivityRecord)`: Put Back, only from directly inside the user's Trash and only to an allowlisted place
+  - Planned for M13: `bootout(label:domain:)`, `deleteLocalSnapshot(date:)`
+- Items the helper removes go to the **connecting user's** Trash (home taken from the connection's user ID, never from the request), keeping their owner, so Put Back restores them exactly. The helper never removes its own log folder or the Clenvra app it ships in.
+- All of the helper's decisions live in `ClenvraKit/Helper/` (`HelperAllowlist`, `HelperService`) and are unit-tested without root; `ClenvraHelper/main.swift` only wires XPC to them.
 - The helper **re-runs the full deletion gate** (`safety-model.md` §4) itself, with a *narrower* root allowlist: `/Library/{Caches,Logs,LaunchAgents,LaunchDaemons,PrivilegedHelperTools,Application Support/<owner>}`, `/private/var/log` (archives only), and `/Applications/<bundle>.app`. It refuses anything else even if the app asks.
 - It runs only on demand (XPC launch-on-demand) and exits when idle. There is no `KeepAlive`.
 

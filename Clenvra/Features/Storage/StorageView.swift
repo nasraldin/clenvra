@@ -1,13 +1,17 @@
 import ClenvraKit
 import SwiftUI
 
-/// Storage section: volume bars, then Browser · Large & Old · Downloads & Screenshots over one scan.
+/// Storage section: volume bars, then Browser · Large & Old · Downloads & Screenshots over one scan, and
+/// Similar Photos with its own scan.
 struct StorageView: View {
     let session: StorageSession
+    let similarPhotos: SimilarPhotosSession
 
     @State private var isConfirming = false
     @State private var shownSummary: StorageShownSummary?
     @State private var didLoadClutter = false
+    /// Similar Photos is not one of the scan's lists, so the tab is kept here rather than in the session.
+    @SceneStorage("storage.showsSimilarPhotos") private var showsSimilarPhotos = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,7 +19,9 @@ struct StorageView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
             Divider()
-            if session.isPartial, session.list != .clutter {
+            tabPicker
+            Divider()
+            if session.isPartial, session.list != .clutter, !showsSimilarPhotos {
                 partialNotice
                 Divider()
             }
@@ -24,7 +30,9 @@ struct StorageView: View {
         }
         .navigationTitle(Text("Storage"))
         .toolbar { toolbar }
-        .safeAreaInset(edge: .bottom) { statusBar }
+        .safeAreaInset(edge: .bottom) {
+            if !showsSimilarPhotos { statusBar }
+        }
         .sheet(isPresented: $isConfirming) {
             ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
                 isConfirming = false
@@ -36,7 +44,7 @@ struct StorageView: View {
         }
         .task {
             await session.refreshVolumes()
-            if session.phase == .idle, session.snapshot == nil { await session.scan() }
+            if session.phase == .idle, session.snapshot == nil, !showsSimilarPhotos { await session.scan() }
         }
         .accessibilityIdentifier("section.storage")
     }
@@ -44,6 +52,14 @@ struct StorageView: View {
     // MARK: - Content
 
     @ViewBuilder private var content: some View {
+        if showsSimilarPhotos {
+            SimilarPhotosView(session: similarPhotos)
+        } else {
+            scanContent
+        }
+    }
+
+    @ViewBuilder private var scanContent: some View {
         switch session.list {
         case .clutter:
             ClutterView(session: session)
@@ -132,17 +148,29 @@ struct StorageView: View {
     // MARK: - Toolbar and status
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            Picker(selection: listBinding) {
-                Text("Browser").tag(StorageList.browser)
-                Text("Large & Old").tag(StorageList.largeFiles)
-                Text("Downloads & Screenshots").tag(StorageList.clutter)
-            } label: {
-                Text("View")
-            }
-            .pickerStyle(.segmented)
-            .accessibilityIdentifier("storage.list")
+        if !showsSimilarPhotos { scanToolbar }
+    }
+
+    /// Four tabs are too wide for the toolbar at the default window size, so they sit above the content.
+    private var tabPicker: some View {
+        Picker(selection: tabBinding) {
+            Text("Browser").tag(StorageTab.browser)
+            Text("Large & Old").tag(StorageTab.largeFiles)
+            Text("Downloads & Screenshots").tag(StorageTab.clutter)
+            Text("Similar Photos").tag(StorageTab.similarPhotos)
+        } label: {
+            Text("View")
         }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .fixedSize()
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .accessibilityIdentifier("storage.list")
+    }
+
+    @ToolbarContentBuilder private var scanToolbar: some ToolbarContent {
         ToolbarItemGroup {
             if case .scanning = session.phase {
                 Button {
@@ -189,8 +217,19 @@ struct StorageView: View {
         }
     }
 
-    private var listBinding: Binding<StorageList> {
-        Binding(get: { session.list }, set: { session.list = $0 })
+    private var tabBinding: Binding<StorageTab> {
+        Binding(
+            get: { showsSimilarPhotos ? .similarPhotos : StorageTab(session.list) },
+            set: { tab in
+                if let list = tab.list {
+                    showsSimilarPhotos = false
+                    session.list = list
+                } else {
+                    // Nothing selected in a hidden list may be moved to the Trash.
+                    session.setSelection([])
+                    showsSimilarPhotos = true
+                }
+            })
     }
 
     private var isBusy: Bool {
@@ -220,7 +259,7 @@ struct StorageView: View {
                 }
             default:
                 Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
+                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
                 Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
             }
             Spacer()
@@ -229,6 +268,28 @@ struct StorageView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(.bar)
+    }
+}
+
+/// The Storage tabs: the scan's three lists, plus Similar Photos.
+private enum StorageTab: Hashable {
+    case browser, largeFiles, clutter, similarPhotos
+
+    init(_ list: StorageList) {
+        switch list {
+        case .browser: self = .browser
+        case .largeFiles: self = .largeFiles
+        case .clutter: self = .clutter
+        }
+    }
+
+    var list: StorageList? {
+        switch self {
+        case .browser: .browser
+        case .largeFiles: .largeFiles
+        case .clutter: .clutter
+        case .similarPhotos: nil
+        }
     }
 }
 

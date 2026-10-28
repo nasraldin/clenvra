@@ -48,10 +48,7 @@ enum StringCatalogAudit {
 
     /// All `.xcstrings` files in the repository, excluding build output.
     static func catalogsInRepository(filePath: String = #filePath) -> [URL] {
-        // …/Packages/ClenvraKit/Tests/ClenvraKitTests/Support/StringCatalogAudit.swift → repository root
-        var root = URL(filePath: filePath)
-        for _ in 0..<6 { root.deleteLastPathComponent() }
-        guard
+        guard let root = repositoryRoot(from: filePath),
             let enumerator = FileManager.default.enumerator(
                 at: root, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
         else { return [] }
@@ -64,5 +61,18 @@ enum StringCatalogAudit {
             }
         }
         return found
+    }
+
+    /// The nearest ancestor holding `Clenvra.xcworkspace`. Found by marker, not by counting folders, so the audit
+    /// never wanders into sibling projects next to the checkout.
+    static func repositoryRoot(from filePath: String) -> URL? {
+        var directory = URL(filePath: filePath).deletingLastPathComponent()
+        while directory.path != "/" {
+            if FileManager.default.fileExists(atPath: directory.appending(path: "Clenvra.xcworkspace").path) {
+                return directory
+            }
+            directory.deleteLastPathComponent()
+        }
+        return nil
     }
 }

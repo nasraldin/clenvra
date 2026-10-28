@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var selectedExclusion: String?
     @State private var message: Message?
     @State private var fullDiskAccess = FullDiskAccess.Status.unknown
+    @State private var isShowingGuide = false
 
     private enum Message {
         case text(LocalizedStringResource)
@@ -36,6 +37,12 @@ struct SettingsView: View {
                             .foregroundStyle(fullDiskAccess == .granted ? .green : .orange)
                     }
                 }
+                Button {
+                    isShowingGuide = true
+                } label: {
+                    Text("About macOS Permission Prompts…")
+                }
+                .accessibilityIdentifier("settings.permissionsGuide")
             } header: {
                 Text("Full Disk Access")
             } footer: {
@@ -84,6 +91,25 @@ struct SettingsView: View {
             }
 
             Section {
+                Toggle(
+                    isOn: Binding(
+                        get: { environment.settings.checksForAppUpdates },
+                        set: { newValue in update { $0.checksForAppUpdates = newValue } }
+                    )
+                ) {
+                    Text("Check for app updates")
+                }
+                .accessibilityIdentifier("settings.checksForAppUpdates")
+            } header: {
+                Text("App Updates")
+            } footer: {
+                Text(
+                    "When you check for updates in Applications, Clenvra contacts the apps' update feeds, Apple's App Store and Homebrew. Nothing is contacted while this is off, and nothing is downloaded or installed."
+                )
+                .foregroundStyle(.secondary)
+            }
+
+            Section {
                 HStack {
                     Button {
                         exportSettings()
@@ -102,10 +128,19 @@ struct SettingsView: View {
                 Text("Folders in your home folder are saved relative to it, so they work for any user name.")
                     .foregroundStyle(.secondary)
             }
+
+            CustomRulesSettingsSection(environment: environment)
+
+            ScheduleSettingsSection(environment: environment)
+
+            MenuBarSettingsSection()
+
+            HelperSettingsSection(onChange: { await environment.refreshHelper() })
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 560)
+        .frame(width: 560, height: 720)
         .task { await refreshFullDiskAccess() }
+        .sheet(isPresented: $isShowingGuide) { PermissionsGuideView(home: environment.home) }
         // The user may grant access in System Settings and come back.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { await refreshFullDiskAccess() }

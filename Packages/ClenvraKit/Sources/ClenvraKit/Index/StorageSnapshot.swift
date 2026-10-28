@@ -96,9 +96,71 @@ public struct StorageSnapshot: Sendable {
     public let skipped: [SkippedPath]
     /// `false` when the scan was cancelled, so totals must be labelled partial.
     public let isComplete: Bool
+    /// Per-directory totals without hard-linked bytes, kept so rescanning one folder can update its ancestors exactly.
+    let subtrees: [String: SubtreeTotals]
+    /// Every hard-linked object seen and the directories holding its names.
+    let hardLinks: [FileIdentity: HardLinkRecord]
 
     /// Looks up a directory, tolerating a trailing slash in `path`.
     public func aggregate(at path: String) -> DirectoryAggregate? {
         directories[StorageScanner.normalize(path)]
+    }
+}
+
+/// Sizes of the entries directly inside one directory (or, after roll-up, its whole subtree).
+struct ScanTotals: Sendable, Hashable {
+    var allocated: Int64 = 0
+    var reclaimable: Int64 = 0
+    var logical: Int64 = 0
+    var fileCount = 0
+    var directoryCount = 0
+    var latestModification: Date?
+
+    mutating func include(_ date: Date) {
+        if let latest = latestModification, latest >= date { return }
+        latestModification = date
+    }
+
+    mutating func add(_ other: ScanTotals) {
+        allocated += other.allocated
+        reclaimable += other.reclaimable
+        logical += other.logical
+        fileCount += other.fileCount
+        directoryCount += other.directoryCount
+        if let date = other.latestModification { include(date) }
+    }
+
+    /// This subtree as its parent counts it: one more directory.
+    var asChild: ScanTotals {
+        var carried = self
+        carried.directoryCount += 1
+        return carried
+    }
+}
+
+/// One directory's own entries and its whole subtree, both excluding hard-linked bytes.
+struct SubtreeTotals: Sendable, Hashable {
+    let own: ScanTotals
+    let subtree: ScanTotals
+}
+
+/// A hard-linked object: its size and the directories holding at least one of its names (may repeat).
+struct HardLinkRecord: Sendable, Hashable {
+    let size: SizeInfo
+    var directories: [String]
+}
+
+extension LargeFile {
+    /// The biggest `limit` files, one entry per identity (hard-link names have equal sizes), biggest first.
+    static func trimmed(_ files: [LargeFile], limit: Int) -> [LargeFile] {
+        let sorted = files.sorted { lhs, rhs in
+            lhs.size.allocated != rhs.size.allocated ? lhs.size.allocated > rhs.size.allocated : lhs.path < rhs.path
+        }
+        var seen = Set<FileIdentity>()
+        var kept: [LargeFile] = []
+        for file in sorted where kept.count < limit && seen.insert(file.identity).inserted {
+            kept.append(file)
+        }
+        return kept
     }
 }

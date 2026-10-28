@@ -4,11 +4,13 @@ import SwiftUI
 /// Displays system health diagnostics, heavy processes, and macOS security posture.
 struct SystemView: View {
     let session: SystemSession
+    let snapshots: SnapshotsSession
 
     enum SystemTab: String, CaseIterable, Identifiable {
         case health
         case processes
         case security
+        case snapshots
 
         var id: String { rawValue }
 
@@ -17,6 +19,7 @@ struct SystemView: View {
             case .health: "Health"
             case .processes: "Heavy Processes"
             case .security: "Security"
+            case .snapshots: "Snapshots"
             }
         }
 
@@ -25,6 +28,7 @@ struct SystemView: View {
             case .health: "heart.text.square"
             case .processes: "cpu"
             case .security: "shield"
+            case .snapshots: "clock.arrow.circlepath"
             }
         }
     }
@@ -43,6 +47,8 @@ struct SystemView: View {
                     SystemProcessesView(session: session)
                 case .security:
                     SystemSecurityView(session: session)
+                case .snapshots:
+                    SnapshotsView(session: snapshots)
                 }
             }
             .accessibilityIdentifier("review.results")
@@ -72,6 +78,7 @@ struct SystemView: View {
             }
         }
         .pickerStyle(.segmented)
+        .labelsHidden()
         .padding(.horizontal)
         .padding(.vertical, 8)
     }
@@ -135,13 +142,14 @@ private struct SystemHealthView: View {
             }
         }()
 
+        // Only the symbol carries the status color: green or yellow text is unreadable on a light background.
         Label {
             Text(title)
                 .fontWeight(.medium)
         } icon: {
             Image(systemName: icon)
+                .foregroundStyle(color)
         }
-        .foregroundStyle(color)
     }
 
     @ViewBuilder
@@ -243,8 +251,8 @@ private struct SystemHealthView: View {
             Text(title)
         } icon: {
             Image(systemName: icon)
+                .foregroundStyle(color)
         }
-        .foregroundStyle(color)
     }
 
     @ViewBuilder
@@ -620,5 +628,76 @@ extension ProcessInfoItem {
     fileprivate var isQuittableApp: Bool {
         guard let bundle = appBundlePath, !bundle.hasPrefix("/System/") else { return false }
         return bundle != Bundle.main.bundlePath
+    }
+}
+
+// MARK: - Local Time Machine snapshots
+
+/// Local snapshots Time Machine keeps on the startup disk. macOS deletes them by itself when space runs low; deleting
+/// one by hand frees space now but loses that restore point.
+private struct SnapshotsView: View {
+    let session: SnapshotsSession
+    @State private var confirming: String?
+    @State private var message: LocalizedStringResource?
+
+    var body: some View {
+        Form {
+            Section {
+                if session.snapshots.isEmpty {
+                    Text(session.isLoading ? "Looking for snapshots…" : "No local snapshots on this Mac.")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(session.snapshots, id: \.self) { snapshot in
+                    LabeledContent {
+                        if session.canDelete {
+                            Button(role: .destructive) {
+                                confirming = snapshot
+                            } label: {
+                                Text("Delete…")
+                            }
+                        }
+                    } label: {
+                        if let date = LocalSnapshots.date(of: snapshot) {
+                            Text(date, format: .dateTime.year().month().day().hour().minute())
+                        } else {
+                            Text(verbatim: snapshot)
+                        }
+                    }
+                }
+            } header: {
+                Text("Local Time Machine Snapshots")
+            } footer: {
+                Text(
+                    session.canDelete
+                        ? "macOS removes these by itself when space runs low. Deleting one frees space now, but you can no longer restore from it. This cannot be undone."
+                        : "macOS removes these by itself when space runs low. To delete one now, install the System Helper in Settings."
+                )
+                .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .task { await session.load() }
+        .confirmationDialog(
+            Text("Delete this snapshot?"),
+            isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } })
+        ) {
+            Button(role: .destructive) {
+                guard let snapshot = confirming else { return }
+                Task {
+                    let outcome = await session.delete(snapshot)
+                    message = outcome == .deleted ? nil : "The snapshot could not be deleted."
+                }
+            } label: {
+                Text("Delete Snapshot")
+            }
+        } message: {
+            Text("You can no longer restore your Mac to this point. This cannot be undone.")
+        }
+        .alert(
+            Text("Snapshots"), isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })
+        ) {
+        } message: {
+            if let message { Text(message) }
+        }
     }
 }

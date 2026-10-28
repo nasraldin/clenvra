@@ -31,6 +31,8 @@ public struct ActivityRecord: Codable, Equatable, Sendable {
     public let outcome: Outcome
     /// Identity of the item acted on; lets Restore verify the Trash still holds the same object.
     public let identity: FileIdentity?
+    /// `true` when the privileged helper did it; Put Back then goes through the helper too.
+    public let privileged: Bool?
 
     public init(
         operationID: UUID,
@@ -39,7 +41,8 @@ public struct ActivityRecord: Codable, Equatable, Sendable {
         itemPath: String,
         bytes: Int64,
         outcome: Outcome,
-        identity: FileIdentity? = nil
+        identity: FileIdentity? = nil,
+        privileged: Bool? = nil
     ) {
         self.operationID = operationID
         self.date = date
@@ -48,6 +51,7 @@ public struct ActivityRecord: Codable, Equatable, Sendable {
         self.bytes = bytes
         self.outcome = outcome
         self.identity = identity
+        self.privileged = privileged
     }
 }
 

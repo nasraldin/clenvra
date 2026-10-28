@@ -11,7 +11,26 @@ public enum Risk: Sendable, Hashable, Codable {
 /// User-facing grouping of rules; drives section and sidebar grouping in the UI.
 public enum CleanupCategory: String, Sendable, Hashable, Codable, CaseIterable {
     case appCaches, logs, crashReports, installers, deviceBackups, trash, browserCaches
+    /// Outside the home folder; removed through the privileged helper (M13).
+    case systemCaches, systemLogs
+    case mailAttachments, temporaryFiles, emptyFolders
     case xcode, simulators, packageCaches, projectArtifacts, ideCaches, containers
+    case aiModels
+    /// The user's own review-only rules (SA-8).
+    case custom
+}
+
+extension CleanupCategory {
+    /// Which app section this category belongs to.
+    public var section: ActivityRecord.Section {
+        switch self {
+        case .xcode, .simulators, .packageCaches, .projectArtifacts, .ideCaches, .containers, .aiModels:
+            .developer
+        case .appCaches, .logs, .crashReports, .installers, .deviceBackups, .trash, .browserCaches,
+            .systemCaches, .systemLogs, .mailAttachments, .temporaryFiles, .emptyFolders, .custom:
+            .cleanup
+        }
+    }
 }
 
 /// Where a rule looks. Home-relative roots make rules portable across Macs and user names.
@@ -22,14 +41,19 @@ public enum RuleRoot: Sendable, Hashable {
     public func path(home: String) -> String {
         switch self {
         case .home(let relative): relative.isEmpty ? home : home + "/" + relative
-        case .absolute(let path): path
+        case .absolute(let path): path.hasSuffix("/") && path.count > 1 ? String(path.dropLast()) : path
         }
     }
 }
 
 /// A minimum age, so recently used items are left alone.
-public struct Age: Sendable, Hashable {
+public struct Age: Sendable, Hashable, Codable {
     public let seconds: TimeInterval
+
+    /// Explicit seconds keep persisted custom rules independent of a UI's chosen time unit.
+    public init(seconds: TimeInterval) {
+        self.seconds = seconds
+    }
 
     public static func days(_ days: Int) -> Age { Age(seconds: TimeInterval(days) * 86_400) }
 }
@@ -37,16 +61,20 @@ public struct Age: Sendable, Hashable {
 /// What inside the root is offered.
 public enum Selection: Sendable, Hashable {
     /// Each direct child of the root is one item (e.g. one cache folder per app), except names that more
-    /// specific rules own.
-    case children(excluding: Set<String> = [])
+    /// specific rules own. When `minimumAge` is specified, items modified more recently are left alone.
+    case children(excluding: Set<String> = [], minimumAge: Age? = nil)
     /// Only the listed direct children (e.g. an editor's cache folders, never its settings).
     case named(Set<String>)
     /// Files anywhere below the root (up to `maximumDepth` folders deep) with one of the extensions,
     /// not modified for at least `minimumAge`.
     case files(extensions: Set<String>, minimumAge: Age?, maximumDepth: Int)
+    /// Files whose names match a glob (`*`, `?` and character classes), with the same age and depth limits.
+    case matchingFiles(pattern: String, minimumAge: Age?, maximumDepth: Int)
     /// Build-output folders inside code projects (up to `maximumDepth` folders deep). A folder is offered only when
     /// one of its kind's marker files sits next to it; projects active within `inactivity` are offered for review only.
     case projectArtifacts([ArtifactKind], inactivity: Age, maximumDepth: Int)
+    /// Folders with no files at any depth (only empty subfolders or `.DS_Store`), never the root itself.
+    case emptyFolders(maximumDepth: Int = 10)
 }
 
 /// A regenerable project folder and the files that prove it belongs to a project (e.g. node_modules ← package.json).
@@ -62,6 +90,8 @@ public struct ArtifactKind: Sendable, Hashable {
 
 public enum CleanupAction: Sendable, Hashable {
     case moveToTrash
+    /// Deleted for good, after a confirmation that says so. Only for items already in the Trash.
+    case removePermanently
     /// Shown for information; the user acts in Finder (e.g. items that need an administrator).
     case revealOnly
 }
@@ -72,6 +102,36 @@ public enum OwnershipHint: Sendable, Hashable {
     /// The item's name is the owner's bundle identifier (e.g. `~/Library/Caches/com.vendor.app`).
     case bundleIdentifierFromName
     case fixed(String)
+    /// The item's name starts with a product name (e.g. `PyCharm2026.2` → PyCharm); the longest matching prefix
+    /// wins. Names matching no prefix get `fallback`.
+    case namePrefix([NamePrefixOwner], fallback: String?)
+}
+
+/// One product-name prefix and the bundle identifier of the app that owns items named that way.
+public struct NamePrefixOwner: Sendable, Hashable {
+    public let prefix: String
+    public let bundleIdentifier: String
+
+    public init(_ prefix: String, _ bundleIdentifier: String) {
+        self.prefix = prefix
+        self.bundleIdentifier = bundleIdentifier
+    }
+}
+
+/// Who performs the removal.
+public enum Elevation: Sendable, Hashable {
+    /// The app itself, as the user.
+    case none
+    /// The optional privileged helper; without it the items are shown but cannot be selected.
+    case helper
+}
+
+/// How an item is named in the review list.
+public enum ItemLabel: Sendable, Hashable {
+    /// Its file name.
+    case fileName
+    /// The device name stored in an iPhone/iPad backup's `Info.plist`; backup folders are named by an opaque ID.
+    case deviceBackup
 }
 
 /// One cleanup category as data. All categories run through the same scanner, gate and review UI.
@@ -83,10 +143,12 @@ public struct CleanupRule: Sendable, Hashable, Identifiable {
     public let risk: Risk
     public let action: CleanupAction
     public let ownership: OwnershipHint
+    public let label: ItemLabel
+    public let elevation: Elevation
 
     public init(
         id: String, category: CleanupCategory, root: RuleRoot, selection: Selection, risk: Risk,
-        action: CleanupAction, ownership: OwnershipHint
+        action: CleanupAction, ownership: OwnershipHint, label: ItemLabel = .fileName, elevation: Elevation = .none
     ) {
         self.id = id
         self.category = category
@@ -95,5 +157,7 @@ public struct CleanupRule: Sendable, Hashable, Identifiable {
         self.risk = risk
         self.action = action
         self.ownership = ownership
+        self.label = label
+        self.elevation = elevation
     }
 }

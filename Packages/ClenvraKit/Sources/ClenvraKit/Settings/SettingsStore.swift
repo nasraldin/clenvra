@@ -1,11 +1,29 @@
 public import Foundation
 
-/// The user's choices that change what Clenvra may touch.
+/// The user's choices that change what Clenvra may touch and when it may work on its own.
 public struct UserSettings: Codable, Equatable, Sendable {
     /// Folders Clenvra never offers or deletes anything inside (absolute, canonical paths).
     public var exclusions: [String] = []
+    /// Background scans that only report (SA-9); off by default.
+    public var scanSchedule = ScanSchedule()
+    /// Whether Clenvra may contact update feeds and the App Store (AP-9); off by default (D5).
+    public var checksForAppUpdates = false
+    /// When the last scheduled scan ran on this Mac; local state, never exported.
+    public var lastScheduledScan: Date?
+    /// User-defined review-only cleanup locations (SA-8), revalidated whenever settings cross a persistence boundary.
+    public var customRules: [CustomCleanupRule] = []
 
     public init() {}
+
+    /// Keys added after the first release are optional, so settings files from older versions still load.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        exclusions = try container.decodeIfPresent([String].self, forKey: .exclusions) ?? []
+        scanSchedule = (try? container.decodeIfPresent(ScanSchedule.self, forKey: .scanSchedule)) ?? ScanSchedule()
+        checksForAppUpdates = (try? container.decodeIfPresent(Bool.self, forKey: .checksForAppUpdates)) ?? false
+        lastScheduledScan = try? container.decodeIfPresent(Date.self, forKey: .lastScheduledScan)
+        customRules = (try? container.decodeIfPresent([CustomCleanupRule].self, forKey: .customRules)) ?? []
+    }
 }
 
 /// Saves settings on this Mac and moves them between Macs.
@@ -21,10 +39,42 @@ public struct SettingsStore: Sendable {
         public let rejectedEntries: [String]
     }
 
-    /// The portable file format; paths inside the home folder are written as `~/…`.
+    private struct PortableCustomRule: Codable {
+        var id: UUID
+        var folder: String
+        var minimumAge: Age
+        var namePattern: String
+    }
+
+    /// The portable file format; paths inside the home folder are written as `~/…`. Fields added later are
+    /// optional and the version stays 1, so older Clenvra builds still import the exclusions of newer files.
     private struct Portable: Codable {
         var version: Int
         var exclusions: [String]
+        var scanSchedule: ScanSchedule?
+        var checksForAppUpdates: Bool?
+        var customRules: [PortableCustomRule]
+
+        private enum CodingKeys: String, CodingKey {
+            case version, exclusions, scanSchedule, checksForAppUpdates, customRules
+        }
+
+        init(version: Int, exclusions: [String], scanSchedule: ScanSchedule?, customRules: [PortableCustomRule]) {
+            self.version = version
+            self.exclusions = exclusions
+            self.scanSchedule = scanSchedule
+            self.checksForAppUpdates = nil
+            self.customRules = customRules
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            version = try container.decode(Int.self, forKey: .version)
+            exclusions = try container.decodeIfPresent([String].self, forKey: .exclusions) ?? []
+            scanSchedule = try? container.decodeIfPresent(ScanSchedule.self, forKey: .scanSchedule)
+            checksForAppUpdates = try? container.decodeIfPresent(Bool.self, forKey: .checksForAppUpdates)
+            customRules = (try? container.decodeIfPresent([PortableCustomRule].self, forKey: .customRules)) ?? []
+        }
     }
 
     private static let formatVersion = 1
@@ -39,8 +89,10 @@ public struct SettingsStore: Sendable {
     /// The saved settings, or the defaults when there are none or the file is unreadable.
     public func load() -> UserSettings {
         guard let data = try? Data(contentsOf: file),
-            let settings = try? JSONDecoder().decode(UserSettings.self, from: data)
+            var settings = try? JSONDecoder().decode(UserSettings.self, from: data)
         else { return UserSettings() }
+        let policy = ProtectionPolicy(home: home, exclusions: settings.exclusions)
+        settings.customRules = settings.customRules.compactMap { try? $0.validated(home: home, policy: policy) }
         return settings
     }
 
@@ -55,8 +107,14 @@ public struct SettingsStore: Sendable {
     public func export(_ settings: UserSettings) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        let customRules = settings.customRules.map {
+            PortableCustomRule(
+                id: $0.id, folder: homeRelative($0.folder), minimumAge: $0.minimumAge, namePattern: $0.namePattern)
+        }
         return try encoder.encode(
-            Portable(version: Self.formatVersion, exclusions: settings.exclusions.map(homeRelative)))
+            Portable(
+                version: Self.formatVersion, exclusions: settings.exclusions.map(homeRelative),
+                scanSchedule: settings.scanSchedule, customRules: customRules))
     }
 
     public func importSettings(from data: Data) throws -> ImportResult {
@@ -64,6 +122,8 @@ public struct SettingsStore: Sendable {
         guard portable.version <= Self.formatVersion else { throw ImportError.unsupportedVersion(portable.version) }
 
         var settings = UserSettings()
+        settings.scanSchedule = portable.scanSchedule ?? ScanSchedule()
+        // Never imported: network access is switched on by the user on each Mac, not by a file (decision D5).
         var rejected: [String] = []
         for entry in portable.exclusions {
             let path = absolute(entry)
@@ -72,6 +132,17 @@ public struct SettingsStore: Sendable {
                 continue
             }
             if !settings.exclusions.contains(path) { settings.exclusions.append(path) }
+        }
+        let policy = ProtectionPolicy(home: home, exclusions: settings.exclusions)
+        for entry in portable.customRules {
+            do {
+                let rule = try CustomCleanupRule(
+                    id: entry.id, folder: absolute(entry.folder), minimumAge: entry.minimumAge,
+                    namePattern: entry.namePattern, home: home, policy: policy)
+                settings.customRules.append(rule)
+            } catch {
+                rejected.append(entry.folder)
+            }
         }
         return ImportResult(settings: settings, rejectedEntries: rejected)
     }

@@ -70,7 +70,7 @@ Stage 1 estimate: about 37 working days.
 | Area | Status |
 |---|---|
 | Filesystem core (bulk reader, executor, storage scanner ≈ 3.6× faster than `du`) | Done |
-| Safety core (path policy, safe walk, protection policy, deletion gate, executor, restore, owner activity, live policy) | Done — safety cases S1–S8, S11–S23, S26, S28 covered by tests |
+| Safety core (path policy, safe walk, protection policy, deletion gate, executor, restore, owner activity, live policy) | Done — safety cases S1–S23, S26–S28 covered by tests |
 | Cleanup & Developer (rule engine, catalog, project build folders, tool adapters + commands) | Done |
 | Storage (disks, browser, treemap, large & old, downloads & screenshots) | Done |
 | Duplicates (staged hashing + byte compare, keep-one enforced in 4 layers) | Done |
@@ -80,8 +80,10 @@ Stage 1 estimate: about 37 working days.
 | Activity (history, Put Back persisted, CSV export) | Done |
 | Settings (exclusions, export/import, Full Disk Access status) | Done |
 | Overview (disks, read-only Scan Everything, recommendations, health line) | Done |
-| Privileged helper (M12–M13), similar photos, scheduled scans, menu bar extra | Not started |
-| Developer ID signing + notarisation | Waiting for the owner's personal team on this Mac |
+| Gap fixes (2026-10-27): Trash, browser caches, device backups, JetBrains/Zed, more tools, extensions & plug-ins, download sources, partial rescan, Markdown report, startup re-enable, Homebrew `--appdir`, permissions guide, benchmarks | Done |
+| Privileged helper (M12) | Built and unit-tested (S24, S25); end-to-end run after approval pending |
+| System-level cleanup (M13), similar photos, scheduled scans, menu bar extra | Not started |
+| Developer ID signing + notarisation | `scripts/release.sh`; first notarisation waiting in Apple's queue |
 
 ## Part C: Decisions
 

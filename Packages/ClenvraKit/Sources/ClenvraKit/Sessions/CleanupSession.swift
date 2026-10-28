@@ -9,9 +9,11 @@ public struct CleanupSummary: Sendable, Equatable {
     }
 
     public var movedToTrashCount = 0
+    /// Items deleted for good (emptying the Trash).
+    public var removedPermanentlyCount = 0
     /// Dry run only: items that passed every check.
     public var wouldRemoveCount = 0
-    /// Estimated bytes freed by items actually moved (what the user reviewed, clone- and hard-link-aware).
+    /// Estimated bytes freed by items actually moved or removed (what the user reviewed, clone- and hard-link-aware).
     public var freedBytes: Int64 = 0
     /// Items skipped, failed or not attempted, each with its reason.
     public var problems: [Problem] = []
@@ -33,7 +35,10 @@ public struct CleanupSummary: Sendable, Equatable {
                 freedBytes += result.item.freedBytes
             case .wouldDelete:
                 wouldRemoveCount += 1
-            case .intent, .removedPermanently, .restored:
+            case .removedPermanently:
+                removedPermanentlyCount += 1
+                freedBytes += result.item.freedBytes
+            case .intent, .restored:
                 break
             case .skipped, .failed, .anomaly, .notAttempted:
                 problems.append(Problem(path: result.item.path, reason: result.outcome))
@@ -67,8 +72,16 @@ public final class CleanupSession {
     public private(set) var groups: [Group] = []
     public private(set) var selection: Set<String> = []
     public private(set) var lastSummary: CleanupSummary?
+    /// Whether the privileged helper is installed and answering; system items can be selected only then.
+    public var helperAvailable = false {
+        didSet { if !helperAvailable { selection = selection.filter { !isElevated($0) } } }
+    }
 
-    private let rules: [CleanupRule]
+    private var rules: [CleanupRule]
+    private var actionsByRule: [String: CleanupAction]
+    private var elevatedRules: Set<String>
+    private let privileged: (any PrivilegedOperations)?
+    private let ownerBundlePath: @Sendable (String) -> String?
     private let section: ActivityRecord.Section
     private let home: String
     private let policy: ProtectionPolicy
@@ -82,15 +95,27 @@ public final class CleanupSession {
     public init(
         rules: [CleanupRule], section: ActivityRecord.Section, home: String, policy: ProtectionPolicy,
         ownerState: @escaping @Sendable (String) -> OwnerState, deleter: DeletionExecutor,
-        executor: FSExecutor = .shared
+        executor: FSExecutor = .shared, privileged: (any PrivilegedOperations)? = nil,
+        ownerBundlePath: @escaping @Sendable (String) -> String? = { _ in nil }
     ) {
         self.rules = rules
+        actionsByRule = Dictionary(rules.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
+        elevatedRules = Set(rules.filter { $0.elevation == .helper }.map(\.id))
+        self.privileged = privileged
+        self.ownerBundlePath = ownerBundlePath
         self.section = section
         self.home = home
         self.policy = policy
         self.ownerState = ownerState
         self.deleter = deleter
         self.executor = executor
+    }
+
+    /// Replaces the rules (for example after the user edits custom rules in Settings); the next scan uses them.
+    public func setRules(_ newRules: [CleanupRule]) {
+        rules = newRules
+        actionsByRule = Dictionary(newRules.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
+        elevatedRules = Set(newRules.filter { $0.elevation == .helper }.map(\.id))
     }
 
     // MARK: - Scanning
@@ -128,7 +153,7 @@ public final class CleanupSession {
             groups.flatMap(\.candidates).map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
         // Keep the user's choices for items already shown; only items seen for the first time get their default.
         var updated = Set<String>()
-        for candidate in candidatesByPath.values where candidate.status == .available {
+        for candidate in candidatesByPath.values where canSelect(candidate) {
             let isNew = !seenPaths.contains(candidate.path)
             if isNew ? candidate.isSelectedByDefault : selection.contains(candidate.path) {
                 updated.insert(candidate.path)
@@ -139,6 +164,16 @@ public final class CleanupSession {
     }
 
     // MARK: - Selection
+
+    /// Items outside the home folder that only the privileged helper may remove.
+    public func requiresHelper(_ candidate: CleanupCandidate) -> Bool { elevatedRules.contains(candidate.ruleID) }
+
+    /// Available, and for system items, the helper is there to remove them.
+    public func canSelect(_ candidate: CleanupCandidate) -> Bool {
+        candidate.status == .available && (!requiresHelper(candidate) || (helperAvailable && privileged != nil))
+    }
+
+    private func isElevated(_ path: String) -> Bool { candidatesByPath[path].map(requiresHelper) ?? false }
 
     public var selectedCount: Int { selection.count }
 
@@ -151,26 +186,54 @@ public final class CleanupSession {
     public func toggle(_ path: String) {
         if selection.contains(path) {
             selection.remove(path)
-        } else if candidatesByPath[path]?.status == .available {
+        } else if let candidate = candidatesByPath[path], canSelect(candidate) {
             selection.insert(path)
         }
     }
 
     public func setSelected(_ selected: Bool, category: CleanupCategory) {
         let paths =
-            groups.first { $0.category == category }?.candidates.filter { $0.status == .available }
+            groups.first { $0.category == category }?.candidates.filter { canSelect($0) }
             .map(\.path) ?? []
         if selected { selection.formUnion(paths) } else { selection.subtract(paths) }
     }
 
     // MARK: - Cleaning
 
-    /// Moves the selection to the Trash (or checks it, when `dryRun`), then rescans.
+    /// True when the selection holds items that are deleted for good (Trash contents), so the confirmation must
+    /// say it cannot be undone.
+    public var selectionIncludesPermanentRemoval: Bool {
+        selection.contains { action(for: $0) == .removePermanently }
+    }
+
+    private func action(for path: String) -> CleanupAction? {
+        candidatesByPath[path].flatMap { actionsByRule[$0.ruleID] }
+    }
+
+    /// Moves the selection to the Trash and empties selected Trash items (or checks both, when `dryRun`), then
+    /// rescans. Reveal-only items are never acted on.
     @discardableResult
     public func clean(dryRun: Bool = false) async -> CleanupSummary {
-        let items = selection.sorted().compactMap { candidatesByPath[$0]?.deletionItem(section: section) }
+        let paths = selection.sorted()
+        func items(_ action: CleanupAction, elevated: Bool) -> [DeletionItem] {
+            paths.filter { self.action(for: $0) == action && isElevated($0) == elevated }
+                .compactMap { candidatesByPath[$0]?.deletionItem(section: section) }
+        }
         phase = .cleaning
-        let results = await deleter.run(items, mode: .moveToTrash, dryRun: dryRun)
+        let operationID = UUID()
+        var results = await deleter.run(
+            items(.moveToTrash, elevated: false), mode: .moveToTrash, dryRun: dryRun, operationID: operationID)
+        let toRemove = items(.removePermanently, elevated: false)
+        if !toRemove.isEmpty {
+            results += await deleter.run(toRemove, mode: .irreversible, dryRun: dryRun, operationID: operationID)
+        }
+        for (action, mode) in [
+            (CleanupAction.moveToTrash, HelperRequest.Mode.moveToTrash), (.removePermanently, .irreversible),
+        ] {
+            let elevated = items(action, elevated: true)
+            guard !elevated.isEmpty else { continue }
+            results += await runThroughHelper(elevated, mode: dryRun ? .dryRun : mode, operationID: operationID)
+        }
 
         let summary = CleanupSummary(results: results)
         lastSummary = summary
@@ -180,5 +243,26 @@ public final class CleanupSession {
             await scan()
         }
         return summary
+    }
+
+    /// Sends system items to the privileged helper, which checks every one again itself. If it cannot be reached,
+    /// nothing is removed and each item is reported.
+    private func runThroughHelper(_ items: [DeletionItem], mode: HelperRequest.Mode, operationID: UUID) async
+        -> [DeletionResult]
+    {
+        let owners = Dictionary(
+            items.compactMap { item in item.ownerBundleID.flatMap { id in ownerBundlePath(id).map { (id, $0) } } },
+            uniquingKeysWith: { first, _ in first })
+        let request = HelperRequest(operationID: operationID, mode: mode, items: items, ownerBundlePaths: owners)
+        let outcomes: [ActivityRecord.Outcome]
+        do {
+            guard let privileged, helperAvailable else { throw HelperClientError.unavailable }
+            outcomes = try await privileged.perform(request).outcomes
+        } catch {
+            outcomes = Array(repeating: .notAttempted, count: items.count)
+        }
+        let results = zip(items, outcomes).map { DeletionResult(item: $0, outcome: $1) }
+        if mode != .dryRun { await deleter.recordPrivileged(results, operationID: operationID) }
+        return results
     }
 }

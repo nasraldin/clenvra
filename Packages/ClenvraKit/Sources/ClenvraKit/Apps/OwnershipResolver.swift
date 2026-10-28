@@ -124,6 +124,16 @@ public struct OwnershipResolver: Sendable {
         }
     }
 
+    /// Reset keeps the app and its launch configuration, and never acts on name-only ownership guesses.
+    func resetItems(
+        for app: InstalledApp, installedApps: [InstalledApp], inventoryIsComplete: Bool
+    ) async -> [OwnedItem] {
+        await resolve(app, installedApps: installedApps, inventoryIsComplete: inventoryIsComplete).filter { item in
+            item.confidence != .possible && item.kind != .launchAgent && item.kind != .systemFile
+                && item.handling == .removable
+        }
+    }
+
     private struct Context: Sendable {
         let app: InstalledApp
         let installedApps: [InstalledApp]
