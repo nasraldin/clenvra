@@ -67,15 +67,24 @@ struct LeftoversView: View {
             CleanupResultSheet(summary: shown.summary, isPreview: shown.isPreview)
         }
         .task {
+            // The installed-app list is needed to tell what belongs to removed apps; the search waits for Scan.
             if session.phase == .idle { await session.load() }
-            if !session.hasScannedLeftovers { await session.scanLeftovers() }
         }
     }
 
     private var isBusy: Bool { session.isScanningLeftovers || session.isWorking || session.phase != .ready }
 
     @ViewBuilder private var content: some View {
-        if session.isScanningLeftovers && session.leftovers.isEmpty {
+        if !session.hasScannedLeftovers && !session.isScanningLeftovers {
+            ScanPrompt(
+                section: .leftovers,
+                description:
+                    "Find files that apps you already removed left behind: settings, caches, containers and support files."
+            ) {
+                Task { await session.scanLeftovers() }
+            }
+            .disabled(session.phase != .ready)
+        } else if session.isScanningLeftovers && session.leftovers.isEmpty {
             ProgressView {
                 Text("Looking for leftovers…")
             }
@@ -90,6 +99,7 @@ struct LeftoversView: View {
             } description: {
                 Text("No files from removed apps were found, or they were changed in the last 30 days.")
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.leftovers.title))
         } else {
@@ -108,13 +118,14 @@ struct LeftoversView: View {
                         Text(
                             "These files are named after apps that are no longer installed and haven't changed for 30 days. Check each one before removing it."
                         )
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                         .textCase(nil)
                     }
                 }
             }
             .disabled(session.isWorking)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.leftovers.title))
         }

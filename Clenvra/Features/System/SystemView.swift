@@ -39,6 +39,7 @@ struct SystemView: View {
                     SnapshotsView(session: snapshots)
                 }
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(pageSection.title))
         }
@@ -183,12 +184,9 @@ private struct SystemHealthView: View {
                 GridRow {
                     Text("CPU Usage")
                         .foregroundStyle(.secondary)
-                    HStack(spacing: 4) {
-                        Text(health.cpuLoadPercent, format: .number.precision(.fractionLength(1)))
-                            .monospacedDigit()
-                            .fontWeight(.medium)
-                        Text(verbatim: "%")
-                    }
+                    Text(health.cpuLoadPercent / 100, format: .percent.precision(.fractionLength(1)))
+                        .monospacedDigit()
+                        .fontWeight(.medium)
 
                     Text("Uptime")
                         .foregroundStyle(.secondary)
@@ -330,6 +328,16 @@ private struct SystemProcessesView: View {
     @State private var sortOrder: ProcessSortOrder = .cpu
     @State private var targetProcessForQuit: ProcessInfoItem?
     @State private var isForceQuit = false
+    @State private var selected: ProcessInfoItem.ID?
+
+    private var selectedProcess: ProcessInfoItem? { processes.first { $0.id == selected } }
+
+    /// Quit (or Force Quit after a polite quit failed) the given app, after confirmation.
+    private func requestQuit(_ proc: ProcessInfoItem) {
+        guard proc.isQuittableApp else { return }
+        isForceQuit = session.failedPoliteQuits.contains(proc.id)
+        targetProcessForQuit = proc
+    }
 
     private var processes: [ProcessInfoItem] {
         switch sortOrder {
@@ -341,13 +349,16 @@ private struct SystemProcessesView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Picker("Sort by", selection: $sortOrder) {
+                Picker(selection: $sortOrder) {
                     ForEach(ProcessSortOrder.allCases) { order in
                         Text(order.title).tag(order)
                     }
+                } label: {
+                    Text("Sort by")
                 }
                 .pickerStyle(.segmented)
                 .frame(maxWidth: 160)
+                .visibleLabel("Sort by")
 
                 Spacer()
             }
@@ -368,11 +379,12 @@ private struct SystemProcessesView: View {
                 }
                 .frame(maxHeight: .infinity)
             } else {
-                Table(processes) {
+                Table(processes, selection: $selected) {
                     TableColumn("Process") { proc in
                         HStack(spacing: 8) {
                             Image(systemName: proc.appBundlePath != nil ? "app.dashed" : "terminal")
                                 .foregroundStyle(.secondary)
+                                .accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(proc.name)
                                     .fontWeight(.medium)
@@ -393,35 +405,39 @@ private struct SystemProcessesView: View {
                     }
                     .width(ideal: 100)
 
-                    TableColumn("Action") { proc in
-                        let failedPolite = session.failedPoliteQuits.contains(proc.id)
-                        // Only apps the user runs can be quit; macOS processes and command-line tools cannot.
-                        if !proc.isQuittableApp {
-                            Text(verbatim: "—")
-                                .foregroundStyle(.secondary)
-                                .accessibilityLabel(Text("Can’t be quit"))
-                                .help(Text("macOS processes and command-line tools can’t be quit here."))
-                        } else if failedPolite {
-                            Button(role: .destructive) {
-                                targetProcessForQuit = proc
-                                isForceQuit = true
-                            } label: {
-                                Text("Force Quit")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red)
-                        } else {
-                            Button {
-                                targetProcessForQuit = proc
-                                isForceQuit = false
-                            } label: {
-                                Text("Quit")
-                            }
-                            .buttonStyle(.bordered)
-                        }
+                    TableColumn("Kind") { proc in
+                        Text(proc.isQuittableApp ? "App" : "Not an App")
+                            .foregroundStyle(.secondary)
                     }
                     .width(ideal: 100)
                 }
+                .accessibilityLabel(Text("Processes"))
+                .contextMenu(forSelectionType: ProcessInfoItem.ID.self) { ids in
+                    if let id = ids.first, let proc = processes.first(where: { $0.id == id }), proc.isQuittableApp {
+                        Button {
+                            requestQuit(proc)
+                        } label: {
+                            Text(session.failedPoliteQuits.contains(proc.id) ? "Force Quit…" : "Quit…")
+                        }
+                    }
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    if let proc = selectedProcess { requestQuit(proc) }
+                } label: {
+                    Label {
+                        Text(
+                            selectedProcess.map { session.failedPoliteQuits.contains($0.id) } == true
+                                ? "Force Quit…" : "Quit…")
+                    } icon: {
+                        Image(systemName: "xmark.octagon")
+                    }
+                }
+                .help(Text("Quit the selected app (it is asked to save its work first)"))
+                .disabled(selectedProcess?.isQuittableApp != true)
             }
         }
         .confirmationDialog(
@@ -500,6 +516,7 @@ private struct SecurityCheckRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             statusIcon
+                .accessibilityHidden(true)
                 .padding(.top, 2)
 
             VStack(alignment: .leading, spacing: 4) {

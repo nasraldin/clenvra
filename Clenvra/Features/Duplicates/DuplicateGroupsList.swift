@@ -6,6 +6,8 @@ import SwiftUI
 struct DuplicateGroupsList: View {
     let session: DuplicatesSession
     @Binding var previewURL: URL?
+    /// Groups the person collapsed (F4).
+    @State private var collapsed: Set<String> = []
 
     var body: some View {
         List {
@@ -29,7 +31,11 @@ struct DuplicateGroupsList: View {
                 .foregroundStyle(.secondary)
             }
             ForEach(session.groups) { group in
-                Section {
+                Section(
+                    isExpanded: Binding(
+                        get: { !collapsed.contains(group.id) },
+                        set: { if $0 { collapsed.remove(group.id) } else { collapsed.insert(group.id) } })
+                ) {
                     ForEach(group.files, id: \.path) { file in
                         DuplicateFileRow(file: file, session: session, previewURL: $previewURL)
                     }

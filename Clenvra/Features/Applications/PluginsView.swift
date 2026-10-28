@@ -9,6 +9,8 @@ struct PluginsView: View {
 
     @State private var isConfirming = false
     @State private var shownSummary: ShownPluginSummary?
+    /// Groups the person collapsed (F4).
+    @State private var collapsed: Set<PluginItem.Kind> = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -56,15 +58,21 @@ struct PluginsView: View {
         .sheet(item: $shownSummary) { shown in
             CleanupResultSheet(summary: shown.summary, isPreview: false)
         }
-        .task {
-            if session.phase == .idle { await session.scan() }
-        }
+
     }
 
     private var isBusy: Bool { session.phase != .ready }
 
     @ViewBuilder private var content: some View {
-        if session.phase == .scanning && session.groups.isEmpty {
+        if session.phase == .idle {
+            ScanPrompt(
+                section: .extensions,
+                description:
+                    "List Safari extensions, system extensions, Quick Look and Spotlight plug-ins, audio plug-ins and other add-ons."
+            ) {
+                Task { await session.scan() }
+            }
+        } else if session.phase == .scanning && session.groups.isEmpty {
             ProgressView {
                 Text("Looking for extensions and plug-ins…")
             }
@@ -80,6 +88,7 @@ struct PluginsView: View {
             } description: {
                 Text("Turn on Show Apple Items to see the ones built into macOS.")
             }
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.extensions.title))
         } else {
@@ -91,7 +100,11 @@ struct PluginsView: View {
                     }
                 }
                 ForEach(session.groups) { group in
-                    Section {
+                    Section(
+                        isExpanded: Binding(
+                            get: { !collapsed.contains(group.id) },
+                            set: { if $0 { collapsed.remove(group.id) } else { collapsed.insert(group.id) } })
+                    ) {
                         ForEach(group.items) { item in
                             PluginRow(
                                 item: item, isSelectable: session.canSelect(item),
@@ -105,6 +118,7 @@ struct PluginsView: View {
                 }
             }
             .disabled(session.phase == .removing)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.extensions.title))
         }
