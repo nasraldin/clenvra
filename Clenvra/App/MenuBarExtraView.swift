@@ -38,24 +38,6 @@ struct MenuBarExtraView: View {
     }
 }
 
-/// Shows or hides the menu bar extra; a per-Mac preference, off by default.
-struct MenuBarSettingsSection: View {
-    @Bindable var environment: AppEnvironment
-
-    var body: some View {
-        Section {
-            Toggle(isOn: $environment.showsMenuBarExtra) {
-                Text("Show Clenvra in the menu bar")
-            }
-        } header: {
-            Text("Menu Bar")
-        } footer: {
-            Text("Free space and the last scan at a glance. Cleaning always happens in the main window.")
-                .foregroundStyle(.secondary)
-        }
-    }
-}
-
 extension MenuBarExtraView {
     static let preferenceKey = "clenvra.showsMenuBarExtra"
 }
