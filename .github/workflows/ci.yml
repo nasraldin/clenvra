@@ -4,8 +4,7 @@
 # GUI session with Accessibility/Automation permission for the test runner, which hosted runners do not provide.
 # Run them locally with `scripts/check.sh --ui`.
 #
-# CI has no team certificate, so every xcodebuild call passes signing overrides for an ad-hoc signature
-# (the project normally signs with its development team).
+# CI runs scripts/check.sh, the same gates as every Mac. It has no team certificate, so check.sh signs ad hoc.
 name: CI
 
 on:
@@ -24,41 +23,24 @@ permissions:
 jobs:
   check:
     name: Lint, test, build
-    runs-on: macos-26
+    # The project needs Xcode 27 (macOS 27 SDK, Swift 6.4). The macos-26 image stops at Xcode 26.6.
+    runs-on: xcode-27
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode 27.x
+      - name: Select Xcode 27
         run: |
-          xcode="$(find /Applications -maxdepth 1 -name 'Xcode_27*.app' | sort -V | tail -n 1)"
+          # Newest released Xcode 27 on the image; release candidates and betas are skipped.
+          xcode="$(find /Applications -maxdepth 1 -name 'Xcode_27*.app' ! -iname '*candidate*' ! -iname '*beta*' | sort -V | tail -n 1)"
           if [[ -z "$xcode" ]]; then
-            echo "::error::No Xcode 27.x found on this runner"
+            echo "::error::No released Xcode 27 found on this runner"
             find /Applications -maxdepth 1 -name 'Xcode*.app'
             exit 1
           fi
           sudo xcode-select -s "$xcode/Contents/Developer"
           xcodebuild -version
+          sw_vers
 
-      - name: Format lint
-        run: >-
-          xcrun swift-format lint --recursive --strict
-          Clenvra ClenvraUITests Packages/ClenvraKit/Sources Packages/ClenvraKit/Tests Packages/ClenvraKit/Package.swift
-
-      - name: ClenvraKit tests
-        run: >-
-          xcodebuild test
-          -workspace Clenvra.xcworkspace -scheme Clenvra
-          -destination 'platform=macOS,arch=arm64'
-          -derivedDataPath .build/DerivedData
-          -only-testing:ClenvraKitTests
-          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
-
-      - name: Release build
-        run: >-
-          xcodebuild build
-          -workspace Clenvra.xcworkspace -scheme Clenvra
-          -configuration Release
-          -destination 'platform=macOS,arch=arm64'
-          -derivedDataPath .build/DerivedData
-          CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=
+      - name: Format, package tests, Release build
+        run: scripts/check.sh

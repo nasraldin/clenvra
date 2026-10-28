@@ -10,7 +10,7 @@ Read this first when you pick the project up on another Mac. It says where the w
 
 **Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A signed but **not notarised** `.build/release/Clenvra-1.0.0.dmg` exists locally (local build output, not in git): notarisation failed because the keychain was locked at the time. The `clenvra-notary` profile works again, so re-running `scripts/release.sh` should produce the notarised, stapled DMG.
 
-**CI is red for an environment reason, not a code one:** `.github/workflows/ci.yml` requires Xcode 27, and GitHub's macOS runners only offer up to Xcode 26.6 (checked 2026-10-27). It will pass once runners get Xcode 27; until then rely on `scripts/check.sh` locally. Do not lower the Xcode requirement: the app targets the macOS 26 SDK features of Xcode 27.
+**CI** runs `scripts/check.sh` on GitHub's `xcode-27` runner (macOS 27, Xcode 27). UI tests run only locally: hosted runners have no GUI session with Accessibility permission.
 
 | Area | Status |
 |---|---|
@@ -52,7 +52,7 @@ How the work was done: features were built test-first, partly by delegated agent
 2. **People, not code:** a VoiceOver pass and a native Arabic review of the strings.
 3. **Other Macs:** a run on a managed (MDM) Mac, a Mac without developer tools, and macOS 26 in a VM; a Release-build benchmark (see `testing/benchmarks.md`).
 4. **Publish:** tag `v1.0.0` on `main`, attach the notarised DMG to a GitHub Release (ask the owner first; it is public).
-5. **After 1.0:** verify the vendor Team IDs below, switch CI to Xcode 27 runners when available, and decide whether CL-11 gets a guided manual flow instead of automation.
+5. **After 1.0:** verify the vendor Team IDs below, and decide whether CL-11 gets a guided manual flow instead of automation.
 
 ## Known caveats
 
