@@ -19,6 +19,7 @@ func launchApp(language: String, appearance: Appearance = .light) -> XCUIApplica
     let app = XCUIApplication()
     app.launchArguments += [
         "-AppleLanguages", "(\(language))", "-AppleLocale", language, "-ApplePersistenceIgnoreState", "YES",
+        "-ClenvraUITestMainDisplay", "YES",
         "-clenvra.permissionsGuideSeen", "YES",
         "-ClenvraUITestAppearance", appearance.rawValue,
     ]

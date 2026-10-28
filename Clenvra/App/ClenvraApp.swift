@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 @main
@@ -29,6 +30,7 @@ struct ClenvraApp: App {
                     PermissionsGuideView(home: environment.home)
                 }
                 .preferredColorScheme(Self.forcedColorScheme)
+                .onAppear(perform: Self.placeOnMainDisplayForUITests)
         }
         .defaultSize(width: 1100, height: 720)
         .commands {
@@ -63,6 +65,28 @@ struct ClenvraApp: App {
         Settings {
             SettingsView(environment: environment)
         }
+    }
+
+    /// UI tests pass `-ClenvraUITestMainDisplay YES`: with several displays macOS may open the window on another
+    /// one, where XCUITest clicks and screenshots miss it. Centre it on the display with the menu bar instead.
+    /// Debug builds only.
+    private static func placeOnMainDisplayForUITests() {
+        #if DEBUG
+            guard UserDefaults.standard.bool(forKey: "ClenvraUITestMainDisplay"),
+                let screen = NSScreen.screens.first
+            else { return }
+            // After SwiftUI has created and positioned the window.
+            DispatchQueue.main.async {
+                for window in NSApp.windows where window.isVisible && window.canBecomeMain {
+                    let area = screen.visibleFrame
+                    var frame = window.frame
+                    frame.size.width = min(frame.width, area.width)
+                    frame.size.height = min(frame.height, area.height)
+                    frame.origin = CGPoint(x: area.midX - frame.width / 2, y: area.midY - frame.height / 2)
+                    window.setFrame(frame, display: true)
+                }
+            }
+        #endif
     }
 
     /// UI tests pass `-ClenvraUITestAppearance light|dark` to run in either appearance whatever the Mac uses.

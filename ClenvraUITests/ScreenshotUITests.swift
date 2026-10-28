@@ -12,6 +12,7 @@ final class ScreenshotUITests: XCTestCase {
             let app = XCUIApplication()
             app.launchArguments += [
                 "-AppleLanguages", "(\(language))", "-AppleLocale", language, "-ApplePersistenceIgnoreState", "YES",
+                "-ClenvraUITestMainDisplay", "YES",
                 "-clenvra.permissionsGuideSeen", "YES",
             ]
             if language == "ar" {

@@ -47,6 +47,7 @@ final class NavigationUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += [
             "-AppleLanguages", "(en)", "-AppleLocale", "en", "-ApplePersistenceIgnoreState", "YES",
+            "-ClenvraUITestMainDisplay", "YES",
             "-clenvra.permissionsGuideSeen", "NO",
         ]
         app.launch()
