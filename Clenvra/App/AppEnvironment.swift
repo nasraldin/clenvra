@@ -15,6 +15,12 @@ final class AppEnvironment {
     let policyProvider: PolicyProvider
 
     private(set) var settings: UserSettings
+    /// The menu bar extra, a per-Mac preference. Kept here, not in `@AppStorage`: macOS writes the status item's own
+    /// visibility to the same defaults, and an `@AppStorage` binding on `MenuBarExtra` rebuilds the scenes on that
+    /// write, which writes again: an endless redraw loop at launch.
+    var showsMenuBarExtra = UserDefaults.standard.bool(forKey: MenuBarExtraView.preferenceKey) {
+        didSet { UserDefaults.standard.set(showsMenuBarExtra, forKey: MenuBarExtraView.preferenceKey) }
+    }
     let settingsStore: SettingsStore
     private(set) var installedApps: [InstalledApp] = []
     /// The optional privileged helper. Every call is pinned to its signature; sessions use it only when available.

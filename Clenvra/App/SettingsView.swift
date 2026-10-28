@@ -133,7 +133,7 @@ struct SettingsView: View {
 
             ScheduleSettingsSection(environment: environment)
 
-            MenuBarSettingsSection()
+            MenuBarSettingsSection(environment: environment)
 
             HelperSettingsSection(onChange: { await environment.refreshHelper() })
         }

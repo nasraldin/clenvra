@@ -7,7 +7,6 @@ struct ClenvraApp: App {
     @AppStorage(PermissionsGuideView.seenKey) private var hasSeenPermissionsGuide = false
     /// Also tracked per launch: a launch argument can override the stored value.
     @State private var dismissedPermissionsGuide = false
-    @AppStorage(MenuBarExtraView.preferenceKey) private var showsMenuBarExtra = false
 
     var body: some Scene {
         WindowGroup(id: "main") {
@@ -48,7 +47,13 @@ struct ClenvraApp: App {
             }
         }
 
-        MenuBarExtra(isInserted: $showsMenuBarExtra) {
+        MenuBarExtra(
+            isInserted: Binding(
+                get: { environment.showsMenuBarExtra },
+                // MenuBarExtra writes this back on every scene update, usually unchanged. Each write would count as an
+                // observable change, re-run this body and trigger another write: an endless loop. Only real changes pass.
+                set: { if environment.showsMenuBarExtra != $0 { environment.showsMenuBarExtra = $0 } })
+        ) {
             MenuBarExtraView(environment: environment)
         } label: {
             Image(systemName: "sparkles")

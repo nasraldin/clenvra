@@ -40,11 +40,11 @@ struct MenuBarExtraView: View {
 
 /// Shows or hides the menu bar extra; a per-Mac preference, off by default.
 struct MenuBarSettingsSection: View {
-    @AppStorage(MenuBarExtraView.preferenceKey) private var showsMenuBarExtra = false
+    @Bindable var environment: AppEnvironment
 
     var body: some View {
         Section {
-            Toggle(isOn: $showsMenuBarExtra) {
+            Toggle(isOn: $environment.showsMenuBarExtra) {
                 Text("Show Clenvra in the menu bar")
             }
         } header: {
