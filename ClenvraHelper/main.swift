@@ -19,34 +19,7 @@ let appBundlePath: String? = {
     return bundle.pathExtension == "app" ? bundle.path(percentEncoded: false) : nil
 }()
 
-/// Exits once no request has arrived for `idleLimit`, so the helper never stays resident.
-final class IdleWatch: Sendable {
-    private let lastActivity = Mutex(ContinuousClock.now)
-    private let busy = Mutex(0)
-    private let idleLimit = Duration.seconds(60)
-
-    func begin() {
-        busy.withLock { $0 += 1 }
-        lastActivity.withLock { $0 = .now }
-    }
-
-    func end() {
-        busy.withLock { $0 -= 1 }
-        lastActivity.withLock { $0 = .now }
-    }
-
-    func start() {
-        let timer = DispatchSource.makeTimerSource(queue: .global())
-        timer.schedule(deadline: .now() + 15, repeating: 15)
-        timer.setEventHandler { [self] in
-            let idle = busy.withLock { $0 } == 0 && ContinuousClock.now - lastActivity.withLock { $0 } > idleLimit
-            if idle { exit(0) }
-        }
-        timer.resume()
-    }
-}
-
-let idleWatch = IdleWatch()
+let idleWatch = IdleWatch { exit(0) }
 
 /// One connected app. Every payload is decoded and checked here; nothing from the app is trusted.
 final class HelperEndpoint: NSObject, ClenvraHelperProtocol, Sendable {
