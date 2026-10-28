@@ -100,14 +100,17 @@ struct SafetyCoverageTests {
         let image = path("disk.dmg")
         let mountPoint = path("mnt")
         try fixture.directory("mnt")
-        guard
-            hdiutil([
-                "create", "-size", "8m", "-fs", "APFS", "-volname", "ClenvraS27", "-layout", "NONE", "-quiet", image,
-            ]) == 0,
-            hdiutil(["attach", image, "-nobrowse", "-noverify", "-noautoopen", "-mountpoint", mountPoint, "-quiet"])
-                == 0
-        else {
-            Issue.record("could not create or attach a test disk image")
+        // Disk images on virtualised CI Macs sometimes fail to attach on the first try, so each step is retried.
+        let create = await hdiutilRetrying([
+            "create", "-ov", "-size", "8m", "-fs", "APFS", "-volname", "ClenvraS27", "-layout", "NONE", "-quiet", image,
+        ])
+        let attach =
+            create.status == 0
+            ? await hdiutilRetrying([
+                "attach", image, "-nobrowse", "-noverify", "-noautoopen", "-mountpoint", mountPoint, "-quiet",
+            ]) : create
+        guard attach.status == 0 else {
+            Issue.record("could not create or attach a test disk image: \(attach.error)")
             return
         }
         var attached = true
@@ -121,26 +124,37 @@ struct SafetyCoverageTests {
             freedBytes: 64_000, section: .cleanup)
 
         // Unplugging a disk does not wait for anyone; a forced detach is the closest equivalent.
-        #expect(hdiutil(["detach", mountPoint, "-force", "-quiet"]) == 0)
+        #expect(hdiutil(["detach", mountPoint, "-force", "-quiet"]).status == 0)
         attached = false
         let results = await executor().run([item], mode: .irreversible)
 
         #expect(results.map(\.outcome) == [.skipped(.notFound)])
     }
 
-    private func hdiutil(_ arguments: [String]) -> Int32 {
+    private func hdiutil(_ arguments: [String]) -> (status: Int32, error: String) {
         let process = Process()
         process.executableURL = URL(filePath: "/usr/bin/hdiutil")
         process.arguments = arguments
         process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
+        let errors = Pipe()
+        process.standardError = errors
         do {
             try process.run()
         } catch {
-            return -1
+            return (-1, "\(error)")
         }
+        let message = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
         process.waitUntilExit()
-        return process.terminationStatus
+        return (process.terminationStatus, message.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private func hdiutilRetrying(_ arguments: [String]) async -> (status: Int32, error: String) {
+        var result = hdiutil(arguments)
+        for _ in 0..<2 where result.status != 0 {
+            try? await Task.sleep(for: .seconds(2))
+            result = hdiutil(arguments)
+        }
+        return result
     }
 }
 
