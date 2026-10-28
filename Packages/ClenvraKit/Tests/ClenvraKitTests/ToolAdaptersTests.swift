@@ -885,21 +885,7 @@ struct ToolAdaptersTests {
 
     // MARK: Android SDK and AVDs
 
-    private static let sdkmanagerList = """
-        Installed packages:===============================
-          Path                                           | Version      | Description                                | Location
-          -------                                        | -------      | -------                                    | -------
-          build-tools;30.0.3                             | 30.0.3       | Android SDK Build-Tools 30.0.3             | build-tools/30.0.3
-          build-tools;34.0.0                             | 34.0.0       | Android SDK Build-Tools 34.0.0             | build-tools/34.0.0
-          emulator                                       | 34.1.18      | Android Emulator                           | emulator
-          platforms;android-34                           | 3            | Android SDK Platform 34                    | platforms/android-34
-          system-images;android-34;google_apis;arm64-v8a  | 2            | Google APIs ARM 64 v8a System Image        | system-images/android-34/google_apis/arm64-v8a
-
-        Available Packages:
-        ...
-        """
-
-    @Test("Android SDK: inspects system-images, old build-tools, platforms, emulator with sdkmanager uninstall")
+    @Test("Android SDK: found from disk without running sdkmanager (it may go online); uninstall still offered")
     func androidSDKWithTools() async throws {
         let fixture = try ToolFixture()
         try fixture.install("sdkmanager")
@@ -911,9 +897,10 @@ struct ToolAdaptersTests {
         let emulator = try fixture.fill("Library/Android/sdk/emulator", bytes: 35_000)
 
         let runner = FakeCommandRunner()
-        runner.stub(fixture.tool("sdkmanager"), ["--list"], stdout: Self.sdkmanagerList)
-
         let rows = try await inspect("android", fixture, runner)
+
+        // sdkmanager now hands off to Google's Android CLI, which fetches the online catalogue. Scans stay offline.
+        #expect(runner.commands.isEmpty)
 
         // Only old build-tools (30.0.3) is offered for removal; 34.0.0 is latest and kept.
         #expect(rows.contains { $0.id == "android.build-tools.30.0.3" })
@@ -946,7 +933,7 @@ struct ToolAdaptersTests {
         #expect(sysRow.cleanup?.summary == "sdkmanager --uninstall system-images;android-34;google_apis;arm64-v8a")
     }
 
-    @Test("Android AVDs: lists .avd folders with .ini and offers avdmanager delete")
+    @Test("Android AVDs: found from disk without running avdmanager; delete still offered")
     func androidAVDWithTools() async throws {
         let fixture = try ToolFixture()
         try fixture.install("avdmanager")
@@ -955,9 +942,9 @@ struct ToolAdaptersTests {
         #expect(FileManager.default.createFile(atPath: iniPath, contents: Data("target=android-34".utf8)))
 
         let runner = FakeCommandRunner()
-        runner.stub(fixture.tool("avdmanager"), ["list", "avd", "-c"], stdout: "Pixel_7\n")
-
         let rows = try await inspect("android", fixture, runner)
+
+        #expect(runner.commands.isEmpty)
 
         let avdRow = try #require(rows.first { $0.id == "android.avd.Pixel_7" })
         #expect(avdRow.category == .simulators)
@@ -1009,16 +996,15 @@ struct ToolAdaptersTests {
         #expect(emuRow.cleanup == nil)
     }
 
-    @Test("Android tools failing or producing garbage gives size unknown without crashing")
-    func androidGarbageOutput() async throws {
+    @Test("Android tools installed but nothing on disk: no rows, and no command is run")
+    func androidToolsWithoutSDKFolders() async throws {
         let fixture = try ToolFixture()
         try fixture.install("sdkmanager", "avdmanager")
         let runner = FakeCommandRunner()
-        runner.stub(fixture.tool("sdkmanager"), ["--list"], stdout: "not a valid list\n=== random ===", status: 0)
-        runner.stub(fixture.tool("avdmanager"), ["list", "avd", "-c"], stderr: "error", status: 1)
 
         let rows = try await inspect("android", fixture, runner)
         #expect(rows.isEmpty)
+        #expect(runner.commands.isEmpty)
     }
 
     // MARK: AI Model Stores (Ollama, LM Studio, Hugging Face)

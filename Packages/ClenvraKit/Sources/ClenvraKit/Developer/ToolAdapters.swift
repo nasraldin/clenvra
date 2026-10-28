@@ -487,10 +487,10 @@ struct AndroidAdapter: ToolAdapter {
 
         var rows: [ToolStorage] = []
         if sdkExists || sdkmanager != nil {
-            rows += await inspectSDK(sdkPath: sdkPath, sdkmanager: sdkmanager, runner: runner)
+            rows += await inspectSDK(sdkPath: sdkPath, sdkmanager: sdkmanager)
         }
         if avdExists || avdmanager != nil {
-            rows += await inspectAVDs(avdRoot: avdRoot, avdmanager: avdmanager, runner: runner)
+            rows += await inspectAVDs(avdRoot: avdRoot, avdmanager: avdmanager)
         }
         return rows
     }
@@ -520,184 +520,85 @@ struct AndroidAdapter: ToolAdapter {
         return nil
     }
 
-    private func inspectSDK(sdkPath: String, sdkmanager: String?, runner: any CommandRunning) async -> [ToolStorage] {
-        var rows: [ToolStorage] = []
-        var listedPackages: Set<String>?
-        if let sdkmanager {
-            if let output = await ToolProbe.output(runner, sdkmanager, ["--list"]) {
-                listedPackages = Self.parseInstalledPackages(output)
-            }
+    /// Reads installed packages from disk. sdkmanager is never run here: it now hands off to Google's Android CLI,
+    /// which downloads the online catalogue. A package's ID is its folder path with `;` (`platforms;android-34`).
+    private func inspectSDK(sdkPath: String, sdkmanager: String?) async -> [ToolStorage] {
+        func uninstall(_ package: String) -> ToolCleanupAction? {
+            guard let sdkmanager, Self.isValidPackageName(package) else { return nil }
+            return ToolCleanupAction(executable: sdkmanager, arguments: ["--uninstall", package], risk: .review)
+        }
+        func folders(in directory: String) -> [String] {
+            ((try? FileManager.default.contentsOfDirectory(atPath: directory)) ?? []).filter { !$0.hasPrefix(".") }
         }
 
-        if let listedPackages, !listedPackages.isEmpty, let sdkmanager {
-            if listedPackages.contains("emulator") {
-                let location = sdkPath + "/emulator"
-                rows.append(
-                    ToolStorage(
-                        id: "android.emulator",
-                        tool: LocalizedStringResource("Android Emulator"),
-                        category: .packageCaches,
-                        location: location,
-                        size: await ToolProbe.allocatedSize(of: location),
-                        cleanup: ToolCleanupAction(
-                            executable: sdkmanager, arguments: ["--uninstall", "emulator"], risk: .review),
-                        note: LocalizedStringResource("The Android Emulator application and support files.")
-                    ))
-            }
+        var rows: [ToolStorage] = []
+        let emulatorDir = sdkPath + "/emulator"
+        if let size = await ToolProbe.allocatedSize(of: emulatorDir) {
+            rows.append(
+                ToolStorage(
+                    id: "android.emulator",
+                    tool: LocalizedStringResource("Android Emulator"),
+                    category: .packageCaches,
+                    location: emulatorDir,
+                    size: size,
+                    cleanup: uninstall("emulator"),
+                    note: LocalizedStringResource("The Android Emulator application and support files.")
+                ))
+        }
 
-            let platformPackages = listedPackages.filter { $0.hasPrefix("platforms;") }.sorted()
-            for pkg in platformPackages {
-                let name = String(pkg.dropFirst("platforms;".count))
-                let location = sdkPath + "/platforms/" + name
-                rows.append(
-                    ToolStorage(
-                        id: "android.platform.\(name)",
-                        tool: LocalizedStringResource("Android Platform (\(name))"),
-                        category: .packageCaches,
-                        location: location,
-                        size: await ToolProbe.allocatedSize(of: location),
-                        cleanup: ToolCleanupAction(
-                            executable: sdkmanager, arguments: ["--uninstall", pkg], risk: .review),
-                        note: LocalizedStringResource("Android SDK platform files and system headers.")
-                    ))
-            }
+        let platformsDir = sdkPath + "/platforms"
+        for name in folders(in: platformsDir).sorted() {
+            let folder = platformsDir + "/" + name
+            guard let size = await ToolProbe.allocatedSize(of: folder) else { continue }
+            rows.append(
+                ToolStorage(
+                    id: "android.platform.\(name)",
+                    tool: LocalizedStringResource("Android Platform (\(name))"),
+                    category: .packageCaches,
+                    location: folder,
+                    size: size,
+                    cleanup: uninstall("platforms;" + name),
+                    note: LocalizedStringResource("Android SDK platform files and system headers.")
+                ))
+        }
 
-            let sysImgPackages = listedPackages.filter { $0.hasPrefix("system-images;") }.sorted()
-            for pkg in sysImgPackages {
-                let name = String(pkg.dropFirst("system-images;".count))
-                let rel = pkg.replacingOccurrences(of: ";", with: "/")
-                let location = sdkPath + "/" + rel
-                let idSuffix = name.replacingOccurrences(of: ";", with: ".")
-                rows.append(
-                    ToolStorage(
-                        id: "android.system-image.\(idSuffix)",
-                        tool: LocalizedStringResource("Android System Image (\(name))"),
-                        category: .packageCaches,
-                        location: location,
-                        size: await ToolProbe.allocatedSize(of: location),
-                        cleanup: ToolCleanupAction(
-                            executable: sdkmanager, arguments: ["--uninstall", pkg], risk: .review),
-                        note: LocalizedStringResource("Android system image for emulator virtual devices.")
-                    ))
-            }
+        let sysImgDir = sdkPath + "/system-images"
+        for folder in (Self.findSystemImageFolders(root: sysImgDir) ?? []).sorted() {
+            let rel = String(folder.dropFirst(sysImgDir.count + 1))
+            rows.append(
+                ToolStorage(
+                    id: "android.system-image.\(rel.replacingOccurrences(of: "/", with: "."))",
+                    tool: LocalizedStringResource("Android System Image (\(rel))"),
+                    category: .packageCaches,
+                    location: folder,
+                    size: await ToolProbe.allocatedSize(of: folder),
+                    cleanup: uninstall("system-images;" + rel.replacingOccurrences(of: "/", with: ";")),
+                    note: LocalizedStringResource("Android system image for emulator virtual devices.")
+                ))
+        }
 
-            let btPackages = listedPackages.filter { $0.hasPrefix("build-tools;") }
-            let btVersions = btPackages.map { String($0.dropFirst("build-tools;".count)) }.sorted(by: Self.isVersion)
-            if btVersions.count > 1 {
-                for version in btVersions.dropLast() {
-                    let pkg = "build-tools;" + version
-                    let location = sdkPath + "/build-tools/" + version
-                    rows.append(
-                        ToolStorage(
-                            id: "android.build-tools.\(version)",
-                            tool: LocalizedStringResource("Android Build-Tools (\(version))"),
-                            category: .packageCaches,
-                            location: location,
-                            size: await ToolProbe.allocatedSize(of: location),
-                            cleanup: ToolCleanupAction(
-                                executable: sdkmanager, arguments: ["--uninstall", pkg], risk: .review),
-                            note: LocalizedStringResource(
-                                "An older version of Android build tools. Current projects usually use the latest version."
-                            )
-                        ))
-                }
-            }
-        } else {
-            let emulatorDir = sdkPath + "/emulator"
-            if let emuSize = await ToolProbe.allocatedSize(of: emulatorDir) {
-                rows.append(
-                    ToolStorage(
-                        id: "android.emulator",
-                        tool: LocalizedStringResource("Android Emulator"),
-                        category: .packageCaches,
-                        location: emulatorDir,
-                        size: emuSize,
-                        cleanup: nil,
-                        note: LocalizedStringResource("The Android Emulator application and support files.")
-                    ))
-            }
-
-            let platformsDir = sdkPath + "/platforms"
-            if let platformFolders = try? FileManager.default.contentsOfDirectory(atPath: platformsDir).filter({
-                !$0.hasPrefix(".")
-            }), !platformFolders.isEmpty {
-                for name in platformFolders.sorted() {
-                    let folder = platformsDir + "/" + name
-                    if let size = await ToolProbe.allocatedSize(of: folder) {
-                        rows.append(
-                            ToolStorage(
-                                id: "android.platform.\(name)",
-                                tool: LocalizedStringResource("Android Platform (\(name))"),
-                                category: .packageCaches,
-                                location: folder,
-                                size: size,
-                                cleanup: nil,
-                                note: LocalizedStringResource("Android SDK platform files and system headers.")
-                            ))
-                    }
-                }
-            }
-
-            let sysImgDir = sdkPath + "/system-images"
-            if let sysImgFolders = Self.findSystemImageFolders(root: sysImgDir), !sysImgFolders.isEmpty {
-                for folder in sysImgFolders.sorted() {
-                    let rel = String(folder.dropFirst(sysImgDir.count + 1))
-                    let idPart = rel.replacingOccurrences(of: "/", with: ".")
-                    rows.append(
-                        ToolStorage(
-                            id: "android.system-image.\(idPart)",
-                            tool: LocalizedStringResource("Android System Image (\(rel))"),
-                            category: .packageCaches,
-                            location: folder,
-                            size: await ToolProbe.allocatedSize(of: folder),
-                            cleanup: nil,
-                            note: LocalizedStringResource("Android system image for emulator virtual devices.")
-                        ))
-                }
-            }
-
-            let btDir = sdkPath + "/build-tools"
-            if let btFolders = try? FileManager.default.contentsOfDirectory(atPath: btDir).filter({
-                !$0.hasPrefix(".")
-            }), !btFolders.isEmpty {
-                let sorted = btFolders.sorted(by: Self.isVersion)
-                if sorted.count > 1 {
-                    for version in sorted.dropLast() {
-                        let folder = btDir + "/" + version
-                        rows.append(
-                            ToolStorage(
-                                id: "android.build-tools.\(version)",
-                                tool: LocalizedStringResource("Android Build-Tools (\(version))"),
-                                category: .packageCaches,
-                                location: folder,
-                                size: await ToolProbe.allocatedSize(of: folder),
-                                cleanup: nil,
-                                note: LocalizedStringResource(
-                                    "An older version of Android build tools. Current projects usually use the latest version."
-                                )
-                            ))
-                    }
-                }
-            }
+        // Only older build-tools: projects usually use the latest one, which is kept.
+        let btDir = sdkPath + "/build-tools"
+        for version in folders(in: btDir).sorted(by: Self.isVersion).dropLast() {
+            let folder = btDir + "/" + version
+            rows.append(
+                ToolStorage(
+                    id: "android.build-tools.\(version)",
+                    tool: LocalizedStringResource("Android Build-Tools (\(version))"),
+                    category: .packageCaches,
+                    location: folder,
+                    size: await ToolProbe.allocatedSize(of: folder),
+                    cleanup: uninstall("build-tools;" + version),
+                    note: LocalizedStringResource(
+                        "An older version of Android build tools. Current projects usually use the latest version."
+                    )
+                ))
         }
         return rows
     }
 
-    private func inspectAVDs(avdRoot: String, avdmanager: String?, runner: any CommandRunning) async -> [ToolStorage] {
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: avdRoot, isDirectory: &isDir), isDir.boolValue else {
-            return []
-        }
-
-        var listedAVDs: Set<String>?
-        if let avdmanager {
-            if let output = await ToolProbe.output(runner, avdmanager, ["list", "avd", "-c"]) {
-                listedAVDs = Set(
-                    output.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter(
-                        Self.isValidAVDName))
-            }
-        }
-
+    /// AVDs are `<name>.avd` folders with a `<name>.ini` beside them; avdmanager is not run to list them (see above).
+    private func inspectAVDs(avdRoot: String, avdmanager: String?) async -> [ToolStorage] {
         guard let entries = try? FileManager.default.contentsOfDirectory(atPath: avdRoot) else { return [] }
         var rows: [ToolStorage] = []
         for entry in entries.sorted() where entry.hasSuffix(".avd") {
@@ -708,16 +609,8 @@ struct AndroidAdapter: ToolAdapter {
             let avdDir = avdRoot + "/" + entry
             let size = await ToolProbe.allocatedSize(of: avdDir)
 
-            let cleanup: ToolCleanupAction?
-            if let avdmanager {
-                if let listedAVDs, listedAVDs.contains(name) {
-                    cleanup = ToolCleanupAction(
-                        executable: avdmanager, arguments: ["delete", "avd", "-n", name], risk: .review)
-                } else {
-                    cleanup = nil
-                }
-            } else {
-                cleanup = nil
+            let cleanup = avdmanager.map {
+                ToolCleanupAction(executable: $0, arguments: ["delete", "avd", "-n", name], risk: .review)
             }
 
             rows.append(
@@ -734,34 +627,6 @@ struct AndroidAdapter: ToolAdapter {
                 ))
         }
         return rows
-    }
-
-    static func parseInstalledPackages(_ output: String) -> Set<String> {
-        var packages = Set<String>()
-        var inInstalled = false
-        for line in output.split(whereSeparator: \.isNewline) {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.localizedCaseInsensitiveContains("Installed packages:") {
-                inInstalled = true
-                continue
-            }
-            if trimmed.localizedCaseInsensitiveContains("Available Packages:") {
-                break
-            }
-            guard inInstalled else { continue }
-            if trimmed.isEmpty || trimmed.hasPrefix("Path") || trimmed.hasPrefix("---") || trimmed.hasPrefix("===") {
-                continue
-            }
-            let token: String
-            if let barIndex = trimmed.firstIndex(of: "|") {
-                token = String(trimmed[..<barIndex]).trimmingCharacters(in: .whitespaces)
-            } else {
-                token = trimmed.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? ""
-            }
-            guard isValidPackageName(token) else { continue }
-            packages.insert(token)
-        }
-        return packages
     }
 
     static func isValidPackageName(_ name: String) -> Bool {
