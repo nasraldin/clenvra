@@ -52,6 +52,18 @@ struct CommandRunnerTests {
         #expect(!result.outputTruncated)
     }
 
+    @Test("tools run without their own online update checks (npm, pnpm, pip, Homebrew)")
+    func toolsSkipUpdateChecks() async throws {
+        let result = try await runner.run(Command(executable: "/usr/bin/env"))
+        let variables = Set(result.standardOutput.split(whereSeparator: \.isNewline).map(String.init))
+
+        #expect(
+            variables.isSuperset(of: [
+                "NO_UPDATE_NOTIFIER=1", "npm_config_update_notifier=false", "PIP_DISABLE_PIP_VERSION_CHECK=1",
+                "HOMEBREW_NO_AUTO_UPDATE=1",
+            ]))
+    }
+
     @Test("a failing command reports its non-zero exit status")
     func exitNonZero() async throws {
         let result = try await runner.run(Command(executable: "/usr/bin/false"))
@@ -316,7 +328,11 @@ struct CommandRunnerTests {
         #expect(variables["USER"]?.isEmpty == false)
         #expect(variables["LANG"] == "en_US.UTF-8")
         #expect(variables["PATH"] == "/usr/bin:/bin")
-        #expect(Set(variables.keys) == ["HOME", "USER", "LANG", "PATH"])
+        #expect(
+            Set(variables.keys) == [
+                "HOME", "USER", "LANG", "PATH", "NO_UPDATE_NOTIFIER", "npm_config_update_notifier",
+                "PIP_DISABLE_PIP_VERSION_CHECK", "HOMEBREW_NO_AUTO_UPDATE",
+            ])
     }
 
     @Test("the default PATH starts with the tool's own directory")

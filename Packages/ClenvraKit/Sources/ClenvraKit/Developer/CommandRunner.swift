@@ -208,6 +208,11 @@ public struct ProcessCommandRunner: CommandRunning {
             "USER": environment["USER"] ?? NSUserName(),
             "PATH": path.joined(separator: ":"),
             "LANG": "en_US.UTF-8",
+            // Clenvra makes no network calls; these stop tools from checking online for their own updates.
+            "NO_UPDATE_NOTIFIER": "1",
+            "npm_config_update_notifier": "false",
+            "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+            "HOMEBREW_NO_AUTO_UPDATE": "1",
         ]
     }
 }
