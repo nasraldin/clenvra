@@ -93,7 +93,7 @@ Clenvra.xcworkspace
 └── docs/                    research, product, architecture, design, testing
 ```
 
-- **Swift 6** with strict concurrency, and warnings treated as errors.
+- **Always the latest toolchain:** Xcode 27, Swift 6.4 in Swift 6 mode with every upcoming Swift 7 feature on (`ExistentialAny`, `InternalImportsByDefault`, `MemberImportVisibility`, `InferIsolatedConformances`, `NonisolatedNonsendingByDefault`, `ImmutableWeakCaptures`), strict concurrency, warnings as errors. Work that must leave the caller's actor is marked `@concurrent`. Dependabot keeps CI's actions current.
 - **No third-party dependencies.**
 - **Fast scanning:** filesystem scans use `getattrlistbulk` on a dedicated thread pool, about 3.6× faster than `du` on a large real source tree.
 - **Data over code:** cleanup categories, browsers, developer tools and leftover locations are rows in tables, not separate code paths.

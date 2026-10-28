@@ -27,7 +27,7 @@ jobs:
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Select Xcode 27
         run: |
@@ -47,7 +47,7 @@ jobs:
 
       - name: Keep test results when something fails
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: .build/DerivedData/Logs/Test/*.xcresult
