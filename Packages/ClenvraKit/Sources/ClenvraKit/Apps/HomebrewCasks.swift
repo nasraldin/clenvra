@@ -33,7 +33,7 @@ public struct HomebrewCaskIndex: Sendable, Equatable {
 public enum HomebrewCasks {
     /// The installed casks; an empty index when `brew` fails.
     /// - Parameter caskroom: Homebrew's Caskroom; defaults to the one next to `brew`'s `bin` folder.
-    public static func installedCasks(
+    @concurrent public static func installedCasks(
         brew: String, runner: any CommandRunning, caskroom: String? = nil
     ) async -> HomebrewCaskIndex {
         let command = Command(

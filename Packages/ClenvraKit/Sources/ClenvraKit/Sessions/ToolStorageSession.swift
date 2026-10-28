@@ -50,7 +50,7 @@ public final class ToolStorageSession {
         var found: [(index: Int, rows: [ToolStorage])] = []
         await withTaskGroup(of: (Int, [ToolStorage]).self) { group in
             for (index, adapter) in adapters.enumerated() {
-                group.addTask { [locator, runner, home] in
+                group.addTask { @concurrent [locator, runner, home] in
                     (index, await adapter.inspect(locator: locator, runner: runner, home: home))
                 }
             }

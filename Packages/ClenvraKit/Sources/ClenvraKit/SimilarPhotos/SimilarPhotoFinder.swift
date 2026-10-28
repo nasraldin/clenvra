@@ -27,7 +27,7 @@ public enum SimilarPhotoFinder {
     private static let skippedFolderExtensions: Set<String> = ["app", "photoslibrary"]
 
     /// Scans `roots` read-only. Cancelling the calling task returns early with `isComplete == false` and no groups.
-    public static func scan(
+    @concurrent public static func scan(
         roots: [String],
         options: SimilarPhotoScanOptions = SimilarPhotoScanOptions(),
         policy: ProtectionPolicy,
@@ -235,7 +235,7 @@ public enum SimilarPhotoFinder {
         var isComplete: Bool
     }
 
-    private static func list(
+    @concurrent private static func list(
         roots: [String], options: SimilarPhotoScanOptions, policy: ProtectionPolicy, executor: FSExecutor,
         counters: Counters, listed: @Sendable () -> Void
     ) async -> Listing {
@@ -261,14 +261,14 @@ public enum SimilarPhotoFinder {
         var visited = Set<FileIdentity>()
         var byIdentity: [FileIdentity: Candidate] = [:]
         var cancelled = false
-        await withTaskGroup(of: DirectoryResult?.self) { group in
+        await withTaskGroup(of: DirectoryResult?.self) { @concurrent group in
             var head = 0
             var inFlight = 0
             while true {
                 while !cancelled, inFlight < executor.width, head < queue.count {
                     let job = queue[head]
                     head += 1
-                    group.addTask {
+                    group.addTask { @concurrent in
                         try? await executor.run { readDirectory(job, options: options, policy: policy) }
                     }
                     inFlight += 1
@@ -350,16 +350,16 @@ public enum SimilarPhotoFinder {
 
     /// Analyses every candidate on at most `maximumConcurrentAnalyses` lanes. Results keep the candidates' order;
     /// `nil` marks a candidate that was never analysed because the task was cancelled.
-    private static func analyzeAll(
+    @concurrent private static func analyzeAll(
         _ candidates: [Candidate], options: SimilarPhotoScanOptions, executor: FSExecutor,
         analysed: @escaping @Sendable () -> Void
     ) async -> [Analysis?] {
         guard !candidates.isEmpty else { return [] }
         let next = NextIndex()
         var results = [Analysis?](repeating: nil, count: candidates.count)
-        await withTaskGroup(of: [(Int, Analysis)].self) { group in
+        await withTaskGroup(of: [(Int, Analysis)].self) { @concurrent group in
             for _ in 0..<min(max(1, options.maximumConcurrentAnalyses), candidates.count) {
-                group.addTask {
+                group.addTask { @concurrent in
                     var done: [(Int, Analysis)] = []
                     while !Task.isCancelled {
                         let index = next.value.add(1, ordering: .relaxed).oldValue
@@ -377,7 +377,7 @@ public enum SimilarPhotoFinder {
         return results
     }
 
-    private static func analyze(
+    @concurrent private static func analyze(
         _ candidate: Candidate, options: SimilarPhotoScanOptions, executor: FSExecutor
     ) async -> Analysis {
         guard candidate.entry.size.logical <= options.maximumFileSize else { return .skipped(.tooLarge) }

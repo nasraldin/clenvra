@@ -50,7 +50,7 @@ public struct LaunchAgentReenabler: Sendable {
 
     /// Validates the plist at the record's path and, unless the agent is already loaded, runs
     /// `/bin/launchctl bootstrap gui/<uid> <plist>` (fixed argv, never a shell).
-    public func reenable(_ record: ActivityRecord) async -> Outcome {
+    @concurrent public func reenable(_ record: ActivityRecord) async -> Outcome {
         guard canReenable(record) else { return .notAllowed }
         let path = record.itemPath
         guard let label = validatedLabel(at: path) else { return .invalidPlist }

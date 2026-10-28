@@ -39,7 +39,7 @@ public struct ToolLocator: Sendable {
     /// and duplicates are removed keeping the first. Any failure returns `fallbackSearchPath`.
     /// Tools set up only in interactive startup files (for example nvm in `.zshrc`) are not seen by a login shell;
     /// the fallback directories and the caller's own additions cover the common cases.
-    public static func resolveLoginPath(
+    @concurrent public static func resolveLoginPath(
         runner: any CommandRunning, shell: String = ToolLocator.defaultLoginShell
     ) async -> [String] {
         let command = Command(executable: shell, arguments: ["-l", "-c", printPathScript], timeout: .seconds(3))

@@ -46,7 +46,7 @@ public enum AppInventory {
 
     /// Discovers `.app` bundles under the roots so the Applications section and ownership matching start from one
     /// list. Never follows symlinks, except links into the Homebrew Caskroom or a system app folder.
-    public static func discover(
+    @concurrent public static func discover(
         roots: [String] = defaultSearchRoots, homebrewCaskroom: String = "/opt/homebrew/Caskroom"
     ) async -> [InstalledApp] {
         await discover(roots: roots, locations: .standard(homebrewCaskroom: homebrewCaskroom))
@@ -86,7 +86,7 @@ public enum AppInventory {
 
     // MARK: - Internal (testable)
 
-    static func discover(roots: [String], locations: Locations) async -> [InstalledApp] {
+    @concurrent static func discover(roots: [String], locations: Locations) async -> [InstalledApp] {
         let work: @Sendable () -> [InstalledApp] = {
             let locations = locations.canonical()
             var candidates: [String] = []

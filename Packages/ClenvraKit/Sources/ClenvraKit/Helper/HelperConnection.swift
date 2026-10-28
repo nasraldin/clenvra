@@ -29,11 +29,11 @@ public enum HelperClientError: Error, Sendable, Equatable {
 public struct HelperClient: Sendable {
     public init() {}
 
-    public func protocolVersion() async throws(HelperClientError) -> Int {
+    @concurrent public func protocolVersion() async throws(HelperClientError) -> Int {
         try await call { proxy, finish in proxy.protocolVersion { finish(.success($0)) } }
     }
 
-    public func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse {
+    @concurrent public func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse {
         guard let payload = try? request.encoded() else { throw .badReply }
         let data: Data? = try await call { proxy, finish in proxy.perform(payload) { finish(.success($0)) } }
         guard let data, let response = try? HelperResponse.decode(data),
@@ -43,7 +43,7 @@ public struct HelperClient: Sendable {
     }
 
     /// `nil` when the item was put back.
-    public func restore(_ record: ActivityRecord) async throws(HelperClientError) -> RestoreError? {
+    @concurrent public func restore(_ record: ActivityRecord) async throws(HelperClientError) -> RestoreError? {
         guard let payload = try? JSONEncoder().encode(record) else { throw .badReply }
         let data: Data? = try await call { proxy, finish in proxy.restore(payload) { finish(.success($0)) } }
         guard let data else { return nil }
@@ -51,7 +51,8 @@ public struct HelperClient: Sendable {
         return error
     }
 
-    public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async throws(HelperClientError)
+    @concurrent public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID)
+        async throws(HelperClientError)
         -> ActivityRecord.Outcome
     {
         guard let payload = try? JSONEncoder().encode(item) else { throw .badReply }
@@ -65,13 +66,13 @@ public struct HelperClient: Sendable {
         return outcome
     }
 
-    public func deleteLocalSnapshot(date: String) async throws(HelperClientError) -> SnapshotDeletion {
+    @concurrent public func deleteLocalSnapshot(date: String) async throws(HelperClientError) -> SnapshotDeletion {
         let raw: String? = try await call { proxy, finish in proxy.deleteLocalSnapshot(date) { finish(.success($0)) } }
         guard let raw, let result = SnapshotDeletion(rawValue: raw) else { throw .badReply }
         return result
     }
 
-    private func call<Value: Sendable>(
+    @concurrent private func call<Value: Sendable>(
         _ body: (any ClenvraHelperProtocol, @escaping @Sendable (Result<Value, HelperClientError>) -> Void) -> Void
     ) async throws(HelperClientError) -> Value {
         let connection = NSXPCConnection(machServiceName: HelperIdentity.machServiceName, options: .privileged)

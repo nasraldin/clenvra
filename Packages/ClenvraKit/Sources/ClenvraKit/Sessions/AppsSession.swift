@@ -129,9 +129,9 @@ public final class AppsSession {
     private let resolver: OwnershipResolver
     private let privileged: (any PrivilegedOperations)?
     private let systemAllowlist: HelperAllowlist
-    private let discover: @Sendable () async -> [InstalledApp]
+    private let discover: @Sendable @concurrent () async -> [InstalledApp]
     private let ownerState: @Sendable (InstalledApp) -> OwnerState
-    private let requestQuit: @Sendable (InstalledApp) async -> Void
+    private let requestQuit: @Sendable @concurrent (InstalledApp) async -> Void
     private let lastUsedProvider: @Sendable (String) -> Date?
     private let teamIdentifier: @Sendable (InstalledApp) -> String?
     private let homebrew: Homebrew?
@@ -147,9 +147,9 @@ public final class AppsSession {
         home: String, policy: ProtectionPolicy, deleter: DeletionExecutor, log: ActivityLog,
         resolver: OwnershipResolver, privileged: (any PrivilegedOperations)? = nil,
         systemAllowlist: HelperAllowlist = HelperAllowlist(),
-        discover: @escaping @Sendable () async -> [InstalledApp],
+        discover: @escaping @Sendable @concurrent () async -> [InstalledApp],
         ownerState: @escaping @Sendable (InstalledApp) -> OwnerState,
-        requestQuit: @escaping @Sendable (InstalledApp) async -> Void = { _ in },
+        requestQuit: @escaping @Sendable @concurrent (InstalledApp) async -> Void = { @concurrent _ in },
         lastUsed: @escaping @Sendable (String) -> Date? = { AppInventory.lastUsedDate(of: $0) },
         teamIdentifier: @escaping @Sendable (InstalledApp) -> String? = { ManagedAgents.teamIdentifier(of: $0.id) },
         homebrew: Homebrew? = nil,

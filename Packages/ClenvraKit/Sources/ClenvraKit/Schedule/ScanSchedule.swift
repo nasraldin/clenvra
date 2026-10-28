@@ -123,14 +123,14 @@ public struct ScheduledScanReport: Sendable, Equatable {
     ///
     /// It has no deleter: a scheduled scan cannot remove anything by construction. Items found by two rules are
     /// counted once, like the Cleanup section does.
-    public static func totals(
+    @concurrent public static func totals(
         rules: [CleanupRule], home: String, policy: ProtectionPolicy,
         ownerState: @escaping @Sendable (String) -> OwnerState, executor: FSExecutor = .shared
     ) async -> OverviewRecommendations.Input.Totals {
         var sizes: [String: Int64] = [:]
-        await withTaskGroup(of: RuleScanResult.self) { group in
+        await withTaskGroup(of: RuleScanResult.self) { @concurrent group in
             for rule in rules {
-                group.addTask {
+                group.addTask { @concurrent in
                     await RuleScanner.scan(
                         rule, home: home, policy: policy, ownerState: ownerState, executor: executor)
                 }

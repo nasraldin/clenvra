@@ -39,9 +39,9 @@ public final class FSExecutor: TaskExecutor, Sendable {
     }
 
     /// Moves blocking work off the cooperative pool while letting the caller stay async and cancellable.
-    public func run<T: Sendable>(_ work: @Sendable () throws -> T) async throws -> T {
+    @concurrent public func run<T: Sendable>(_ work: @Sendable () throws -> T) async throws -> T {
         try Task.checkCancellation()
-        return try await withTaskExecutorPreference(self) { () async throws -> T in
+        return try await withTaskExecutorPreference(self) { @concurrent () async throws -> T in
             try Task.checkCancellation()
             return try work()
         }

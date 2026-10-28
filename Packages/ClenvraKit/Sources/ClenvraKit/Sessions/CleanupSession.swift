@@ -126,7 +126,7 @@ public final class CleanupSession {
         var results: [RuleScanResult] = []
         await withTaskGroup(of: RuleScanResult.self) { group in
             for rule in rules {
-                group.addTask { [home, policy, ownerState, executor] in
+                group.addTask { @concurrent [home, policy, ownerState, executor] in
                     await RuleScanner.scan(
                         rule, home: home, policy: policy, ownerState: ownerState, executor: executor)
                 }

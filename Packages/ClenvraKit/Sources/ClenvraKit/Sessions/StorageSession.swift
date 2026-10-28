@@ -133,7 +133,7 @@ public final class StorageSession {
         let options = options
         let executor = executor
         let scan = scanFunction
-        await runScan { progress in try await scan(root, options, executor, progress) }
+        await runScan { @concurrent progress in try await scan(root, options, executor, progress) }
     }
 
     /// Updates the snapshot after items moved out of (or into) `changedFolders`, reading only those folders.
@@ -142,7 +142,7 @@ public final class StorageSession {
         let options = options
         let executor = executor
         let scan = scanFunction
-        await runScan { progress in
+        await runScan { @concurrent progress in
             try await StorageScanner.rescan(
                 snapshot, changedFolders: changedFolders, options: options, executor: executor, scan: scan,
                 progress: progress)
@@ -152,7 +152,7 @@ public final class StorageSession {
     /// Runs `work` as the current scan, showing its progress, and installs the snapshot it returns.
     private func runScan(
         _ work:
-            @escaping @Sendable (_ progress: @escaping @Sendable (ScanProgress) -> Void) async throws ->
+            @escaping @Sendable @concurrent (_ progress: @escaping @Sendable (ScanProgress) -> Void) async throws ->
             StorageSnapshot
     ) async {
         scanTask?.cancel()

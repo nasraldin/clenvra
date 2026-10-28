@@ -65,13 +65,13 @@ public protocol ToolAdapter: Sendable {
     /// Stable identifier of the adapter, for example `pnpm`.
     var id: String { get }
     /// Returns nothing when the tool is not installed. Read-only: only probe commands and size measurement.
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage]
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage]
 }
 
 /// Runs a confirmed tool cleanup, kept separate from inspection so only an explicit user action can reach it.
 public enum ToolCleanupRunner {
     /// Runs `action.command` unchanged, streaming its output, and returns the result for the activity log.
-    public static func run(
+    @concurrent public static func run(
         _ action: ToolCleanupAction, runner: any CommandRunning, onOutput: (@Sendable (OutputLine) -> Void)?
     ) async throws -> CommandResult {
         try await runner.run(action.command, onOutput: onOutput)
@@ -84,7 +84,9 @@ enum ToolProbe {
     static let cleanupTimeout = Duration.seconds(600)
 
     /// Standard output of a probe that exited 0, or `nil` for any failure, timeout or launch error.
-    static func output(_ runner: any CommandRunning, _ executable: String, _ arguments: [String]) async -> String? {
+    @concurrent static func output(_ runner: any CommandRunning, _ executable: String, _ arguments: [String]) async
+        -> String?
+    {
         let command = Command(executable: executable, arguments: arguments, timeout: probeTimeout)
         guard let result = try? await runner.run(command), result.terminationReason == .exited,
             result.exitStatus == 0
@@ -103,7 +105,7 @@ enum ToolProbe {
     }
 
     /// Allocated bytes of the directory at `path`, or `nil` when it is not a directory or cannot be read.
-    static func allocatedSize(of path: String?) async -> Int64? {
+    @concurrent static func allocatedSize(of path: String?) async -> Int64? {
         guard let path else { return nil }
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory), isDirectory.boolValue,

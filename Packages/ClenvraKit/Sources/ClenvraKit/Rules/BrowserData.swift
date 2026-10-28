@@ -326,7 +326,7 @@ private struct DirectoryMeasurement {
 /// Discovers profiles and reads only the catalog's exact paths, never a whole profile for cleanup.
 public enum BrowserDataScanner {
     /// Scans fixture or real homes read-only; permission and malformed-profile failures become skipped paths.
-    public static func scan(
+    @concurrent public static func scan(
         home: String, policy: ProtectionPolicy,
         ownerState: @escaping @Sendable (String) -> OwnerState,
         executor: FSExecutor = .shared

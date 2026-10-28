@@ -79,7 +79,7 @@ public struct PluginReader: Sendable {
     }
 
     /// Reads every source; file-based folders run on `executor` because they block on the filesystem.
-    public func read(executor: FSExecutor = .shared) async -> PluginInventory {
+    @concurrent public func read(executor: FSExecutor = .shared) async -> PluginInventory {
         async let bundles = (try? await executor.run { readBundles() }) ?? PluginInventory()
         async let appExtensions = readAppExtensions()
         async let systemExtensions = readSystemExtensions()
@@ -212,7 +212,7 @@ public struct PluginReader: Sendable {
     // MARK: - App extensions
 
     /// Reads `pluginkit -mAvvv`; on failure the result is empty with a reason.
-    public func readAppExtensions() async -> PluginInventory {
+    @concurrent public func readAppExtensions() async -> PluginInventory {
         guard let output = await output(of: Self.pluginKit) else {
             return PluginInventory(issues: [.commandFailed(.appExtensions)])
         }
@@ -303,7 +303,7 @@ public struct PluginReader: Sendable {
     // MARK: - System extensions
 
     /// Reads `systemextensionsctl list`; on failure the result is empty with a reason.
-    public func readSystemExtensions() async -> PluginInventory {
+    @concurrent public func readSystemExtensions() async -> PluginInventory {
         guard let output = await output(of: Self.systemExtensionsList) else {
             return PluginInventory(issues: [.commandFailed(.systemExtensions)])
         }
@@ -364,7 +364,7 @@ public struct PluginReader: Sendable {
 
     // MARK: - Helpers
 
-    private func output(of command: Command) async -> String? {
+    @concurrent private func output(of command: Command) async -> String? {
         guard let result = try? await runner.run(command), result.terminationReason == .exited,
             result.exitStatus == 0
         else { return nil }

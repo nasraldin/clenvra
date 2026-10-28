@@ -143,7 +143,7 @@ public final class UpdateCheckSession {
             remaining = remaining.dropFirst(batch.count)
             let updates = await withTaskGroup(of: AppUpdate.self) { group in
                 for lookup in batch {
-                    group.addTask { [fetcher, systemVersion] in
+                    group.addTask { @concurrent [fetcher, systemVersion] in
                         await Self.resolve(lookup, fetcher: fetcher, systemVersion: systemVersion)
                     }
                 }
@@ -224,7 +224,7 @@ public final class UpdateCheckSession {
         }
     }
 
-    private nonisolated static func resolve(
+    @concurrent private nonisolated static func resolve(
         _ lookup: Lookup, fetcher: any HTTPFetching, systemVersion: AppVersion
     ) async -> AppUpdate {
         switch lookup {

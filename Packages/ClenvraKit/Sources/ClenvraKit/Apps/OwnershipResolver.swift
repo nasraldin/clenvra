@@ -20,7 +20,7 @@ public struct OwnershipResolver: Sendable {
     }
 
     /// Returns receipt items for an app's identifiers; injected so the `pkgutil` dependency stays optional.
-    public typealias ReceiptLookup = @Sendable (_ identifiers: [String]) async -> [ReceiptFile]
+    public typealias ReceiptLookup = @Sendable @concurrent (_ identifiers: [String]) async -> [ReceiptFile]
 
     /// Owner prefixes never reported as leftovers: shared frameworks and updaters many apps use.
     public static let neverFlagPrefixes = [
@@ -108,7 +108,7 @@ public struct OwnershipResolver: Sendable {
 
     /// Everything `app` owns, Certain first. `installedApps` must be the whole inventory (including `app`);
     /// when it is not known to be complete, nothing less than Certain is pre-selected.
-    public func resolve(
+    @concurrent public func resolve(
         _ app: InstalledApp, installedApps: [InstalledApp], inventoryIsComplete: Bool = true
     ) async -> [OwnedItem] {
         guard !app.isProtected else { return [] }
@@ -125,7 +125,7 @@ public struct OwnershipResolver: Sendable {
     }
 
     /// Reset keeps the app and its launch configuration, and never acts on name-only ownership guesses.
-    func resetItems(
+    @concurrent func resetItems(
         for app: InstalledApp, installedApps: [InstalledApp], inventoryIsComplete: Bool
     ) async -> [OwnedItem] {
         await resolve(app, installedApps: installedApps, inventoryIsComplete: inventoryIsComplete).filter { item in
@@ -322,7 +322,7 @@ public struct OwnershipResolver: Sendable {
     /// Library items named after bundle identifiers that no installed app (or its components) shares lineage with,
     /// untouched for at least 30 days. They are offered for review only and never pre-selected. Without a complete,
     /// non-empty inventory nothing is reported, because "no owner" must be proven.
-    public func leftovers(
+    @concurrent public func leftovers(
         installedApps: [InstalledApp], inventoryIsComplete: Bool = true, now: Date = Date()
     ) async -> [OwnedItem] {
         guard inventoryIsComplete, !installedApps.isEmpty else { return [] }
@@ -368,7 +368,7 @@ public struct OwnershipResolver: Sendable {
 
     // MARK: - Sizes and ordering
 
-    private func finish(_ matches: [Match], preselect: (Match) -> Bool) async -> [OwnedItem] {
+    @concurrent private func finish(_ matches: [Match], preselect: (Match) -> Bool) async -> [OwnedItem] {
         var items: [OwnedItem] = []
         for match in matches {
             var allocated = match.size.allocated
@@ -543,8 +543,8 @@ public struct OwnershipResolver: Sendable {
     public static func pkgutilReceipts(
         runner: any CommandRunning, pkgutil: String = "/usr/sbin/pkgutil"
     ) -> ReceiptLookup {
-        { identifiers in
-            func output(_ arguments: [String]) async -> String? {
+        { @concurrent identifiers in
+            @concurrent func output(_ arguments: [String]) async -> String? {
                 let command = Command(executable: pkgutil, arguments: arguments, timeout: .seconds(30))
                 guard let result = try? await runner.run(command), result.terminationReason == .exited,
                     result.exitStatus == 0

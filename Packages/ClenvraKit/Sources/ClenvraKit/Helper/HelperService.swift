@@ -84,7 +84,7 @@ public struct HelperService: Sendable {
         self.runner = runner
     }
 
-    public func perform(_ request: HelperRequest) async -> HelperResponse {
+    @concurrent public func perform(_ request: HelperRequest) async -> HelperResponse {
         var outcomes = [ActivityRecord.Outcome?](repeating: nil, count: request.items.count)
         var accepted: [(index: Int, item: DeletionItem)] = []
         for (index, item) in request.items.enumerated() {
@@ -124,7 +124,7 @@ public struct HelperService: Sendable {
     /// The app's record only names which item to restore (operation and path). Everything acted on comes from the
     /// helper's own root-owned log: the Trash path, the original location and the identity. Otherwise a crafted
     /// record could make root move a user's file into a privileged folder (a launch daemon, a helper tool).
-    public func restore(_ request: ActivityRecord) async -> RestoreError? {
+    @concurrent public func restore(_ request: ActivityRecord) async -> RestoreError? {
         guard let records = try? await log.readAll().records,
             let logged = records.last(where: {
                 $0.operationID == request.operationID && $0.itemPath == request.itemPath && $0.outcome.isMovedToTrash
@@ -207,7 +207,9 @@ public struct HelperService: Sendable {
 
     /// Unloads an orphaned launch daemon or agent and moves its plist to the user's Trash. The label and program
     /// come from the plist itself, and only items whose program no longer exists are touched.
-    public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async -> ActivityRecord.Outcome {
+    @concurrent public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async
+        -> ActivityRecord.Outcome
+    {
         guard allowlist.isSystemLaunchItem(item) else { return .skipped(.outsideRoot) }
         guard !Self.belongsToManagedSoftware(item),
             let plist = Self.launchPlist(at: item.path), let label = Self.validLabel(plist["Label"]),
@@ -259,7 +261,7 @@ public struct HelperService: Sendable {
     // MARK: - Local Time Machine snapshots (SY-4)
 
     /// Deletes one local snapshot by date, only if the date is well formed and currently listed.
-    public func deleteLocalSnapshot(date: String) async -> SnapshotDeletion {
+    @concurrent public func deleteLocalSnapshot(date: String) async -> SnapshotDeletion {
         guard LocalSnapshots.isValidDate(date) else { return .invalid }
         let list = try? await runner.run(
             Command(executable: "/usr/bin/tmutil", arguments: ["listlocalsnapshotdates", "/"]))

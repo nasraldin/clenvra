@@ -107,12 +107,12 @@ public enum CommandError: Error, Sendable, Equatable {
 public protocol CommandRunning: Sendable {
     /// Runs `command` to completion, streaming lines to `onOutput` (on an arbitrary thread) as they arrive.
     /// Cancellation of the calling task stops the child and returns a `.cancelled` result instead of throwing.
-    func run(_ command: Command, onOutput: (@Sendable (OutputLine) -> Void)?) async throws -> CommandResult
+    @concurrent func run(_ command: Command, onOutput: (@Sendable (OutputLine) -> Void)?) async throws -> CommandResult
 }
 
 extension CommandRunning {
     /// Convenience for probes that only need the final result.
-    public func run(_ command: Command) async throws -> CommandResult {
+    @concurrent public func run(_ command: Command) async throws -> CommandResult {
         try await run(command, onOutput: nil)
     }
 }
@@ -134,7 +134,9 @@ public struct ProcessCommandRunner: CommandRunning {
         self.outputLimit = max(0, outputLimit)
     }
 
-    public func run(_ command: Command, onOutput: (@Sendable (OutputLine) -> Void)?) async throws -> CommandResult {
+    @concurrent public func run(_ command: Command, onOutput: (@Sendable (OutputLine) -> Void)?) async throws
+        -> CommandResult
+    {
         try Self.validate(command)
         if Task.isCancelled {
             return CommandResult(
@@ -159,7 +161,7 @@ public struct ProcessCommandRunner: CommandRunning {
             outHandle: outPipe.fileHandleForReading, errHandle: errPipe.fileHandleForReading,
             limit: outputLimit, onOutput: onOutput)
 
-        let result = try await withTaskCancellationHandler {
+        let result = try await withTaskCancellationHandler { @concurrent in
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<CommandResult, any Error>) in
                 session.begin(continuation)
                 process.terminationHandler = { finished in
@@ -355,7 +357,7 @@ private final class RunSession: Sendable {
 
     /// Runs `action` after `delay` unless the run finishes first; timers are cancelled on completion.
     private func addTimer(after delay: Duration, _ action: @escaping @Sendable (RunSession) -> Void) {
-        let timer = Task { [self] in
+        let timer = Task { @concurrent [self] in
             guard (try? await Task.sleep(for: delay)) != nil else { return }
             action(self)
         }

@@ -98,7 +98,7 @@ public final class ProcessSampler: Sendable {
     }
 
     /// Samples running processes and computes CPU utilization deltas and memory footprints.
-    public func sample(limit: Int = 15) async throws -> ProcessMetricsResult {
+    @concurrent public func sample(limit: Int = 15) async throws -> ProcessMetricsResult {
         let current = try sampleSource()
         let previous = previousSamples.withLock { saved in
             let old = saved

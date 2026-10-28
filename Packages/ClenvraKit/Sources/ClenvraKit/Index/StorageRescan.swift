@@ -4,13 +4,13 @@ import Foundation
 extension StorageScanner {
     /// Runs one scan; injectable so callers and tests can observe which folders are read.
     typealias ScanFunction =
-        @Sendable (
+        @Sendable @concurrent (
             _ root: String, _ options: ScanOptions, _ executor: FSExecutor,
             _ progress: @escaping @Sendable (ScanProgress) -> Void
         ) async throws -> StorageSnapshot
 
     /// The real scanner as a `ScanFunction`.
-    static let defaultScan: ScanFunction = { root, options, executor, progress in
+    static let defaultScan: ScanFunction = { @concurrent root, options, executor, progress in
         try await scan(root: root, options: options, executor: executor, progress: progress)
     }
 
@@ -22,7 +22,7 @@ extension StorageScanner {
     /// counted. A folder that no longer exists is replaced by its nearest existing ancestor. When a hard-linked
     /// object loses a name inside a rescanned folder, the folders holding its other names are rescanned too, because
     /// their link count (and so what they free) may have changed. Throws only if the scanned root itself is gone.
-    static func rescan(
+    @concurrent static func rescan(
         _ snapshot: StorageSnapshot, changedFolders: [String], options: ScanOptions, executor: FSExecutor = .shared,
         scan: ScanFunction = defaultScan, progress: @escaping @Sendable (ScanProgress) -> Void = { _ in }
     ) async throws -> StorageSnapshot {
@@ -44,7 +44,7 @@ extension StorageScanner {
     }
 
     /// Scans `folder`, or, if it can no longer be read, its nearest ancestor known to the snapshot.
-    private static func scanNearestExisting(
+    @concurrent private static func scanNearestExisting(
         _ folder: String, in snapshot: StorageSnapshot, options: ScanOptions, executor: FSExecutor,
         scan: ScanFunction, progress: @escaping @Sendable (ScanProgress) -> Void
     ) async throws -> (folder: String, snapshot: StorageSnapshot) {

@@ -47,7 +47,7 @@ public enum DuplicateFinder {
     private static let skippedFolderExtensions: Set<String> = ["app", "photoslibrary"]
 
     /// Scans `roots` read-only. Cancelling the calling task returns early with `isComplete == false`.
-    public static func scan(
+    @concurrent public static func scan(
         roots: [String],
         options: DuplicateScanOptions = DuplicateScanOptions(),
         policy: ProtectionPolicy,
@@ -59,7 +59,7 @@ public enum DuplicateFinder {
             hooks: DuplicateScanHooks())
     }
 
-    static func scan(
+    @concurrent static func scan(
         roots: [String],
         options: DuplicateScanOptions,
         policy: ProtectionPolicy,
@@ -228,7 +228,7 @@ public enum DuplicateFinder {
         var isComplete: Bool
     }
 
-    private static func list(
+    @concurrent private static func list(
         roots: [String], options: DuplicateScanOptions, policy: ProtectionPolicy, executor: FSExecutor,
         counters: Counters, progress: @escaping @Sendable (DuplicateScanProgress) -> Void
     ) async -> Listing {
@@ -252,14 +252,14 @@ public enum DuplicateFinder {
         var visited = Set<FileIdentity>()
         var byIdentity: [FileIdentity: Candidate] = [:]
         var cancelled = false
-        await withTaskGroup(of: DirectoryResult?.self) { group in
+        await withTaskGroup(of: DirectoryResult?.self) { @concurrent group in
             var head = 0
             var inFlight = 0
             while true {
                 while !cancelled, inFlight < executor.width, head < queue.count {
                     let job = queue[head]
                     head += 1
-                    group.addTask {
+                    group.addTask { @concurrent in
                         try? await executor.run { readDirectory(job, options: options, policy: policy) }
                     }
                     inFlight += 1
@@ -345,7 +345,7 @@ public enum DuplicateFinder {
     }
 
     /// Digests every file of every group and regroups each by digest, dropping singletons.
-    private static func digestGroups(
+    @concurrent private static func digestGroups(
         _ groups: [[Candidate]], full: Bool, options: DuplicateScanOptions, executor: FSExecutor,
         hooks: DuplicateScanHooks, counters: Counters,
         progress: @escaping @Sendable (DuplicateScanProgress) -> Void
@@ -557,16 +557,16 @@ public enum DuplicateFinder {
     /// Runs `body` over `jobs` on at most `lanes` executor threads. Each lane owns two 1 MiB buffers for its whole
     /// life, so memory stays fixed however many files are read. Results keep the jobs' order; `nil` marks a job
     /// that never ran because the task was cancelled.
-    private static func runLanes<Job: Sendable, Output: Sendable>(
+    @concurrent private static func runLanes<Job: Sendable, Output: Sendable>(
         _ jobs: [Job], lanes: Int, executor: FSExecutor,
         _ body:
             @escaping @Sendable (Job, UnsafeMutableRawBufferPointer, UnsafeMutableRawBufferPointer) -> Output
     ) async -> [Output?] {
         guard !jobs.isEmpty else { return [] }
         let state = LaneState<Output>(count: jobs.count)
-        await withTaskGroup(of: Void.self) { group in
+        await withTaskGroup(of: Void.self) { @concurrent group in
             for _ in 0..<min(max(1, lanes), jobs.count) {
-                group.addTask {
+                group.addTask { @concurrent in
                     _ = try? await executor.run {
                         let first = UnsafeMutableRawBufferPointer.allocate(byteCount: bufferSize, alignment: 16)
                         let second = UnsafeMutableRawBufferPointer.allocate(byteCount: bufferSize, alignment: 16)

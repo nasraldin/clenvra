@@ -3,7 +3,7 @@ public import Foundation
 
 /// Runs one `CleanupRule` read-only and returns review candidates with sizes, ownership and status.
 public enum RuleScanner {
-    public static func scan(
+    @concurrent public static func scan(
         _ rule: CleanupRule,
         home: String,
         policy: ProtectionPolicy,
@@ -96,7 +96,7 @@ public enum RuleScanner {
     }
 
     /// Direct children of the root; folder sizes come from one storage scan of the root.
-    private static func children(
+    @concurrent private static func children(
         of rootPath: String, cutoff: Date?, executor: FSExecutor, including isIncluded: (String) -> Bool
     ) async throws -> FoundItems {
         let listing = try await executor.run { try OpenDirectory(path: rootPath).read() }
@@ -183,7 +183,7 @@ public enum RuleScanner {
     }
 
     /// Artifact folders found by walking the root; sizes come from a storage scan of each folder.
-    private static func projectArtifacts(
+    @concurrent private static func projectArtifacts(
         below rootPath: String, kinds: [ArtifactKind], activeSince cutoff: Date, maximumDepth: Int,
         executor: FSExecutor
     ) async throws -> FoundItems {

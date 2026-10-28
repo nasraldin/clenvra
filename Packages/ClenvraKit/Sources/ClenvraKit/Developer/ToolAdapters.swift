@@ -160,7 +160,7 @@ struct PathToolAdapter: ToolAdapter {
         self.note = note
     }
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         let toolPath = executable.flatMap(locator.locate)
         if detection == .tool, toolPath == nil { return [] }
 
@@ -257,7 +257,7 @@ struct SimulatorAdapter: ToolAdapter {
     let id = "simulators"
     var xcrun = "/usr/bin/xcrun"
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         // Without a CoreSimulator folder there is nothing to report, and the xcrun shim is never woken on Macs
         // without developer tools (it would offer to install them).
         var isDirectory: ObjCBool = false
@@ -362,7 +362,7 @@ struct ContainerEngineAdapter: ToolAdapter {
                 risk: .review, note: "Removes dangling images only: untagged layers that no image or container uses.")
         ])
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         guard let path = locator.locate(executable) else { return [] }
         guard let output = await ToolProbe.output(runner, path, ["system", "df", "--format", "{{json .}}"]) else {
             return [
@@ -398,7 +398,7 @@ struct ContainerEngineAdapter: ToolAdapter {
 struct ColimaAdapter: ToolAdapter {
     let id = "colima"
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         guard let colima = locator.locate("colima"),
             let output = await ToolProbe.output(runner, colima, ["list", "--json"])
         else { return [] }
@@ -442,7 +442,7 @@ struct ColimaAdapter: ToolAdapter {
 struct LimaAdapter: ToolAdapter {
     let id = "lima"
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         guard let limactl = locator.locate("limactl"),
             let output = await ToolProbe.output(runner, limactl, ["list", "--json"])
         else { return [] }
@@ -470,7 +470,7 @@ struct AndroidAdapter: ToolAdapter {
         self.environment = environment
     }
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         let sdkPath = resolveSDKPath(home: home)
         let avdRoot = home + "/.android/avd"
 
@@ -522,7 +522,7 @@ struct AndroidAdapter: ToolAdapter {
 
     /// Reads installed packages from disk. sdkmanager is never run here: it now hands off to Google's Android CLI,
     /// which downloads the online catalogue. A package's ID is its folder path with `;` (`platforms;android-34`).
-    private func inspectSDK(sdkPath: String, sdkmanager: String?) async -> [ToolStorage] {
+    @concurrent private func inspectSDK(sdkPath: String, sdkmanager: String?) async -> [ToolStorage] {
         func uninstall(_ package: String) -> ToolCleanupAction? {
             guard let sdkmanager, Self.isValidPackageName(package) else { return nil }
             return ToolCleanupAction(executable: sdkmanager, arguments: ["--uninstall", package], risk: .review)
@@ -598,7 +598,7 @@ struct AndroidAdapter: ToolAdapter {
     }
 
     /// AVDs are `<name>.avd` folders with a `<name>.ini` beside them; avdmanager is not run to list them (see above).
-    private func inspectAVDs(avdRoot: String, avdmanager: String?) async -> [ToolStorage] {
+    @concurrent private func inspectAVDs(avdRoot: String, avdmanager: String?) async -> [ToolStorage] {
         guard let entries = try? FileManager.default.contentsOfDirectory(atPath: avdRoot) else { return [] }
         var rows: [ToolStorage] = []
         for entry in entries.sorted() where entry.hasSuffix(".avd") {
@@ -681,7 +681,7 @@ struct AndroidAdapter: ToolAdapter {
 struct OllamaAdapter: ToolAdapter {
     let id = "ollama"
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         let storePath = home + "/.ollama/models"
         var isDir: ObjCBool = false
         let storeExists = FileManager.default.fileExists(atPath: storePath, isDirectory: &isDir) && isDir.boolValue
@@ -781,7 +781,7 @@ struct OllamaAdapter: ToolAdapter {
 struct LMStudioAdapter: ToolAdapter {
     let id = "lmstudio"
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         let roots: [(path: String, isLegacy: Bool)] = [
             (home + "/.lmstudio/models", false),
             (home + "/.cache/lm-studio/models", true),
@@ -864,7 +864,7 @@ struct HuggingFaceAdapter: ToolAdapter {
         self.environment = environment
     }
 
-    func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
+    @concurrent func inspect(locator: ToolLocator, runner: any CommandRunning, home: String) async -> [ToolStorage] {
         let hubPath: String = {
             if let custom = environment?["HF_HOME"], !custom.isEmpty {
                 let base = custom.hasPrefix("/") ? custom : home + "/" + custom

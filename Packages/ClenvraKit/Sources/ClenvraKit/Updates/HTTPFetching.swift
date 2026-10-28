@@ -11,7 +11,7 @@ public enum FetchError: Error, Sendable, Equatable {
 
 /// The only way ClenvraKit reaches the network, injected so tests use canned responses and never connect.
 public protocol HTTPFetching: Sendable {
-    func data(from url: URL) async throws -> Data
+    @concurrent func data(from url: URL) async throws -> Data
 }
 
 /// Fetches over HTTPS with an ephemeral session: no cookies, no cache, no credentials, bounded size and time.
@@ -25,7 +25,7 @@ public struct URLSessionFetcher: HTTPFetching {
         self.timeout = timeout
     }
 
-    public func data(from url: URL) async throws -> Data {
+    @concurrent public func data(from url: URL) async throws -> Data {
         guard Self.isSecure(url) else { throw FetchError.insecureURL }
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = timeout
@@ -53,7 +53,7 @@ public struct URLSessionFetcher: HTTPFetching {
     }
 
     /// Reads at most `limit` bytes, stopping (and failing) as soon as the body goes past it.
-    static func collect<Bytes: AsyncSequence>(_ bytes: Bytes, limit: Int) async throws -> Data
+    @concurrent static func collect<Bytes: AsyncSequence>(_ bytes: Bytes, limit: Int) async throws -> Data
     where Bytes.Element == UInt8 {
         var data = Data()
         do {
@@ -76,7 +76,8 @@ public struct URLSessionFetcher: HTTPFetching {
 
 /// Refuses redirects that leave HTTPS, so an HTTPS feed cannot be downgraded to plain HTTP.
 private final class SecureRedirects: NSObject, URLSessionTaskDelegate, Sendable {
-    func urlSession(
+    // Called by URLSession through Objective-C, so there is no caller actor to inherit.
+    @concurrent func urlSession(
         _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
         newRequest request: URLRequest
     ) async -> URLRequest? {

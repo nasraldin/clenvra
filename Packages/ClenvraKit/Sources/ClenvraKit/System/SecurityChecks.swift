@@ -58,7 +58,7 @@ public final class SecurityChecker: Sendable {
     }
 
     /// Runs all security checks in sequence and returns structured results.
-    public func checkAll() async -> [SecurityCheck] {
+    @concurrent public func checkAll() async -> [SecurityCheck] {
         let sip = await checkSIP()
         let fileVault = await checkFileVault()
         let gatekeeper = await checkGatekeeper()
@@ -190,7 +190,7 @@ public final class SecurityChecker: Sendable {
 
     // MARK: - Private Probes
 
-    private func checkSIP() async -> SecurityCheck {
+    @concurrent private func checkSIP() async -> SecurityCheck {
         do {
             let cmd = Command(executable: "/usr/bin/csrutil", arguments: ["status"])
             let result = try await runner.run(cmd)
@@ -205,7 +205,7 @@ public final class SecurityChecker: Sendable {
         }
     }
 
-    private func checkFileVault() async -> SecurityCheck {
+    @concurrent private func checkFileVault() async -> SecurityCheck {
         do {
             let cmd = Command(executable: "/usr/bin/fdesetup", arguments: ["status"])
             let result = try await runner.run(cmd)
@@ -221,7 +221,7 @@ public final class SecurityChecker: Sendable {
         }
     }
 
-    private func checkGatekeeper() async -> SecurityCheck {
+    @concurrent private func checkGatekeeper() async -> SecurityCheck {
         do {
             let cmd = Command(executable: "/usr/sbin/spctl", arguments: ["--status"])
             let result = try await runner.run(cmd)
@@ -237,7 +237,7 @@ public final class SecurityChecker: Sendable {
         }
     }
 
-    private func checkFirewall() async -> SecurityCheck {
+    @concurrent private func checkFirewall() async -> SecurityCheck {
         do {
             let cmd = Command(
                 executable: "/usr/libexec/ApplicationFirewall/socketfilterfw",

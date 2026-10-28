@@ -9,7 +9,7 @@ import Foundation
 public enum StorageScanner {
     /// Scans `root` without modifying anything; throws only if the root itself cannot be opened and read.
     /// Cancelling the calling task returns a partial snapshot with `isComplete == false`.
-    public static func scan(
+    @concurrent public static func scan(
         root: String,
         options: ScanOptions = ScanOptions(),
         executor: FSExecutor = .shared,
@@ -40,11 +40,11 @@ public enum StorageScanner {
         let clock = ContinuousClock()
         var lastProgress = clock.now
 
-        await withTaskGroup(of: JobOutcome.self) { group in
+        await withTaskGroup(of: JobOutcome.self) { @concurrent group in
             var inFlight = 0
             while true {
                 while !cancelled, inFlight < executor.width, let job = queue.popFirst() {
-                    group.addTask {
+                    group.addTask { @concurrent in
                         await readChild(job, rootDevice: rootDevice, context: context, executor: executor)
                     }
                     inFlight += 1
@@ -110,7 +110,7 @@ public enum StorageScanner {
 
     // MARK: - Reading one directory
 
-    private static func readChild(
+    @concurrent private static func readChild(
         _ job: DirectoryJob, rootDevice: Int32, context: ScanContext, executor: FSExecutor
     ) async -> JobOutcome {
         do {
