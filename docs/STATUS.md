@@ -1,12 +1,12 @@
 # Project status and handoff
 
-_Last updated: 2026-10-28 (1.0.0, merged into `main`)._
+_Last updated: 2026-10-28 (1.0.0 on `main`, plus fixes found while verifying it on the work Mac)._
 
 Read this first when you pick the project up on another Mac. It says where the work stands, how to get running, and what to do next.
 
 ## Where we are
 
-**Version 1.0.0 is feature-complete and merged into `main`** (PR #1, branch `feat/gap-fixes-and-helper`). Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). `scripts/check.sh` passes locally: format, 720+ package tests, Release build. `scripts/check.sh --ui` (UI tests in English and Arabic, light and dark, accessibility audit of every section) passed on 2026-10-27; the last re-run only failed because the screen was locked.
+**Version 1.0.0 is feature-complete and merged into `main`** (PR #1, branch `feat/gap-fixes-and-helper`). Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). **`scripts/check.sh --ui` passes on the work Mac (2026-10-28):** format, 718 package tests, Release build, 7 UI tests (navigation in English and Arabic × light and dark, accessibility audit in light and dark). The earlier "UI tests passed" claim of 2026-10-27 was made before the menu bar extra landed, and the app froze at launch after that (see below).
 
 **Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A signed but **not notarised** `.build/release/Clenvra-1.0.0.dmg` exists locally (local build output, not in git): notarisation failed because the keychain was locked at the time. The `clenvra-notary` profile works again, so re-running `scripts/release.sh` should produce the notarised, stapled DMG.
 
@@ -26,6 +26,13 @@ Read this first when you pick the project up on another Mac. It says where the w
 | CL-11 recent-items lists | ✖ Not implemented on purpose: macOS has no supported way, and deleting `sharedfilelist` files does not reliably clear them (the daemon rewrites them) |
 
 How the work was done: features were built test-first, partly by delegated agents (Claude subagents, Antigravity `agy`, opencode) in separate worktrees, then reviewed, merged and re-verified here. Automated security reviews of the helper led to six fixes (forged Put Back, Trash symlinks, irreversible mode, admin-only, staged Put Back, gate before `launchctl`).
+
+### Fixed on 2026-10-28 (work Mac verification)
+
+- **Launch freeze (serious, also hit real users):** `MenuBarExtra(isInserted:)` was bound to `@AppStorage`. MenuBarExtra writes the binding back on every scene update, so the App body re-ran forever: main thread at 100%, memory over 1 GB, beach ball, UI tests failing with "has not loaded accessibility". It happened on most launches, not all. Fixed in `1024588`; found by bisecting to `55ec750`. **Rule: never bind `MenuBarExtra(isInserted:)` without dropping no-op writes, and never put `.task` or state writes in menu-style menu bar content.**
+- **Network calls during scans:** `sdkmanager --list` now hands off to Google's Android CLI, which goes online (a firewall caught it). Android packages and AVDs are read from disk now (`4f43f18`). npm, pnpm, pip and Homebrew run with their update checks off (`ea17fb6`).
+- **Light-mode contrast** of the small notes in Developer tool rows (`0b73013`).
+- **Tests on any Mac:** helper tests no longer assume user ID 501 (`65ca4fd`); `check.sh` signs ad hoc without the team certificate; the UI-test window is placed on the main display when several monitors are connected (`c9a614f`).
 
 ## Setting up on a new Mac
 
@@ -55,7 +62,8 @@ How the work was done: features were built test-first, partly by delegated agent
 - **Browser caches of uninstalled browsers** show as "in use", because Clenvra cannot tell whether an unknown app is running. The Leftovers tab is the place for those.
 - **Also unverified on this Mac:** Android SDK, Ollama/LM Studio/Hugging Face, and the Sparkle/App Store/Homebrew update sources were built from documentation with canned test output.
 - **UI tests trigger a folder prompt** on each fresh debug build ("access files in your Desktop folder"). Grant the debug build Desktop access once; the audit skips contrast checks while a prompt is showing.
-- **The accessibility UI tests take about 12 minutes**, mostly waiting for real scans to finish.
+- **The accessibility UI tests take about 12 minutes**, mostly waiting for real scans to finish. Don't use the Mac meanwhile: the tests drive the mouse.
+- **Other apps' pop-ups break the audit.** A firewall alert (LuLu) or any window over Clenvra makes the contrast audit measure the overlay and fail. Dismiss such alerts before `check.sh --ui`.
 - **Live cleanup on the owner's Macs is never automatic.** Testing deletion uses temporary fixture folders only.
 
 ## Working conventions
