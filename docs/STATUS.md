@@ -1,12 +1,16 @@
 # Project status and handoff
 
-_Last updated: 2026-10-27 (1.0.0)._
+_Last updated: 2026-10-28 (1.0.0, merged into `main`)._
 
 Read this first when you pick the project up on another Mac. It says where the work stands, how to get running, and what to do next.
 
 ## Where we are
 
-**Version 1.0.0 is feature-complete.** Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). `scripts/check.sh --ui` passes: format, 720+ package tests, Release build, UI tests in English and Arabic, light and dark, and an accessibility audit of every section. GitHub Actions runs lint, package tests and a Release build on every push.
+**Version 1.0.0 is feature-complete and merged into `main`** (PR #1, branch `feat/gap-fixes-and-helper`). Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). `scripts/check.sh` passes locally: format, 720+ package tests, Release build. `scripts/check.sh --ui` (UI tests in English and Arabic, light and dark, accessibility audit of every section) passed on 2026-10-27; the last re-run only failed because the screen was locked.
+
+**Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A signed but **not notarised** `.build/release/Clenvra-1.0.0.dmg` exists locally (local build output, not in git): notarisation failed because the keychain was locked at the time. The `clenvra-notary` profile works again, so re-running `scripts/release.sh` should produce the notarised, stapled DMG.
+
+**CI is red for an environment reason, not a code one:** `.github/workflows/ci.yml` requires Xcode 27, and GitHub's macOS runners only offer up to Xcode 26.6 (checked 2026-10-27). It will pass once runners get Xcode 27; until then rely on `scripts/check.sh` locally. Do not lower the Xcode requirement: the app targets the macOS 26 SDK features of Xcode 27.
 
 | Area | Status |
 |---|---|
@@ -36,10 +40,12 @@ How the work was done: features were built test-first, partly by delegated agent
 
 ## Next steps, in order
 
+0. **Unlocked Mac:** run `scripts/check.sh --ui`, then `scripts/release.sh`. Confirm `xcrun stapler validate .build/release/Clenvra-1.0.0.dmg` and `spctl -a -t open --context context:primary-signature -v` on the DMG both pass.
 1. **Helper end to end on a real Mac:** install the DMG into /Applications, Settings › System Helper › Install, approve in System Settings › General › Login Items, press Check. Then try Cleanup › System Caches (one item), Put Back from Activity, and System › Snapshots.
 2. **People, not code:** a VoiceOver pass and a native Arabic review of the strings.
 3. **Other Macs:** a run on a managed (MDM) Mac, a Mac without developer tools, and macOS 26 in a VM; a Release-build benchmark (see `testing/benchmarks.md`).
-4. **Publish:** merge `feat/gap-fixes-and-helper` into `main`, tag `v1.0.0`, run `scripts/release.sh`, attach the DMG to a GitHub Release.
+4. **Publish:** tag `v1.0.0` on `main`, attach the notarised DMG to a GitHub Release (ask the owner first; it is public).
+5. **After 1.0:** verify the vendor Team IDs below, switch CI to Xcode 27 runners when available, and decide whether CL-11 gets a guided manual flow instead of automation.
 
 ## Known caveats
 

@@ -15,3 +15,6 @@ xcuserdata/
 
 # Coverage data
 *.profraw
+
+# Xcode recreates this inside the project; the repo uses Clenvra.xcworkspace
+Clenvra.xcodeproj/project.xcworkspace/
