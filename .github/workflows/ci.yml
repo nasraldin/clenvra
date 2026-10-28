@@ -44,3 +44,11 @@ jobs:
 
       - name: Format, package tests, Release build
         run: scripts/check.sh
+
+      - name: Keep test results when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: .build/DerivedData/Logs/Test/*.xcresult
+          retention-days: 7

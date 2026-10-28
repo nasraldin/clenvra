@@ -32,13 +32,18 @@ public final class IdleWatch: Sendable {
     }
 
     public func start() {
-        let (seconds, attoseconds) = checkInterval.components
-        let interval = DispatchTimeInterval.nanoseconds(Int(seconds) * 1_000_000_000 + Int(attoseconds / 1_000_000_000))
+        let interval = Self.dispatchInterval(checkInterval)
         timer.schedule(deadline: .now() + interval, repeating: interval)
         timer.setEventHandler { [self] in
             let idle = busy.withLock { $0 } == 0 && ContinuousClock.now - lastActivity.withLock { $0 } > idleLimit
             if idle { onIdle() }
         }
         timer.resume()
+    }
+
+    /// The whole duration in nanoseconds (seconds included, not only the fractional part).
+    static func dispatchInterval(_ duration: Duration) -> DispatchTimeInterval {
+        let (seconds, attoseconds) = duration.components
+        return .nanoseconds(Int(seconds) * 1_000_000_000 + Int(attoseconds / 1_000_000_000))
     }
 }
