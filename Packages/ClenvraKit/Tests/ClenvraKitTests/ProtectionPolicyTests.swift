@@ -35,14 +35,23 @@ struct ProtectionPolicyTests {
     }
 
     @Test(
-        "the home folder, its direct children and the direct children of ~/Library are protected",
+        "the home folder, macOS's own folders in it, and the direct children of ~/Library are protected",
         arguments: [
-            "/Users/u", "/Users/u/Documents", "/Users/u/Library", "/Users/u/Sources", "/Users/u/.Trash",
+            "/Users/u", "/Users/u/Documents", "/Users/u/Library", "/Users/u/Desktop", "/Users/u/Downloads",
+            "/Users/u/Movies", "/Users/u/Music", "/Users/u/Pictures", "/Users/u/Public", "/Users/u/Applications",
+            "/Users/u/.Trash",
             "/Users/u/Library/Caches", "/Users/u/Library/Application Support", "/Users/u/Library/Containers",
             "/Users/u/.config", "/Users/u/.local", "/Users/u/.cache", "/USERS/U/documents",
         ])
     func homeRoots(path: String) {
         #expect(policy.protection(for: path) == .homeRoot)
+    }
+
+    @Test(
+        "folders the person created at the top of the home folder can be reviewed and moved to the Trash",
+        arguments: ["/Users/u/flutter", "/Users/u/android-sdk", "/Users/u/Sources", "/Users/u/.rbenv"])
+    func ownTopLevelFolders(path: String) {
+        #expect(policy.protection(for: path) == nil)
     }
 
     @Test("items inside home folders are not protected by the home rule")

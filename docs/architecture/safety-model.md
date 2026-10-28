@@ -31,7 +31,7 @@ This document takes priority over every other doc. If a feature conflicts with i
 All checks compare **file identity (dev, inode)** where a path is given, so case variants and firmlinks (`/var` ↔ `/private/var`) cannot slip through.
 
 - **System:** `/`, `/System`, `/usr`, `/bin`, `/sbin`, `/private` (except user `$TMPDIR` items in a later release), `/Library/Apple`, `/Library/Keychains`, `/Library/Extensions`, `/Applications` itself, `/System/Applications/**`, `/Users`, `/Volumes`.
-- **Home roots:** `~` and every direct child folder (`Documents`, `Desktop`, `Downloads`, `Pictures`, `Movies`, `Music`, `Library`, `Sources`, …). Their *contents* can be candidates; the folders themselves never are.
+- **Home roots:** `~` itself, the folders macOS and the shell put in every home (`Applications`, `Desktop`, `Documents`, `Downloads`, `Library`, `Movies`, `Music`, `Pictures`, `Public`, `Sites`, `.Trash`, `.config`, `.local`, `.cache`), and every top-level folder of `~/Library`. Their *contents* can be candidates; the folders themselves never are. Folders the person created at the top of their home (`~/flutter`, `~/Sources`) are not structural: they can be selected on purpose in Space Map, reviewed, confirmed and moved to the Trash (field issue F1, 2026-10-28). Secrets inside any folder stay protected by the name rules below.
 - **Secrets and identity:**
   - folders: `~/Library/Keychains`, `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, `~/.docker` (config), `~/.config` *root*, `~/.local` *root*, `~/.cache` *root*;
   - files: `*.keychain-db`, `id_*`, `*.pem`, `*.p12`, `.netrc`, `.npmrc`, `.pypirc`, `credentials*`.

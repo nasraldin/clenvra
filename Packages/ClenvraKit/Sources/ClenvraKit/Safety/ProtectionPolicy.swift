@@ -4,7 +4,7 @@ import Foundation
 public enum ProtectionReason: Sendable, Equatable, Codable {
     /// macOS itself or a root folder whose removal would break the system.
     case system
-    /// The home folder, its top-level folders, or a top-level folder of ~/Library.
+    /// The home folder, a folder macOS puts in it (Documents, Library…), or a top-level folder of ~/Library.
     case homeRoot
     /// Keys, certificates, keychains and credential files.
     case secret
@@ -114,9 +114,22 @@ public struct ProtectionPolicy: Sendable {
     /// Home itself, its direct children, and direct children of ~/Library.
     private func isHomeRoot(_ parts: [String]) -> Bool {
         guard parts.starts(with: homeComponents) else { return false }
-        let relative = parts.dropFirst(homeComponents.count)
-        return relative.count <= 1 || (relative.count == 2 && relative.first == "library")
+        let relative = Array(parts.dropFirst(homeComponents.count))
+        switch relative.count {
+        case 0: return true
+        case 1: return Self.standardHomeFolders.contains(relative[0])
+        case 2: return relative[0] == "library"
+        default: return false
+        }
     }
+
+    /// The folders macOS and the shell put in every home folder (case-folded). Folders the person created there
+    /// (`~/flutter`, `~/Sources`) are not structural: they may be reviewed and moved to the Trash like anything else.
+    /// Secrets inside them (`~/.ssh`, keys, keychains) stay protected by the name rules.
+    private static let standardHomeFolders: Set<String> = [
+        "applications", "desktop", "documents", "downloads", "library", "movies", "music", "pictures", "public",
+        "sites", ".trash", ".config", ".local", ".cache",
+    ]
 
     private static func nameReason(_ parts: [String]) -> ProtectionReason? {
         parts.lazy.compactMap(protection(forFoldedName:)).first
