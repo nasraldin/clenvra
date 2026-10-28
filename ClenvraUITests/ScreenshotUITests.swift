@@ -22,12 +22,8 @@ final class ScreenshotUITests: XCTestCase {
             app.launch()
             for section in allSections {
                 app.outlines.cells.containing(.any, identifier: "sidebar.\(section)").firstMatch.click()
-                // Wait for the read-only scan to finish and results to appear.
                 _ = app.descendants(matching: .any)["section.\(section)"].waitForExistence(timeout: 10)
-                _ = app.descendants(matching: .any)["review.results"].waitForExistence(timeout: 30)
-                let scanning = app.descendants(matching: .any)["review.scanning"]
-                let finished = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: scanning)
-                wait(for: [finished], timeout: 180)
+                scanAndWait(in: app, timeout: 120)
                 // A window screenshot is a screen region: bring the app to the front so nothing covers it.
                 app.activate()
                 let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
@@ -35,11 +31,30 @@ final class ScreenshotUITests: XCTestCase {
                 attachment.lifetime = .keepAlways
                 add(attachment)
             }
+            if language == "en" { captureSettings(of: app) }
             app.terminate()
         }
     }
 
     override func setUpWithError() throws {
         try XCTSkipIf(outputFolder == nil, "Screenshots are opt-in")
+    }
+
+    /// Every Settings tab, for visual review.
+    @MainActor
+    private func captureSettings(of app: XCUIApplication) {
+        app.typeKey(",", modifierFlags: .command)
+        let settings = app.windows.firstMatch
+        guard settings.waitForExistence(timeout: 5) else { return }
+        for tab in ["General", "Schedule", "Menu Bar", "Exclusions", "Custom Rules", "System Helper"] {
+            let button = app.toolbars.buttons[tab].firstMatch
+            guard button.waitForExistence(timeout: 3) else { continue }
+            button.click()
+            let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            attachment.name = "settings-\(tab)"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        app.typeKey("w", modifierFlags: .command)
     }
 }

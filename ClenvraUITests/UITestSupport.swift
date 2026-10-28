@@ -3,7 +3,8 @@ import XCTest
 
 /// The sidebar pages in display order, as their `sidebar.<id>` / `section.<id>` identifiers.
 let allSections = [
-    "overview", "cleanup", "developer", "largeFiles", "downloads", "duplicates", "similarPhotos", "storage",
+    "overview", "cleanup", "developer", "developerTools", "largeFiles", "downloads", "duplicates", "similarPhotos",
+    "storage",
     "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "snapshots", "activity",
 ]
 
@@ -64,4 +65,17 @@ func meanLuminance(of screenshot: XCUIScreenshot) -> Double? {
         total += 0.2126 * red + 0.7152 * green + 0.0722 * blue
     }
     return total / Double(side * side) / 255
+}
+
+/// Pages scan only when asked: press the page's Scan button if it shows one, then wait for the results to settle.
+@MainActor
+func scanAndWait(in app: XCUIApplication, timeout: TimeInterval = 90) {
+    let scan = app.buttons["review.scan"]
+    let scanned = scan.waitForExistence(timeout: 2)
+    if scanned { scan.click() }
+    // Pages without a Scan button show their content at once.
+    _ = app.descendants(matching: .any)["review.results"].waitForExistence(timeout: scanned ? timeout : 5)
+    let scanning = app.descendants(matching: .any)["review.scanning"]
+    let finished = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: scanning)
+    _ = XCTWaiter.wait(for: [finished], timeout: timeout)
 }

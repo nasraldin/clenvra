@@ -42,7 +42,7 @@ tart exec "$VM" /bin/zsh -c "rm -rf ~/clenvra && rsync -a --exclude .build --exc
 
 echo "▸ UI tests: $FILTER"
 set +e
-tart exec "$VM" /bin/zsh -c "cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
+tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
   -destination 'platform=macOS,arch=arm64' -derivedDataPath ~/dd -resultBundlePath ~/Results.xcresult \
   -only-testing:$FILTER -quiet \
   CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="

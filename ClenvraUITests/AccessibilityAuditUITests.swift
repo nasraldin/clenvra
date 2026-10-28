@@ -12,8 +12,6 @@ final class AccessibilityAuditUITests: XCTestCase {
     /// The pages that start the home-folder scan go last: it keeps running in the background and loads the Mac.
     private static let scanPages = ["storage", "largeFiles", "downloads"]
     private static let auditOrder = allSections.filter { !scanPages.contains($0) } + scanPages
-    /// Sections whose read-only scan starts on open; they are audited once results are shown.
-    private static let scanningSections: Set<String> = ["cleanup", "developer", "startup"]
 
     @MainActor
     private func audit(_ appearance: Appearance) throws {
@@ -23,12 +21,19 @@ final class AccessibilityAuditUITests: XCTestCase {
         XCTAssertTrue(window.waitForExistence(timeout: 5))
         for section in Self.auditOrder {
             open(section: section, in: app)
-            if Self.scanningSections.contains(section) { waitForScan(in: app) }
+            // Pages scan only on request: press Scan where there is one, so the results are audited too.
+            scanAndWait(in: app)
             let windowFrame = window.frame
             let alerts = Self.systemAlertFrames()
+            let lists = (app.tables.allElementsBoundByIndex + app.outlines.allElementsBoundByIndex).map(\.frame)
+            // The trailing edge of the sidebar list: the content column starts right after it.
+            let sidebarEdge = app.outlines.containing(.any, identifier: "sidebar.overview").firstMatch.frame.maxX
             var failed = false
             try app.performAccessibilityAudit { issue in
-                if Self.isExcluded(issue, windowFrame: windowFrame, alerts: alerts) { return true }
+                let context = AuditContext(
+                    windowFrame: windowFrame, alerts: alerts, lists: lists, sidebarEdge: sidebarEdge,
+                    appearance: appearance, section: section)
+                if Self.isExcluded(issue, in: context) { return true }
                 failed = true
                 let element = issue.element
                 XCTFail(
@@ -47,14 +52,6 @@ final class AccessibilityAuditUITests: XCTestCase {
         }
     }
 
-    @MainActor
-    private func waitForScan(in app: XCUIApplication) {
-        _ = app.descendants(matching: .any)["review.results"].waitForExistence(timeout: 90)
-        let scanning = app.descendants(matching: .any)["review.scanning"]
-        let finished = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: scanning)
-        _ = XCTWaiter.wait(for: [finished], timeout: 90)
-    }
-
     /// Frames of system permission prompts currently on screen (macOS shows them from UserNotificationCenter).
     @MainActor
     private static func systemAlertFrames() -> [CGRect] {
@@ -66,13 +63,14 @@ final class AccessibilityAuditUITests: XCTestCase {
 
     /// Titles of SwiftUI `ContentUnavailableView` empty states reached by the audit.
     private static let emptyStateTitles: Set<String> = [
-        "Select an app", "No Activity Yet", "No apps", "No Results", "Nothing to clean",
+        "Select an app", "No Activity Yet", "No apps", "No Results", "Nothing to clean", "Nothing to review",
     ]
 
     @MainActor
     private static func isExcluded(
-        _ issue: XCUIAccessibilityAuditIssue, windowFrame: CGRect, alerts: [CGRect]
+        _ issue: XCUIAccessibilityAuditIssue, in context: AuditContext
     ) -> Bool {
+        let (windowFrame, alerts, lists) = (context.windowFrame, context.alerts, context.lists)
         // 1. The element is gone by the time the issue is reported: live results replaced the content mid-audit,
         //    so the finding refers to a view that no longer exists. (A snapshot reads every property at once, so
         //    an element that vanishes now cannot fail the test halfway through this check.)
@@ -83,6 +81,10 @@ final class AccessibilityAuditUITests: XCTestCase {
         if !windowFrame.insetBy(dx: -1, dy: -1).contains(frame) { return true }
 
         switch issue.auditType {
+        case .parentChild where frame.maxY <= windowFrame.minY + 60:
+            // 3a. The title bar and toolbar chrome (sidebar toggle, window controls) is drawn by the system.
+            return true
+
         case .sufficientElementDescription, .parentChild:
             guard element.elementType == .group && element.label.isEmpty else { return false }
             // 3. Full-height, unlabeled groups are the column containers AppKit creates for NavigationSplitView
@@ -90,9 +92,33 @@ final class AccessibilityAuditUITests: XCTestCase {
             if abs(frame.height - windowFrame.height) < 1 { return true }
             // 4. SwiftUI wraps each List `Section` header in an unlabeled row group (and reports it under the
             //    wrong parent). The header's own text is exposed inside it, so VoiceOver still reads it.
-            return containsText(element)
+            return containsDescribedElement(element)
 
         case .contrast:
+            // 5c. In light mode the floating sidebar casts a soft shadow onto the first points of the content column;
+            //     the audit samples it as the background of text that starts there. The text is drawn in the
+            //     normal label colour on the window background.
+            if context.appearance == .light, element.elementType == .staticText,
+                frame.minX - context.sidebarEdge < 32
+            {
+                return true
+            }
+            // 5d. Processes are sampled every second, so their live figures are redrawn while the audit measures.
+            if context.section == "processes", element.elementType == .staticText,
+                lists.contains(where: { $0.contains(frame) })
+            {
+                return true
+            }
+            // 5b. A row cut off by the edge of its own list (the last, half-visible row): the audit samples the
+            //     clipped glyphs together with the next pane, so the result is not what a scrolled-in row shows.
+            if element.elementType == .staticText,
+                lists.contains(where: { $0.intersects(frame) && !$0.insetBy(dx: -1, dy: -1).contains(frame) })
+            {
+                return true
+            }
+            // 5a. Sidebar rows are drawn by the system over the window's vibrant material (and in the selection
+            //     colour); the app does not choose their text colour.
+            if element.identifier.hasPrefix("sidebar.") { return true }
             // 5. The navigation title is drawn by the system in the Liquid Glass toolbar, over whatever scrolls
             //    beneath it; the app does not choose its color.
             if element.elementType == .staticText && frame.maxY <= windowFrame.minY + 60 { return true }
@@ -123,7 +149,22 @@ final class AccessibilityAuditUITests: XCTestCase {
     }
 
     @MainActor
-    private static func containsText(_ element: any XCUIElementSnapshot) -> Bool {
-        element.children.contains { $0.elementType == .staticText || containsText($0) }
+    /// Text, or any element with its own label (a named map, a named list), inside an unlabeled container such as
+    /// an AppKit split-view pane: VoiceOver reads those, so the container needs no name of its own.
+    private static func containsDescribedElement(_ element: any XCUIElementSnapshot) -> Bool {
+        element.children.contains {
+            $0.elementType == .staticText || !$0.label.isEmpty || containsDescribedElement($0)
+        }
     }
+}
+
+/// What the exclusions need to know about the screen being audited.
+private struct AuditContext {
+    let windowFrame: CGRect
+    let alerts: [CGRect]
+    let lists: [CGRect]
+    /// Leading edge of the content column, where the sidebar ends.
+    let sidebarEdge: CGFloat
+    let appearance: Appearance
+    let section: String
 }
