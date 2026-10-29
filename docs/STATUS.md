@@ -8,7 +8,7 @@ Read this first when you pick the project up on another Mac. It says where the w
 
 **Version 1.0.0 is feature-complete and merged into `main`** (PR #1, branch `feat/gap-fixes-and-helper`). Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). **`scripts/check.sh --ui` passes on the work Mac (2026-10-28):** format, 718 package tests, Release build, 7 UI tests (navigation in English and Arabic × light and dark, accessibility audit in light and dark). The earlier "UI tests passed" claim of 2026-10-27 was made before the menu bar extra landed, and the app froze at launch after that (see below).
 
-**Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A signed but **not notarised** `.build/release/Clenvra-1.0.0.dmg` exists locally (local build output, not in git): notarisation failed because the keychain was locked at the time. The `clenvra-notary` profile works again, so re-running `scripts/release.sh` should produce the notarised, stapled DMG.
+**Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A notarised, stapled `.build/release/Clenvra-1.0.0.dmg` was built from `7fadb0a` on 2026-10-29 (local build output, not in git; `stapler validate` and `spctl` both pass). It predates the page-pattern work of the same day, so rebuild with `scripts/release.sh` before publishing.
 
 **CI** runs `scripts/check.sh` on GitHub's `xcode-27` runner (macOS 27, Xcode 27). UI tests run only locally: hosted runners have no GUI session with Accessibility permission.
 
@@ -38,7 +38,9 @@ Plan: [`superpowers/specs/2026-10-28-ui-redesign-design.md`](superpowers/specs/2
 - **Downloads:** Age and Size filters, Select All Shown, collapsible groups; hidden files are never listed.
 - **Space Map:** folders you created at the top of home can be selected and moved to the Trash (safety model updated); disks are re-read after every cleanup; the result explains that Trash space is freed once it is emptied.
 - **Settings:** toolbar tabs with icons (General, Schedule, Menu Bar, Exclusions, Custom Rules, System Helper), two-column pages, Open at Login.
-- **Not redesigned yet** (work as before, on the new navigation): Overview, Applications, Leftovers, Extensions, Duplicates, Similar Photos, Large & Old Files, Health, Processes, Security, Snapshots, Activity. They move to the same table + inspector pattern next.
+- **Every list page on one pattern (2026-10-29):** Leftovers, Extensions, Large & Old Files, Duplicates and Activity are sortable tables with an inspector, search, a context menu and one prominent action. The shared parts are in `Clenvra/Shared/PagePattern.swift` (`ExpandedGroups`, `PrimaryActionButton`, `InspectorToggle`, `SelectionStatusBar`, `ItemInspector`). Applications keeps list + detail (an uninstall review needs the width), with a sortable table of apps and **Uninstall…** as the prominent action. Duplicates' Search Options moved to a popover. Similar Photos keeps its thumbnail grid with collapsible groups. Health, Security and Snapshots are grouped forms with ⌘R in the toolbar. Overview already follows the spec's non-list layout.
+- **Groups everywhere (F4):** every grouped page remembers which groups are closed across launches (`GroupExpansion` in the kit, tested), and Option-click opens or closes all of them, as in Finder. Activity's history starts closed.
+- **Startup inspector shows who signed the program** (Apple, Mac App Store, identified developer, ad hoc, not signed, broken), read with the public Security framework (`CodeSignature`, tested).
 
 ### Fixed on 2026-10-28 (work Mac verification)
 
