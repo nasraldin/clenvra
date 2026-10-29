@@ -81,41 +81,49 @@ struct AppDetailView: View {
             }
         }
         .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    Task { shownResult = ShownResult(summary: await session.uninstall(dryRun: true), isPreview: true) }
+            ToolbarItem {
+                Menu {
+                    Button {
+                        Task {
+                            shownResult = ShownResult(summary: await session.uninstall(dryRun: true), isPreview: true)
+                        }
+                    } label: {
+                        Text("Preview Uninstall")
+                    }
+                    .disabled(!canUninstall)
+
+                    Button {
+                        resettingApp = session.detail?.app
+                    } label: {
+                        Text("Reset App…")
+                    }
+                    .help(Text("Removes the app's settings, caches and saved state. The app stays installed."))
+                    .disabled(!canReset)
+
+                    if let path = session.detail?.app.id {
+                        Divider()
+                        FileActionsMenu(paths: [path])
+                    }
                 } label: {
                     Label {
-                        Text("Preview")
+                        Text("More")
                     } icon: {
-                        Image(systemName: "eye")
+                        Image(systemName: "ellipsis")
                     }
                 }
-                .disabled(!canUninstall)
+                .menuIndicator(.hidden)
+                .help(Text("More actions"))
+            }
 
-                Button {
-                    resettingApp = session.detail?.app
-                } label: {
-                    Label {
-                        Text("Reset…")
-                    } icon: {
-                        Image(systemName: "arrow.counterclockwise")
-                    }
-                }
-                .help(Text("Removes the app's settings, caches and saved state. The app stays installed."))
-                .disabled(!canReset)
+            ToolbarSpacer(.fixed)
 
-                Button(role: .destructive) {
+            ToolbarItem {
+                PrimaryActionButton(
+                    title: "Uninstall…", help: "Review and move the app and its selected files to the Trash (⌘⌫)",
+                    isDisabled: !canUninstall
+                ) {
                     isConfirmingUninstall = true
-                } label: {
-                    Label {
-                        Text("Uninstall")
-                    } icon: {
-                        Image(systemName: "trash")
-                    }
                 }
-                .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(!canUninstall)
             }
         }
         .sheet(isPresented: $isConfirmingUninstall) {
@@ -174,21 +182,9 @@ struct AppDetailView: View {
     }
 
     private var statusBar: some View {
-        HStack {
-            if session.isWorking {
-                ProgressView().controlSize(.small)
-                Text("Moving to the Trash…")
-            } else {
-                Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
-                Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
-            }
-            Spacer()
-        }
-        .font(.callout)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(.bar)
+        SelectionStatusBar(
+            count: session.selectedCount, bytes: session.selectedBytes,
+            working: session.isWorking ? "Moving to the Trash…" : nil)
     }
 }
 

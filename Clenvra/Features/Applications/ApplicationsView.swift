@@ -66,7 +66,7 @@ struct ApplicationsView: View {
     }
 }
 
-/// Searchable, sortable list of installed apps; sizes are measured as rows appear.
+/// Searchable table of installed apps, sortable by name, size and last use; sizes are measured as rows appear.
 private struct AppListView: View {
     /// The engine's filters plus "apps with an update", which the update check provides.
     private enum ListFilter: Hashable {
@@ -80,6 +80,7 @@ private struct AppListView: View {
     let showsUpdates: Bool
     @Binding var selectedID: String?
     @State private var showsUpdatesOnly = false
+    @State private var sortOrder = [KeyPathComparator(\AppRow.name)]
 
     private var listFilter: Binding<ListFilter> {
         Binding(
@@ -99,6 +100,13 @@ private struct AppListView: View {
     private var listedApps: [InstalledApp] {
         guard showsUpdatesOnly && showsUpdates else { return session.visibleApps }
         return session.visibleApps.filter { availableVersion(of: $0) != nil }
+    }
+
+    private var rows: [AppRow] {
+        listedApps.map {
+            AppRow(app: $0, size: session.size(of: $0), lastUsed: session.lastUsed(of: $0))
+        }
+        .sorted(using: sortOrder)
     }
 
     private func availableVersion(of app: InstalledApp) -> String? {
@@ -134,25 +142,13 @@ private struct AppListView: View {
                     Text("No apps match the current search or filter.")
                 }
             } else {
-                List(listedApps, selection: $selectedID) { app in
-                    AppRow(
-                        app: app, size: session.size(of: app), lastUsed: session.lastUsed(of: app),
-                        availableVersion: availableVersion(of: app)
-                    )
-                    .tag(app.id)
-                    .task { await session.measure(app) }
-                }
-                .accessibilityLabel(Text(AppSection.applications.title))
-                .accessibilityIdentifier("review.results")
+                table
             }
         }
         .searchable(text: $session.searchText, placement: .sidebar, prompt: Text("Search apps"))
         .safeAreaInset(edge: .top) {
             VStack(spacing: 6) {
-                HStack {
-                    filterPicker
-                    sortPicker
-                }
+                filterPicker
                 if showsUpdates {
                     UpdateCheckProgress(updates: updates)
                 }
@@ -162,9 +158,53 @@ private struct AppListView: View {
             .padding(.vertical, 6)
             .background(.bar)
         }
-        .task(id: session.sortOrder) {
-            if session.sortOrder == .size { await session.measureAll() }
+        .onChange(of: sortOrder) {
+            // Sorting by size needs every app measured, not only the visible ones.
+            if sortOrder.first?.keyPath == \AppRow.size as AnyKeyPath { Task { await session.measureAll() } }
         }
+    }
+
+    private var table: some View {
+        Table(rows, selection: $selectedID, sortOrder: $sortOrder) {
+            TableColumn(Text("Name"), value: \.name) { row in
+                AppNameCell(app: row.app, availableVersion: availableVersion(of: row.app))
+                    .task { await session.measure(row.app) }
+            }
+            .width(min: 160, ideal: 200)
+
+            TableColumn(Text("Size"), value: \.size) { row in
+                if row.size > 0 {
+                    SizeText(bytes: row.size)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                } else {
+                    Text("Unknown")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            }
+            .width(min: 60, ideal: 75)
+
+            TableColumn(Text("Last Used"), value: \.lastUsed) { row in
+                DateCell(date: row.lastUsed)
+            }
+            .width(min: 80, ideal: 95)
+        }
+        .contextMenu(forSelectionType: String.self) { ids in
+            FileActionsMenu(paths: ids.sorted())
+            if ids.count == 1, let id = ids.first {
+                Button {
+                    NSWorkspace.shared.open(URL(filePath: id))
+                } label: {
+                    Text("Open")
+                }
+            }
+        }
+        // Two-line rows need no stripes, and grey version text on a grey stripe falls below readable contrast.
+        .alternatingRowBackgrounds(.disabled)
+        // The edge blur would fade the last visible row below readable contrast.
+        .scrollEdgeEffectHidden(true, for: .bottom)
+        .accessibilityLabel(Text(AppSection.applications.title))
+        .accessibilityIdentifier("review.results")
     }
 
     private var filterPicker: some View {
@@ -179,30 +219,35 @@ private struct AppListView: View {
         } label: {
             Text("Show")
         }
-    }
-
-    private var sortPicker: some View {
-        Picker(selection: $session.sortOrder) {
-            Text("Name").tag(AppsSession.SortOrder.name)
-            Text("Size").tag(AppsSession.SortOrder.size)
-            Text("Last Used").tag(AppsSession.SortOrder.lastUsed)
-        } label: {
-            Text("Sort By")
-        }
+        .visibleLabel("Show")
     }
 }
 
-private struct AppRow: View {
+/// One installed app in the table. Plain data, so the table can sort by its key paths.
+nonisolated struct AppRow: Identifiable, Sendable {
     let app: InstalledApp
-    let size: Int64?
-    let lastUsed: Date?
-    /// The newer version, when the update check found one.
+    let name: String
+    let size: Int64
+    let lastUsed: Date
+    var id: String { app.id }
+
+    init(app: InstalledApp, size: Int64?, lastUsed: Date?) {
+        self.app = app
+        name = app.name
+        self.size = size ?? 0
+        self.lastUsed = lastUsed ?? .distantPast
+    }
+}
+
+/// App icon, name, version and source; a newer version when the update check found one.
+private struct AppNameCell: View {
+    let app: InstalledApp
     var availableVersion: String?
 
     var body: some View {
-        HStack(spacing: 10) {
-            AppIcon(path: app.id, size: 32)
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 8) {
+            AppIcon(path: app.id, size: 24)
+            VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: app.name)
                     .lineLimit(1)
                 HStack(spacing: 6) {
@@ -211,27 +256,14 @@ private struct AppRow: View {
                     }
                     SourceBadge(source: app.source)
                 }
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
                 if let availableVersion {
                     UpdateBadge(version: availableVersion)
                 }
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
-                if let size {
-                    SizeText(bytes: size)
-                } else {
-                    Text(verbatim: "—").foregroundStyle(.tertiary)
-                }
-                if let lastUsed {
-                    Text(lastUsed, format: .relative(presentation: .named))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
         }
-        .accessibilityElement(children: .combine)
     }
 }
 

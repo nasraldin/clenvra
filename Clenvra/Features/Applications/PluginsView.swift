@@ -2,66 +2,58 @@ import AppKit
 import ClenvraKit
 import SwiftUI
 
-/// Extensions and plug-ins that add code to macOS or other apps. Only the user's own plug-in bundles can be
-/// removed; everything else is shown so the user knows it is there, and can be revealed in Finder.
+/// Extensions and plug-ins that add code to macOS or other apps, in collapsible groups. Only the user's own plug-in
+/// bundles can be removed; everything else is shown so the user knows it is there, and can be revealed in Finder.
 struct PluginsView: View {
     let session: PluginsSession
 
+    @State private var highlighted: Set<PluginRow.ID> = []
+    @State private var sortOrder = [KeyPathComparator(\PluginRow.name)]
+    @State private var query = ""
+    @State private var showsInspector = false
     @State private var isConfirming = false
     @State private var shownSummary: ShownPluginSummary?
-    /// Groups the person collapsed (F4).
-    @State private var collapsed: Set<PluginItem.Kind> = []
+    @State private var scanned: Date?
+    /// Groups the person closed, remembered across launches (F4).
+    private let expansion = ExpandedGroups("extensions")
 
     var body: some View {
-        VStack(spacing: 0) {
-            content
-            if session.removableCount > 0 { statusBar }
-        }
-        .toolbar {
-            ToolbarItemGroup {
-                Toggle(isOn: Binding(get: { session.showsAppleItems }, set: { session.showsAppleItems = $0 })) {
-                    Text("Show Apple Items")
+        content
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .safeAreaInset(edge: .bottom) {
+                if session.removableCount > 0 {
+                    SelectionStatusBar(
+                        count: session.selectedCount, bytes: session.selectedBytes,
+                        working: session.phase == .removing ? "Moving to the Trash…" : nil, scanned: scanned)
                 }
-                .accessibilityIdentifier("plugins.showApple")
-
-                Button {
-                    Task { await session.scan() }
-                } label: {
-                    Label {
-                        Text("Rescan")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .keyboardShortcut("r", modifiers: .command)
-                .disabled(isBusy)
-
-                Button(role: .destructive) {
-                    isConfirming = true
-                } label: {
-                    Label {
-                        Text("Move to Trash")
-                    } icon: {
-                        Image(systemName: "trash")
-                    }
-                }
-                .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(isBusy || session.selection.isEmpty)
             }
-        }
-        .sheet(isPresented: $isConfirming) {
-            ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
-                isConfirming = false
-                Task { shownSummary = ShownPluginSummary(summary: await session.remove()) }
+            .toolbar { toolbar }
+            .inspector(isPresented: $showsInspector) {
+                inspector
+                    .inspectorColumnWidth(min: 240, ideal: 290, max: 360)
             }
-        }
-        .sheet(item: $shownSummary) { shown in
-            CleanupResultSheet(summary: shown.summary, isPreview: false)
-        }
-
+            .searchable(text: $query, placement: .toolbar, prompt: Text("Search Extensions"))
+            .sheet(isPresented: $isConfirming) {
+                ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
+                    isConfirming = false
+                    Task { shownSummary = ShownPluginSummary(summary: await session.remove()) }
+                }
+            }
+            .sheet(item: $shownSummary) { shown in
+                CleanupResultSheet(summary: shown.summary, isPreview: false)
+            }
     }
 
     private var isBusy: Bool { session.phase != .ready }
+
+    private func scan() {
+        Task {
+            await session.scan()
+            scanned = .now
+        }
+    }
+
+    // MARK: - Content
 
     @ViewBuilder private var content: some View {
         if session.phase == .idle {
@@ -70,7 +62,7 @@ struct PluginsView: View {
                 description:
                     "List Safari extensions, system extensions, Quick Look and Spotlight plug-ins, audio plug-ins and other add-ons."
             ) {
-                Task { await session.scan() }
+                scan()
             }
         } else if session.phase == .scanning && session.groups.isEmpty {
             ProgressView {
@@ -78,148 +70,320 @@ struct PluginsView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("review.scanning")
-        } else if session.groups.isEmpty {
-            ContentUnavailableView {
-                Label {
-                    Text("No extensions or plug-ins found")
-                } icon: {
-                    Image(systemName: "puzzlepiece.extension")
+        } else if visibleGroups.isEmpty {
+            Group {
+                if query.isEmpty {
+                    ContentUnavailableView {
+                        Label {
+                            Text("No extensions or plug-ins found")
+                        } icon: {
+                            Image(systemName: "puzzlepiece.extension")
+                        }
+                    } description: {
+                        Text("Turn on Show Apple Items to see the ones built into macOS.")
+                    }
+                } else {
+                    ContentUnavailableView.search(text: query)
                 }
-            } description: {
-                Text("Turn on Show Apple Items to see the ones built into macOS.")
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.extensions.title))
         } else {
-            List {
+            VStack(spacing: 0) {
                 if !session.issues.isEmpty {
-                    Section {
+                    Label {
                         Text("Some extensions could not be listed, so this list may be incomplete.")
-                            .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
                     }
+                    .font(.callout)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    Divider()
                 }
-                ForEach(session.groups) { group in
-                    Section(
-                        isExpanded: Binding(
-                            get: { !collapsed.contains(group.id) },
-                            set: { if $0 { collapsed.remove(group.id) } else { collapsed.insert(group.id) } })
-                    ) {
-                        ForEach(group.items) { item in
-                            PluginRow(
-                                item: item, isSelectable: session.canSelect(item),
-                                isSelected: Binding(
-                                    get: { session.selection.contains(item.id) },
-                                    set: { _ in session.toggle(item.id) }))
+                table
+                    .accessibilityIdentifier("review.results")
+                    .accessibilityLabel(Text(AppSection.extensions.title))
+            }
+        }
+    }
+
+    private var table: some View {
+        Table(of: PluginRow.self, selection: $highlighted, sortOrder: $sortOrder) {
+            TableColumn(Text("Name"), value: \.name) { row in
+                HStack(spacing: 6) {
+                    checkbox(for: row)
+                    if let item = row.item {
+                        FileNameCell(name: item.name, path: item.path)
+                        if let app = item.containingApp {
+                            Text("Part of \(app)")
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
                         }
-                    } header: {
-                        Text(group.kind.title)
+                    } else {
+                        Text(row.kind.title)
+                            .fontWeight(.semibold)
                     }
                 }
             }
-            .disabled(session.phase == .removing)
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("review.results")
-            .accessibilityLabel(Text(AppSection.extensions.title))
-        }
-    }
+            .width(min: 220, ideal: 320)
 
-    private var statusBar: some View {
-        HStack {
-            if session.phase == .removing {
-                ProgressView().controlSize(.small)
-                Text("Moving to the Trash…")
-            } else {
-                Text("\(session.selectedCount) items selected")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
-                Text("Frees about \(session.selectedBytes.formatted(.byteCount(style: .file)))")
+            TableColumn(Text("Status")) { row in
+                if let item = row.item {
+                    PluginStatus(item: item)
+                } else {
+                    Text("\(row.itemCount) items")
+                        .foregroundStyle(.secondary)
+                }
             }
-            Spacer()
+            .width(min: 110, ideal: 150)
+
+            TableColumn(Text("Size"), value: \.size) { row in
+                if row.size > 0 {
+                    SizeText(bytes: row.size)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            }
+            .width(min: 70, ideal: 90)
+        } rows: {
+            ForEach(visibleGroups) { group in
+                DisclosureTableRow(PluginRow(group: group), isExpanded: expandedBinding(group.kind)) {
+                    ForEach(matches(in: group).map(PluginRow.init(item:)).sorted(using: sortOrder)) { row in
+                        TableRow(row)
+                    }
+                }
+            }
         }
-        .font(.callout)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(.bar)
+        .contextMenu(forSelectionType: PluginRow.ID.self) { ids in
+            let items = session.groups.flatMap(\.items).filter { ids.contains($0.id) }
+            if !items.isEmpty {
+                FileActionsMenu(paths: items.compactMap(\.path)) {
+                    highlighted = ids
+                    showsInspector = true
+                }
+            }
+        } primaryAction: { ids in
+            highlighted = ids
+            showsInspector = true
+        }
+        .disabled(session.phase == .removing)
     }
-}
 
-private struct PluginRow: View {
-    let item: PluginItem
-    let isSelectable: Bool
-    @Binding var isSelected: Bool
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Toggle(isOn: $isSelected) {
-                Text(verbatim: item.name)
+    @ViewBuilder private func checkbox(for row: PluginRow) -> some View {
+        if let item = row.item {
+            Toggle(
+                isOn: Binding(
+                    get: { session.selection.contains(item.id) },
+                    set: { if $0 != session.selection.contains(item.id) { session.toggle(item.id) } })
+            ) {
+                Text("Include \(item.name)")
             }
             .toggleStyle(.checkbox)
             .labelsHidden()
-            .disabled(!isSelectable)
-
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(verbatim: item.name)
-                        .lineLimit(1)
-                    if let version = item.version {
-                        Text(verbatim: version)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    }
-                    handlingBadge
-                }
-                if let path = item.path {
-                    PathText(path: path)
-                } else if let identifier = item.bundleIdentifier {
-                    Text(verbatim: identifier)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
-                if let app = item.containingApp {
-                    Text("Part of \(app)")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
+            .disabled(!session.canSelect(item))
+        } else if let group = session.groups.first(where: { $0.kind == row.kind }),
+            group.items.contains(where: session.canSelect)
+        {
+            let removable = group.items.filter(session.canSelect)
+            Toggle(
+                isOn: Binding(
+                    get: { removable.allSatisfy { session.selection.contains($0.id) } },
+                    set: { session.setSelected($0, kind: group.kind) })
+            ) {
+                Text("Include all \(Text(group.kind.title))")
             }
-
-            Spacer()
-
-            if let size = item.size {
-                Text(size.formatted(.byteCount(style: .file)))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-            if let path = item.path {
-                Button {
-                    NSWorkspace.shared.activateFileViewerSelecting([URL(filePath: path)])
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                }
-                .buttonStyle(.borderless)
-                .help(Text("Show in Finder"))
-                .accessibilityLabel(Text("Show in Finder"))
-            }
+            .toggleStyle(.checkbox)
+            .labelsHidden()
         }
-        .padding(.vertical, 2)
     }
 
-    @ViewBuilder private var handlingBadge: some View {
+    @ViewBuilder private var inspector: some View {
+        let items = session.groups.flatMap(\.items).filter { highlighted.contains($0.id) }
+        if items.count == 1, let item = items.first {
+            ItemInspector(name: item.name, path: item.path) {
+                Section {
+                    LabeledContent {
+                        Text(item.kind.title)
+                    } label: {
+                        Text("Kind")
+                    }
+                    LabeledContent {
+                        PluginStatus(item: item)
+                    } label: {
+                        Text("Status")
+                    }
+                    if let version = item.version {
+                        LabeledContent {
+                            Text(verbatim: version)
+                        } label: {
+                            Text("Version")
+                        }
+                    }
+                    if let app = item.containingApp {
+                        LabeledContent {
+                            Text(verbatim: app)
+                        } label: {
+                            Text("Part Of")
+                        }
+                    }
+                    if let identifier = item.bundleIdentifier {
+                        LabeledContent {
+                            Text(verbatim: identifier)
+                                .textSelection(.enabled)
+                                .environment(\.layoutDirection, .leftToRight)
+                        } label: {
+                            Text("Identifier")
+                        }
+                    }
+                    if let size = item.size {
+                        LabeledContent {
+                            SizeText(bytes: size)
+                        } label: {
+                            Text("Size")
+                        }
+                    }
+                } footer: {
+                    Text(item.handling.explanation)
+                        .font(.callout)
+                }
+            }
+        } else if items.count > 1 {
+            SelectionTotalsInspector(count: items.count, bytes: items.reduce(0) { $0 + ($1.size ?? 0) })
+        } else {
+            NoSelectionInspector(description: "Select an extension to see what it is and where it lives.")
+        }
+    }
+
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItemGroup {
+            Toggle(isOn: Binding(get: { session.showsAppleItems }, set: { session.showsAppleItems = $0 })) {
+                Text("Show Apple Items")
+            }
+            .help(Text("Also list the extensions built into macOS"))
+            .accessibilityIdentifier("plugins.showApple")
+
+            Button {
+                scan()
+            } label: {
+                Label {
+                    Text(session.phase == .idle ? "Scan" : "Rescan")
+                } icon: {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+            .keyboardShortcut("r", modifiers: .command)
+            .help(Text("Look for extensions again (⌘R)"))
+            .disabled(session.phase == .scanning || session.phase == .removing)
+        }
+
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem {
+            PrimaryActionButton(isDisabled: isBusy || session.selection.isEmpty) {
+                isConfirming = true
+            }
+        }
+
+        ToolbarItem {
+            InspectorToggle(isPresented: $showsInspector)
+        }
+    }
+
+    // MARK: - Data
+
+    private var visibleGroups: [PluginsSession.Group] {
+        session.groups.filter { !matches(in: $0).isEmpty }
+    }
+
+    private func matches(in group: PluginsSession.Group) -> [PluginItem] {
+        guard !query.isEmpty else { return group.items }
+        return group.items.filter {
+            $0.name.localizedCaseInsensitiveContains(query)
+                || ($0.containingApp?.localizedCaseInsensitiveContains(query) ?? false)
+                || ($0.bundleIdentifier?.localizedCaseInsensitiveContains(query) ?? false)
+        }
+    }
+
+    private func expandedBinding(_ kind: PluginItem.Kind) -> Binding<Bool> {
+        expansion.binding(String(describing: kind)) { session.groups.map { String(describing: $0.kind) } }
+    }
+}
+
+/// One table row: a kind of extension (with its items as children) or one extension. Plain data, so the table can
+/// sort by its key paths.
+nonisolated struct PluginRow: Identifiable, Sendable {
+    let id: String
+    let kind: PluginItem.Kind
+    let item: PluginItem?
+    let name: String
+    let size: Int64
+    let itemCount: Int
+
+    init(group: PluginsSession.Group) {
+        id = "kind:" + String(describing: group.kind)
+        kind = group.kind
+        item = nil
+        name = String(describing: group.kind)  // Kind rows are not sorted; the cell shows the localized title.
+        size = group.items.reduce(0) { $0 + ($1.size ?? 0) }
+        itemCount = group.items.count
+    }
+
+    init(item: PluginItem) {
+        id = item.id
+        kind = item.kind
+        self.item = item
+        name = item.name
+        size = item.size ?? 0
+        itemCount = 1
+    }
+}
+
+/// Whether the extension can be removed, as icon + word.
+private struct PluginStatus: View {
+    let item: PluginItem
+
+    var body: some View {
+        Label {
+            Text(title)
+        } icon: {
+            Image(systemName: symbol)
+                .foregroundStyle(item.handling == .managed ? Color.orange : Color.secondary)
+        }
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .labelStyle(.titleAndIcon)
+    }
+
+    private var title: LocalizedStringResource {
         switch item.handling {
-        case .removable:
-            EmptyView()
+        case .removable: item.isEnabled == false ? "Off" : "Removable"
+        case .managed: "Security software"
+        case .revealOnly: item.isEnabled == false ? "Off" : "Show only"
+        }
+    }
+
+    private var symbol: String {
+        switch item.handling {
+        case .removable: item.isEnabled == false ? "pause.circle" : "trash.circle"
+        case .managed: "lock.shield"
+        case .revealOnly: item.isEnabled == false ? "pause.circle" : "eye"
+        }
+    }
+}
+
+extension PluginItem.Handling {
+    var explanation: LocalizedStringResource {
+        switch self {
+        case .removable: "Installed in your home folder. You can move it to the Trash."
         case .managed:
-            Label {
-                Text("Security or management software")
-            } icon: {
-                Image(systemName: "lock.shield").foregroundStyle(.orange)
-            }
-            .font(.callout)
+            "Security or management software. Remove it with its own app or ask your administrator."
         case .revealOnly:
-            if item.isEnabled == false {
-                Text("Off")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
+            "Installed by macOS, an app or an administrator. Clenvra shows it so you know it is there; remove it from the app it belongs to."
         }
     }
 }
