@@ -61,76 +61,33 @@ private struct SystemHealthView: View {
     let session: SystemSession
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                if let health = session.health {
-                    memoryPressureSection(health: health)
-                    memoryBreakdownSection(health: health)
-                    systemMetricsSection(health: health)
-                    if let battery = health.battery {
-                        batterySection(battery: battery)
-                    }
-                } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 40)
+        if let health = session.health {
+            Form {
+                memorySection(health: health)
+                performanceSection(health: health)
+                if let battery = health.battery {
+                    batterySection(battery: battery)
                 }
             }
-            .padding()
+            .formStyle(.grouped)
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
-    @ViewBuilder
-    private func memoryPressureSection(health: SystemHealth) -> some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Memory Pressure")
-                        .font(.headline)
-                    Spacer()
-                    pressureBadge(level: health.memoryPressure)
-                }
-                Text(
-                    "macOS manages memory dynamically. High used memory is normal and keeps the system responsive; memory pressure is the true indicator of memory constraint."
-                )
-                .font(.callout)
-                .foregroundStyle(.secondary)
+    private func memorySection(health: SystemHealth) -> some View {
+        Section {
+            LabeledContent {
+                pressureBadge(level: health.memoryPressure)
+            } label: {
+                Text("Memory Pressure")
             }
-            .padding(4)
-        }
-    }
-
-    @ViewBuilder
-    private func pressureBadge(level: MemoryPressureLevel) -> some View {
-        let (title, icon, color): (LocalizedStringResource, String, Color) = {
-            switch level {
-            case .normal:
-                return ("Normal", "checkmark.circle.fill", .green)
-            case .warning:
-                return ("Warning", "exclamationmark.triangle.fill", .orange)
-            case .critical:
-                return ("Critical", "exclamationmark.octagon.fill", .red)
-            }
-        }()
-
-        // Only the symbol carries the status color: green or yellow text is unreadable on a light background.
-        Label {
-            Text(title)
-                .fontWeight(.medium)
-        } icon: {
-            Image(systemName: icon)
-                .foregroundStyle(color)
-        }
-    }
-
-    @ViewBuilder
-    private func memoryBreakdownSection(health: SystemHealth) -> some View {
-        GroupBox(label: Text("Memory Usage").font(.headline)) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 MemoryDistributionBar(health: health)
-                    .frame(height: 18)
+                    .frame(height: 14)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
-
+                    .accessibilityHidden(true)
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
                     GridRow {
                         legendItem(color: .blue, title: "App Memory", bytes: health.appMemory)
@@ -141,80 +98,38 @@ private struct SystemHealthView: View {
                         legendItem(color: .green, title: "Available Memory", bytes: health.availableMemory)
                     }
                 }
-
-                Divider()
-
-                HStack {
-                    Text("Total RAM")
-                        .foregroundStyle(.secondary)
-                    SizeText(bytes: Int64(health.totalPhysicalMemory))
-                        .fontWeight(.medium)
-
-                    Spacer()
-
-                    Text("Swap Used")
-                        .foregroundStyle(.secondary)
-                    SizeText(bytes: Int64(health.swapUsed))
-                        .fontWeight(.medium)
-                }
-                .font(.callout)
             }
-            .padding(4)
-        }
-    }
-
-    @ViewBuilder
-    private func legendItem(color: Color, title: LocalizedStringResource, bytes: UInt64) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(title)
-                .foregroundStyle(.secondary)
-            SizeText(bytes: Int64(bytes))
-                .fontWeight(.medium)
-        }
-        .font(.callout)
-    }
-
-    @ViewBuilder
-    private func systemMetricsSection(health: SystemHealth) -> some View {
-        GroupBox(label: Text("System Performance").font(.headline)) {
-            Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 8) {
-                GridRow {
-                    Text("CPU Usage")
-                        .foregroundStyle(.secondary)
-                    Text(health.cpuLoadPercent / 100, format: .percent.precision(.fractionLength(1)))
-                        .monospacedDigit()
-                        .fontWeight(.medium)
-
-                    Text("Uptime")
-                        .foregroundStyle(.secondary)
-                    Text(formatUptime(seconds: health.uptime))
-                        .fontWeight(.medium)
-                }
-                GridRow {
-                    Text("Thermal State")
-                        .foregroundStyle(.secondary)
-                    thermalBadge(state: health.thermalState)
-                }
+            .padding(.vertical, 4)
+            LabeledContent {
+                SizeText(bytes: Int64(health.totalPhysicalMemory))
+            } label: {
+                Text("Total RAM")
             }
+            LabeledContent {
+                SizeText(bytes: Int64(health.swapUsed))
+            } label: {
+                Text("Swap Used")
+            }
+        } header: {
+            Text("Memory")
+        } footer: {
+            Text(
+                "macOS manages memory dynamically. High used memory is normal and keeps the system responsive; memory pressure is the true indicator of memory constraint."
+            )
             .font(.callout)
-            .padding(4)
         }
     }
 
-    @ViewBuilder
-    private func thermalBadge(state: ThermalState) -> some View {
-        let (title, icon, color): (LocalizedStringResource, String, Color) = {
-            switch state {
-            case .nominal: return ("Normal", "thermometer.low", .green)
-            case .fair: return ("Fair", "thermometer.medium", .yellow)
-            case .serious: return ("Serious", "thermometer.high", .orange)
-            case .critical: return ("Critical", "exclamationmark.triangle.fill", .red)
-            }
-        }()
+    @ViewBuilder private func pressureBadge(level: MemoryPressureLevel) -> some View {
+        switch level {
+        case .normal: statusLabel("Normal", "checkmark.circle.fill", .green)
+        case .warning: statusLabel("Warning", "exclamationmark.triangle.fill", .orange)
+        case .critical: statusLabel("Critical", "exclamationmark.octagon.fill", .red)
+        }
+    }
 
+    /// Only the symbol carries the status color: green or yellow text is unreadable on a light background.
+    private func statusLabel(_ title: LocalizedStringResource, _ icon: String, _ color: Color) -> some View {
         Label {
             Text(title)
         } icon: {
@@ -223,49 +138,84 @@ private struct SystemHealthView: View {
         }
     }
 
-    @ViewBuilder
+    private func legendItem(color: Color, title: LocalizedStringResource, bytes: UInt64) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+                .accessibilityHidden(true)
+            Text(title)
+                .foregroundStyle(.secondary)
+            SizeText(bytes: Int64(bytes))
+        }
+        .font(.callout)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func performanceSection(health: SystemHealth) -> some View {
+        Section {
+            LabeledContent {
+                Text(health.cpuLoadPercent / 100, format: .percent.precision(.fractionLength(1)))
+                    .monospacedDigit()
+            } label: {
+                Text("CPU Usage")
+            }
+            LabeledContent {
+                thermalBadge(state: health.thermalState)
+            } label: {
+                Text("Thermal State")
+            }
+            LabeledContent {
+                Text(formatUptime(seconds: health.uptime))
+            } label: {
+                Text("Uptime")
+            }
+        } header: {
+            Text("System Performance")
+        }
+    }
+
+    @ViewBuilder private func thermalBadge(state: ThermalState) -> some View {
+        switch state {
+        case .nominal: statusLabel("Normal", "thermometer.low", .green)
+        case .fair: statusLabel("Fair", "thermometer.medium", .yellow)
+        case .serious: statusLabel("Serious", "thermometer.high", .orange)
+        case .critical: statusLabel("Critical", "exclamationmark.triangle.fill", .red)
+        }
+    }
+
     private func batterySection(battery: BatteryHealth) -> some View {
-        GroupBox(label: Text("Battery").font(.headline)) {
-            Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 8) {
-                GridRow {
-                    Text("Charge")
-                        .foregroundStyle(.secondary)
-                    HStack(spacing: 2) {
-                        Text(battery.chargePercent.formatted())
-                            .monospacedDigit()
-                            .fontWeight(.medium)
-                        Text(verbatim: "%")
-                    }
-
-                    if let cycles = battery.cycleCount {
-                        Text("Cycle Count")
-                            .foregroundStyle(.secondary)
-                        Text(cycles.formatted())
-                            .fontWeight(.medium)
-                    }
-                }
-                if let maxCap = battery.maxCapacityPercent {
-                    GridRow {
-                        Text("Maximum Capacity")
-                            .foregroundStyle(.secondary)
-                        HStack(spacing: 2) {
-                            Text(maxCap.formatted())
-                                .monospacedDigit()
-                                .fontWeight(.medium)
-                            Text(verbatim: "%")
-                        }
-
-                        if let condition = battery.condition {
-                            Text("Condition")
-                                .foregroundStyle(.secondary)
-                            Text(verbatim: condition)
-                                .fontWeight(.medium)
-                        }
-                    }
+        Section {
+            LabeledContent {
+                Text(Double(battery.chargePercent) / 100, format: .percent)
+                    .monospacedDigit()
+            } label: {
+                Text("Charge")
+            }
+            if let maxCap = battery.maxCapacityPercent {
+                LabeledContent {
+                    Text(Double(maxCap) / 100, format: .percent)
+                        .monospacedDigit()
+                } label: {
+                    Text("Maximum Capacity")
                 }
             }
-            .font(.callout)
-            .padding(4)
+            if let cycles = battery.cycleCount {
+                LabeledContent {
+                    Text(cycles, format: .number)
+                } label: {
+                    Text("Cycle Count")
+                }
+            }
+            if let condition = battery.condition {
+                LabeledContent {
+                    Text(verbatim: condition)
+                } label: {
+                    Text("Condition")
+                }
+            }
+        } header: {
+            Text("Battery")
         }
     }
 
@@ -480,31 +430,33 @@ private struct SystemSecurityView: View {
     let session: SystemSession
 
     var body: some View {
-        List {
+        Form {
             Section {
                 ForEach(session.securityChecks) { check in
                     SecurityCheckRow(check: check)
                 }
             } header: {
-                HStack {
-                    Text("Security Protections")
-                    Spacer()
-                    if session.isCheckingSecurity {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Button {
-                            Task { await session.refreshSecurity() }
-                        } label: {
-                            Label {
-                                Text("Check Again")
-                            } icon: {
-                                Image(systemName: "arrow.clockwise")
-                            }
-                        }
-                        .buttonStyle(.borderless)
+                Text("Security Protections")
+            } footer: {
+                Text("Clenvra only reads these settings. Change them in System Settings.")
+                    .font(.callout)
+            }
+        }
+        .formStyle(.grouped)
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    Task { await session.refreshSecurity() }
+                } label: {
+                    Label {
+                        Text("Check Again")
+                    } icon: {
+                        Image(systemName: "arrow.clockwise")
                     }
                 }
+                .keyboardShortcut("r", modifiers: .command)
+                .help(Text("Read the security settings again (⌘R)"))
+                .disabled(session.isCheckingSecurity)
             }
         }
     }
@@ -655,6 +607,22 @@ private struct SnapshotsView: View {
         }
         .formStyle(.grouped)
         .task { await session.load() }
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    Task { await session.load() }
+                } label: {
+                    Label {
+                        Text("Refresh")
+                    } icon: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+                .keyboardShortcut("r", modifiers: .command)
+                .help(Text("List the snapshots again (⌘R)"))
+                .disabled(session.isLoading)
+            }
+        }
         .confirmationDialog(
             Text("Delete this snapshot?"),
             isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } })
