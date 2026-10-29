@@ -432,8 +432,23 @@ public struct OwnershipResolver: Sendable {
     }
 
     static func isNeverFlagged(_ identifier: String) -> Bool {
-        let lowered = identifier.lowercased()
-        return neverFlagPrefixes.contains { lowered.hasPrefix($0) }
+        let owner = groupOwner(of: identifier).lowercased()
+        return neverFlagPrefixes.contains { owner.hasPrefix($0) }
+    }
+
+    /// The identifier a group container is named after: `group.`, `groups.` and `systemgroup.` and a ten-character
+    /// team prefix (`243LU875E5.groups.com.apple.podcasts`) are dropped, so macOS's own groups match `com.apple.`.
+    static func groupOwner(of identifier: String) -> String {
+        var parts = identifier.split(separator: ".", omittingEmptySubsequences: false)
+        if let team = parts.first, team.count == 10, team.allSatisfy({ $0.isUppercase || $0.isNumber }),
+            parts.count > 1
+        {
+            parts.removeFirst()
+        }
+        if let first = parts.first, ["group", "groups", "systemgroup"].contains(first.lowercased()), parts.count > 1 {
+            parts.removeFirst()
+        }
+        return parts.joined(separator: ".")
     }
 
     /// Reverse-DNS shape with at least three components (`com.vendor.app`), so plain folder names never qualify.

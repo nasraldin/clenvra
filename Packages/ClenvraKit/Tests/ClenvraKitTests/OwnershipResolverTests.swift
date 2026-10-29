@@ -438,4 +438,20 @@ struct OwnershipResolverTests {
         #expect(OwnershipResolver.isNeverFlagged(prefix + "x.y"))
         #expect(!OwnershipResolver.isNeverFlagged("com.vendor.app"))
     }
+
+    @Test(
+        "macOS group containers are never leftovers, whatever their group or team prefix",
+        arguments: [
+            "group.com.apple.calendar", "systemgroup.com.apple.configurationprofiles",
+            "243LU875E5.groups.com.apple.podcasts", "UBF8T346G9.group.com.apple.notes",
+        ])
+    func appleGroupsNeverFlagged(_ identifier: String) {
+        #expect(OwnershipResolver.isNeverFlagged(identifier))
+    }
+
+    @Test("a third-party group container can still be a leftover")
+    func otherGroupsCanBeFlagged() {
+        #expect(!OwnershipResolver.isNeverFlagged("group.com.vendor.app"))
+        #expect(!OwnershipResolver.isNeverFlagged("ABCDE12345.group.com.vendor.app"))
+    }
 }
