@@ -9,6 +9,9 @@ struct DuplicatesView: View {
     @State private var isConfirming = false
     @State private var shownSummary: ShownDuplicatesSummary?
     @State private var previewURL: URL?
+    @State private var highlighted: Set<DuplicateRow.ID> = []
+    @State private var showsInspector = false
+    @State private var query = ""
 
     init(session: DuplicatesSession) {
         _session = State(initialValue: session)
@@ -19,12 +22,17 @@ struct DuplicatesView: View {
             .accessibilityElement(children: .contain)
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom) {
-                if !session.groups.isEmpty { statusBar }
+                if !session.groups.isEmpty {
+                    SelectionStatusBar(
+                        count: session.markedCount, bytes: session.markedBytes,
+                        working: session.phase == .removing ? "Moving to the Trash…" : nil)
+                }
             }
-            .inspector(isPresented: $isShowingOptions) {
-                DuplicatesSearchOptions(session: session)
-                    .inspectorColumnWidth(min: 260, ideal: 300)
+            .inspector(isPresented: $showsInspector) {
+                DuplicateInspector(session: session, highlighted: highlighted)
+                    .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
             }
+            .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.markedCount, bytes: session.markedBytes) {
                     isConfirming = false
@@ -70,8 +78,13 @@ struct DuplicatesView: View {
             }
             .accessibilityIdentifier("review.results")
         case .ready, .removing:
-            DuplicateGroupsList(session: session, previewURL: $previewURL)
-                .accessibilityIdentifier("review.results")
+            DuplicateGroupsList(
+                session: session, previewURL: $previewURL, highlighted: $highlighted,
+                showsInspector: $showsInspector, query: query
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.duplicates.title))
         }
     }
 
@@ -148,38 +161,28 @@ struct DuplicatesView: View {
                     Image(systemName: "slider.horizontal.3")
                 }
             }
+            .help(Text("Choose the folders to search and the smallest file size"))
             .disabled(session.phase == .idle)
+            .popover(isPresented: $isShowingOptions, arrowEdge: .bottom) {
+                DuplicatesSearchOptions(session: session)
+                    .frame(width: 380, height: 420)
+            }
+        }
 
-            Button(role: .destructive) {
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem {
+            PrimaryActionButton(
+                help: "Review and move the checked copies to the Trash (⌘⌫)",
+                isDisabled: session.phase != .ready || session.markedCount == 0
+            ) {
                 isConfirming = true
-            } label: {
-                Label {
-                    Text("Move to Trash")
-                } icon: {
-                    Image(systemName: "trash")
-                }
             }
-            .keyboardShortcut(.delete, modifiers: .command)
-            .disabled(session.phase != .ready || session.markedCount == 0)
         }
-    }
 
-    private var statusBar: some View {
-        HStack {
-            if session.phase == .removing {
-                ProgressView().controlSize(.small)
-                Text("Moving to the Trash…")
-            } else {
-                Text("\(session.markedCount) copies marked")
-                Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
-                Text("Frees about \(session.markedBytes.formatted(.byteCount(style: .file)))")
-            }
-            Spacer()
+        ToolbarItem {
+            InspectorToggle(isPresented: $showsInspector)
         }
-        .font(.callout)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(.bar)
     }
 }
 

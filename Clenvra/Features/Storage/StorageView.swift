@@ -197,18 +197,14 @@ struct StorageView: View {
                 .keyboardShortcut("r", modifiers: .command)
                 .disabled(isBusy)
             }
+        }
 
-            Button(role: .destructive) {
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem {
+            PrimaryActionButton(isDisabled: isBusy || session.selection.isEmpty) {
                 isConfirming = true
-            } label: {
-                Label {
-                    Text("Move to Trash")
-                } icon: {
-                    Image(systemName: "trash")
-                }
             }
-            .keyboardShortcut(.delete, modifiers: .command)
-            .disabled(isBusy || session.selection.isEmpty)
         }
     }
 
