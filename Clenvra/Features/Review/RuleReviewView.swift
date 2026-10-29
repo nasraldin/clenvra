@@ -23,8 +23,8 @@ struct RuleReviewView<MoreActions: View>: View {
     @State private var showsInspector = false
     @State private var isConfirming = false
     @State private var shownSummary: ShownSummary?
-    /// Categories the person collapsed, remembered per page across launches.
-    @SceneStorage private var collapsedStorage: String
+    /// Categories the person closed, remembered per page across launches.
+    private let groups: ExpandedGroups
 
     init(
         section: AppSection, session: CleanupSession, introduction: LocalizedStringResource,
@@ -35,7 +35,7 @@ struct RuleReviewView<MoreActions: View>: View {
         self.introduction = introduction
         self.exclude = exclude
         self.moreActions = moreActions()
-        _collapsedStorage = SceneStorage(wrappedValue: "", "review.\(section.rawValue).collapsed")
+        groups = ExpandedGroups(section.rawValue)
     }
 
     var body: some View {
@@ -382,18 +382,8 @@ struct RuleReviewView<MoreActions: View>: View {
             })
     }
 
-    private var collapsed: Set<String> {
-        Set(collapsedStorage.split(separator: "\n").map(String.init))
-    }
-
     private func expandedBinding(_ category: CleanupCategory) -> Binding<Bool> {
-        Binding(
-            get: { !collapsed.contains(category.rawValue) },
-            set: { expanded in
-                var next = collapsed
-                if expanded { next.remove(category.rawValue) } else { next.insert(category.rawValue) }
-                collapsedStorage = next.sorted().joined(separator: "\n")
-            })
+        groups.binding(category.rawValue) { session.groups.map(\.category.rawValue) }
     }
 }
 

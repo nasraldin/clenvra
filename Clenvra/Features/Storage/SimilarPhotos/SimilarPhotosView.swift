@@ -141,36 +141,24 @@ struct SimilarPhotosView: View {
                     .frame(width: 380, height: 320)
             }
 
-            Button(role: .destructive) {
+        }
+
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem {
+            PrimaryActionButton(
+                help: "Review and move the marked photos to the Trash (⌘⌫)",
+                isDisabled: session.phase != .ready || session.markedCount == 0
+            ) {
                 isConfirming = true
-            } label: {
-                Label {
-                    Text("Move to Trash")
-                } icon: {
-                    Image(systemName: "trash")
-                }
             }
-            .keyboardShortcut(.delete, modifiers: .command)
-            .disabled(session.phase != .ready || session.markedCount == 0)
         }
     }
 
     private var statusBar: some View {
-        HStack(spacing: 8) {
-            if session.phase == .removing {
-                ProgressView().controlSize(.small)
-                Text("Moving to the Trash…")
-            } else {
-                Text("\(session.markedCount) photos marked")
-                Text(verbatim: "·").foregroundStyle(.tertiary)
-                Text("Frees about \(session.markedBytes.formatted(.byteCount(style: .file)))")
-            }
-            Spacer()
-        }
-        .font(.callout)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(.bar)
+        SelectionStatusBar(
+            count: session.markedCount, bytes: session.markedBytes,
+            working: session.phase == .removing ? "Moving to the Trash…" : nil)
     }
 }
 

@@ -11,7 +11,7 @@ struct StartupView: View {
 
     @State private var highlighted: Set<StartupRow.ID> = []
     @State private var showsInspector = false
-    @State private var collapsed: Set<StartupGroup> = []
+    private let groups = ExpandedGroups("startup")
     @State private var removing: LaunchItem?
     @State private var message: LocalizedStringResource?
     @State private var query = ""
@@ -230,15 +230,10 @@ struct StartupView: View {
     }
 
     private func expandedBinding(_ group: StartupGroup) -> Binding<Bool> {
-        Binding(
-            get: { !collapsed.contains(group) },
-            set: { expanded in
-                if expanded { collapsed.remove(group) } else { collapsed.insert(group) }
-            })
+        groups.binding(String(describing: group)) { StartupGroup.allCases.map { String(describing: $0) } }
     }
 }
 
-/// The startup groups, problems first.
 enum StartupGroup: CaseIterable, Hashable {
     case needsAttention, userAgents, systemAgents, systemDaemons
 
@@ -358,6 +353,8 @@ private struct StartupInspector: View {
 
     @State private var isRunning: Bool?
     @State private var isWorking = false
+    /// Who signed the program the item runs (F8); read when the item is highlighted.
+    @State private var signature: CodeSignature?
 
     var body: some View {
         if let item {
@@ -412,6 +409,22 @@ private struct StartupInspector: View {
                 if let program = item.program {
                     Section {
                         PathText(path: ([program] + item.arguments.dropFirst()).joined(separator: " "))
+                        if let signature {
+                            LabeledContent {
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text(signature.kind.title)
+                                    if let authority = signature.authority {
+                                        Text(verbatim: authority)
+                                            .font(.callout)
+                                            .foregroundStyle(.secondary)
+                                            .multilineTextAlignment(.trailing)
+                                            .textSelection(.enabled)
+                                    }
+                                }
+                            } label: {
+                                Text("Signed By")
+                            }
+                        }
                     } header: {
                         Text("Runs This Program")
                     }
@@ -467,7 +480,13 @@ private struct StartupInspector: View {
                 }
             }
             .formStyle(.grouped)
-            .task(id: item.id) { isRunning = await session.isRunning(item) }
+            .task(id: item.id) {
+                signature = nil
+                if let program = item.program, program.hasPrefix("/") {
+                    signature = await Task.detached { CodeSignature.read(at: program) }.value
+                }
+                isRunning = await session.isRunning(item)
+            }
         } else {
             ContentUnavailableView {
                 Label {
@@ -528,6 +547,20 @@ extension StartupSession.RemovalOutcome {
         case .notAllowed: "Only your own startup items can be removed here. Use Show in Finder for system items."
         case .couldNotStop: "macOS could not stop this item, so it was kept."
         case .refused(let outcome): outcome.explanation
+        }
+    }
+}
+
+extension CodeSignature.Kind {
+    var title: LocalizedStringResource {
+        switch self {
+        case .apple: "Apple"
+        case .appStore: "Mac App Store"
+        case .developerID: "Identified developer"
+        case .otherCertificate: "Developer certificate"
+        case .adHoc: "Not identified (ad hoc)"
+        case .unsigned: "Not signed"
+        case .invalid: "Broken signature"
         }
     }
 }

@@ -8,6 +8,8 @@ struct SimilarPhotoGroupsList: View {
     let session: SimilarPhotosSession
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
+    /// Groups the person closed, remembered across launches (F4).
+    private let expansion = ExpandedGroups("similarPhotos")
 
     var body: some View {
         ScrollView {
@@ -27,7 +29,8 @@ struct SimilarPhotoGroupsList: View {
                     .padding(.top, 12)
                 ForEach(session.groups) { group in
                     SimilarPhotoGroupSection(
-                        group: group, session: session, focusedPath: $focusedPath, previewURL: $previewURL)
+                        group: group, session: session, focusedPath: $focusedPath, previewURL: $previewURL,
+                        isExpanded: expansion.binding(group.id) { session.groups.map(\.id) })
                     Divider()
                         .padding(.horizontal, 16)
                 }
@@ -83,12 +86,12 @@ private struct SimilarPhotoGroupSection: View {
     let session: SimilarPhotosSession
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
+    @Binding var isExpanded: Bool
 
     private static let thumbnailSide: CGFloat = 132
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            header
+        DisclosureGroup(isExpanded: $isExpanded) {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: Self.thumbnailSide, maximum: Self.thumbnailSide), spacing: 14)],
                 alignment: .leading, spacing: 14
@@ -99,6 +102,9 @@ private struct SimilarPhotoGroupSection: View {
                         side: Self.thumbnailSide, focusedPath: $focusedPath, previewURL: $previewURL)
                 }
             }
+            .padding(.top, 10)
+        } label: {
+            header
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -112,12 +118,12 @@ private struct SimilarPhotoGroupSection: View {
                 Text(
                     "Keeping only the best frees about \(group.reclaimableIfOthersRemoved.formatted(.byteCount(style: .file)))"
                 )
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
             }
             Spacer()
             Text("Frees about \(session.markedBytes(in: group).formatted(.byteCount(style: .file)))")
-                .font(.caption)
+                .font(.callout)
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
             Button {
