@@ -210,7 +210,8 @@ struct MainWindow: View {
     private func applications(_ page: ApplicationsPage) -> some View {
         ApplicationsView(
             session: environment.appsSession, plugins: environment.pluginsSession, updates: environment.updateSession,
-            checksForUpdates: environment.settings.checksForAppUpdates, page: page
+            checksForUpdates: environment.settings.checksForAppUpdates, backupFolder: environment.appBackupFolder,
+            page: page
         )
         .id(page)
     }

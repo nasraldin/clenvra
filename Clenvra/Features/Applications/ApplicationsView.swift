@@ -14,10 +14,17 @@ struct ApplicationsView: View {
     let updates: UpdateCheckSession
     /// The "Check for app updates" setting; off by default, and nothing is contacted while it is off.
     let checksForUpdates: Bool
+    /// Where apps are backed up before a batch removal (Settings › Applications).
+    let backupFolder: URL
     let page: ApplicationsPage
     @State private var selectedID: String?
     /// The review opens when an app is chosen; until then the list has the whole page.
     @State private var showsDetail = false
+    @State private var isConfirmingBatch = false
+    @State private var backsUpBeforeRemoving = true
+    @State private var batchResult: ShownBatchResult?
+    @State private var showsBackups = false
+    @State private var opensBackupsAfterResult = false
 
     var body: some View {
         VStack(spacing: 0) { content }
@@ -27,9 +34,60 @@ struct ApplicationsView: View {
                         CheckForUpdatesButton(session: session, updates: updates, isEnabled: checksForUpdates)
                     }
                     ToolbarItem {
+                        Button {
+                            showsBackups = true
+                        } label: {
+                            ToolbarLabel(title: "Backups…", symbol: "archivebox")
+                        }
+                        .help(Text("Show app backups and restore them"))
+                        .accessibilityIdentifier("applications.backups")
+                    }
+                    ToolbarItem {
+                        // Not the page's ⌘⌫ action: that belongs to Uninstall of the selected app.
+                        Button {
+                            isConfirmingBatch = true
+                        } label: {
+                            ToolbarLabel(title: "Remove \(session.checked.count) Apps…", symbol: "trash")
+                        }
+                        .help(Text("Review and move the checked apps to the Trash"))
+                        .disabled(session.checked.isEmpty || session.isWorking)
+                        .accessibilityIdentifier("applications.removeChecked")
+                    }
+                    ToolbarItem {
                         InspectorToggle(isPresented: $showsDetail)
                     }
                 }
+            }
+            .sheet(isPresented: $isConfirmingBatch) {
+                ConfirmBatchUninstallSheet(
+                    session: session, backupFolder: backupFolder, backsUp: $backsUpBeforeRemoving
+                ) {
+                    isConfirmingBatch = false
+                    let backup = backsUpBeforeRemoving ? backupFolder : nil
+                    Task {
+                        let result = await session.uninstallChecked(backup: backup)
+                        if let id = selectedID, !session.apps.contains(where: { $0.id == id }) { selectedID = nil }
+                        batchResult = ShownBatchResult(result: result)
+                    }
+                }
+            }
+            .sheet(
+                item: $batchResult,
+                onDismiss: {
+                    // One sheet at a time: the backups open once the result has closed.
+                    if opensBackupsAfterResult {
+                        opensBackupsAfterResult = false
+                        showsBackups = true
+                    }
+                }
+            ) { shown in
+                BatchUninstallResultSheet(result: shown.result) {
+                    opensBackupsAfterResult = true
+                    batchResult = nil
+                }
+            }
+            .sheet(isPresented: $showsBackups) {
+                AppBackupsSheet(session: session, folder: backupFolder)
             }
             .task {
                 if session.phase == .idle { await session.load() }
@@ -114,6 +172,25 @@ private struct AppListView: View {
         .sorted(using: sortOrder)
     }
 
+    private func checkedBinding(row: AppRow) -> Binding<Bool> {
+        Binding(
+            get: { session.checked.contains(row.id) },
+            set: { checked in
+                if session.checked.contains(row.id) != checked { session.toggleChecked(row.id) }
+            })
+    }
+
+    /// The header checkbox: on when every shown app is checked; checking adds the shown apps, unchecking removes
+    /// only them, so checks on apps hidden by search or a filter stay.
+    private var allShownChecked: Binding<Bool> {
+        let shown = Set(listedApps.map(\.id))
+        return Binding(
+            get: { !shown.isEmpty && shown.isSubset(of: session.checked) },
+            set: { checked in
+                session.setChecked(checked ? session.checked.union(shown) : session.checked.subtracting(shown))
+            })
+    }
+
     private func availableVersion(of app: InstalledApp) -> String? {
         guard showsUpdates, case .available(let version) = updates.results[app.id]?.status else { return nil }
         return version
@@ -175,6 +252,18 @@ private struct AppListView: View {
 
     private var table: some View {
         Table(rows, selection: $selectedID, sortOrder: $sortOrder) {
+            // Checks pick apps to remove together; they never change the highlighted row (the review on the right).
+            // A table header can only be text, so checking every shown app is in the Show menu and the row menu.
+            TableColumn(Text(Image(systemName: "checkmark.square")).accessibilityLabel(Text("Checked"))) { row in
+                Toggle(isOn: checkedBinding(row: row)) {
+                    Text("Check \(row.name)")
+                }
+                .toggleStyle(.checkbox)
+                .labelsHidden()
+                .disabled(session.isWorking)
+            }
+            .width(22)
+
             TableColumn(Text("Name"), value: \.name) { row in
                 AppNameCell(app: row.app, availableVersion: availableVersion(of: row.app))
                     .task { await session.measure(row.app) }
@@ -200,6 +289,14 @@ private struct AppListView: View {
         }
         .contextMenu(forSelectionType: String.self) { ids in
             FileActionsMenu(paths: ids.sorted())
+            if !ids.isEmpty {
+                let allChecked = ids.isSubset(of: session.checked)
+                Button {
+                    session.setChecked(allChecked ? session.checked.subtracting(ids) : session.checked.union(ids))
+                } label: {
+                    Text(allChecked ? "Uncheck" : "Check")
+                }
+            }
             if ids.count == 1, let id = ids.first {
                 Button {
                     NSWorkspace.shared.open(URL(filePath: id))
@@ -231,6 +328,17 @@ private struct AppListView: View {
                 Text("Show")
             }
             .pickerStyle(.inline)
+            Divider()
+            Toggle(isOn: allShownChecked) {
+                Text("Check All Shown Apps")
+            }
+            .disabled(listedApps.isEmpty || session.isWorking)
+            Button {
+                session.clearChecked()
+            } label: {
+                Text("Uncheck All Apps")
+            }
+            .disabled(session.checked.isEmpty || session.isWorking)
         } label: {
             ToolbarLabel(
                 title: "Show",

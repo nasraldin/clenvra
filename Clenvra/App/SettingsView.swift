@@ -10,7 +10,7 @@ struct SettingsView: View {
     let environment: AppEnvironment
 
     private enum SettingsTab: String, Hashable {
-        case general, schedule, menuBar, exclusions, customRules, helper
+        case general, schedule, menuBar, applications, exclusions, customRules, helper
     }
 
     @AppStorage("settings.tab") private var tab = SettingsTab.general
@@ -53,6 +53,15 @@ struct SettingsView: View {
                     Text("Menu Bar")
                 } icon: {
                     Image(systemName: "menubar.rectangle")
+                }
+            }
+            Tab(value: SettingsTab.applications) {
+                applications
+            } label: {
+                Label {
+                    Text("Applications")
+                } icon: {
+                    Image(systemName: "square.grid.2x2")
                 }
             }
             Tab(value: SettingsTab.exclusions) {
@@ -238,6 +247,60 @@ struct SettingsView: View {
         }
         .formStyle(.columns)
         .padding(28)
+    }
+
+    // MARK: - Applications
+
+    private var applications: some View {
+        Form {
+            LabeledContent {
+                VStack(alignment: .leading, spacing: 8) {
+                    PathText(path: environment.appBackupFolder.path(percentEncoded: false))
+                    HStack {
+                        Button {
+                            chooseBackupFolder()
+                        } label: {
+                            Text("Choose…")
+                        }
+                        .accessibilityIdentifier("settings.appBackupFolder")
+                        Button {
+                            NSWorkspace.shared.open(environment.appBackupFolder)
+                        } label: {
+                            Text("Show in Finder")
+                        }
+                        .disabled(
+                            !FileManager.default.fileExists(
+                                atPath: environment.appBackupFolder.path(percentEncoded: false)))
+                        if environment.settings.appBackupFolder != nil {
+                            Button {
+                                update { $0.appBackupFolder = nil }
+                            } label: {
+                                Text("Use Default")
+                            }
+                        }
+                    }
+                    note(
+                        "When you remove several apps, Clenvra can back them up here first, so you can restore them later. The folder is created when the first backup is made."
+                    )
+                }
+            } label: {
+                Text("App Backups:")
+            }
+        }
+        .formStyle(.columns)
+        .padding(28)
+    }
+
+    private func chooseBackupFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = String(localized: "Choose")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let path = Self.canonical(url.path(percentEncoded: false))
+        update { $0.appBackupFolder = path }
     }
 
     // MARK: - Exclusions

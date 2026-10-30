@@ -12,6 +12,8 @@ public struct UserSettings: Codable, Equatable, Sendable {
     public var lastScheduledScan: Date?
     /// User-defined review-only cleanup locations (SA-8), revalidated whenever settings cross a persistence boundary.
     public var customRules: [CustomCleanupRule] = []
+    /// Where app backups are made before removal; `nil` uses `~/Documents/Clenvra Backups`. Local, never exported.
+    public var appBackupFolder: String?
 
     public init() {}
 
@@ -23,6 +25,7 @@ public struct UserSettings: Codable, Equatable, Sendable {
         checksForAppUpdates = (try? container.decodeIfPresent(Bool.self, forKey: .checksForAppUpdates)) ?? false
         lastScheduledScan = try? container.decodeIfPresent(Date.self, forKey: .lastScheduledScan)
         customRules = (try? container.decodeIfPresent([CustomCleanupRule].self, forKey: .customRules)) ?? []
+        appBackupFolder = try? container.decodeIfPresent(String.self, forKey: .appBackupFolder)
     }
 }
 

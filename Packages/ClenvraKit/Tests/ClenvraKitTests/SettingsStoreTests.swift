@@ -28,6 +28,20 @@ struct SettingsStoreTests {
         #expect(store.load() == settings)
     }
 
+    @Test("the app backup folder is saved on this Mac but never exported")
+    func appBackupFolder() throws {
+        let store = SettingsStore(file: file, home: "/Users/a")
+        var settings = UserSettings()
+        #expect(settings.appBackupFolder == nil)
+        settings.appBackupFolder = "/Volumes/Backup/Apps"
+
+        try store.save(settings)
+
+        #expect(store.load().appBackupFolder == "/Volumes/Backup/Apps")
+        let imported = try SettingsStore(file: file, home: "/Users/b").importSettings(from: store.export(settings))
+        #expect(imported.settings.appBackupFolder == nil)
+    }
+
     @Test("a missing settings file gives the defaults")
     func missingFile() {
         #expect(SettingsStore(file: file, home: "/Users/a").load() == UserSettings())

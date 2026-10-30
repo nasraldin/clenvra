@@ -111,6 +111,9 @@ public final class AppsSession {
     public private(set) var selection: Set<String> = []
     /// Live output of the last `brew` command.
     public private(set) var homebrewOutput: [String] = []
+    /// Apps checked for removal together. Independent of the selected app (`detail`): checking never changes the
+    /// selection and selecting never changes the checks.
+    public private(set) var checked: Set<InstalledApp.ID> = []
     public private(set) var leftovers: [OwnedItem] = []
     public private(set) var leftoverSelection: Set<String> = []
     public private(set) var isScanningLeftovers = false
@@ -195,6 +198,7 @@ public final class AppsSession {
         lastUsedDates = dates
         let present = Set(ids)
         sizes = sizes.filter { present.contains($0.key) }
+        checked.formIntersection(present)
         phase = .ready
         if let detail, !present.contains(detail.app.id) {
             self.detail = nil
@@ -304,9 +308,7 @@ public final class AppsSession {
         let built = await buildDetail(for: app)
         guard generation == resolveGeneration else { return }
         detail = built
-        selection = Set(
-            built.items.filter { $0.isSelectedByDefault && $0.handling == .removable && !$0.containsProtectedItem }
-                .map(\.path))
+        selection = Set(Self.defaultSelection(built.items).map(\.path))
         isResolving = false
     }
 
@@ -436,9 +438,7 @@ public final class AppsSession {
         guard let detail, detail.app.id == current.app.id, detail.availability == .available else { return nil }
         let app = detail.app
         let owner = app.bundleIdentifier
-        let bundleItem = DeletionItem(
-            path: app.id, ruleRoot: (app.id as NSString).deletingLastPathComponent, expected: bundle.snapshot,
-            ownerBundleID: owner, freedBytes: bundle.reclaimableSize, section: .applications)
+        let bundleItem = Self.deletionItem(for: app, bundle: bundle)
         let chosen = detail.items.filter { selection.contains($0.path) && isSelectable($0) }
         let owned = chosen.filter { $0.handling == .removable }.map {
             $0.deletionItem(owner: owner, section: .applications)
@@ -447,21 +447,8 @@ public final class AppsSession {
         let system = chosen.compactMap { helperItem(for: $0, owner: nil) }
 
         isWorking = true
-        let operation = UUID()
-        var results = await deleter.run([bundleItem], mode: .moveToTrash, dryRun: dryRun, operationID: operation)
-        let bundleDone = results.contains { result in
-            switch result.outcome {
-            case .movedToTrash, .wouldDelete: true
-            default: false
-            }
-        }
-        if bundleDone {
-            results += await deleter.run(owned, mode: .moveToTrash, dryRun: dryRun, operationID: operation)
-            results += await removeThroughHelper(system, dryRun: dryRun, operationID: operation)
-        } else {
-            // Data without its app is worse than an app without its data: keep everything if the bundle stays.
-            results += (owned + system).map { DeletionResult(item: $0, outcome: .notAttempted) }
-        }
+        let (results, bundleDone) = await remove(
+            bundle: bundleItem, owned: owned, system: system, dryRun: dryRun, operationID: UUID())
         isWorking = false
 
         let summary = CleanupSummary(results: results)
@@ -474,6 +461,39 @@ public final class AppsSession {
             }
         }
         return summary
+    }
+
+    /// The bundle first and, only if it went, the owned items; the same path for one app and for several.
+    private func remove(
+        bundle: DeletionItem, owned: [DeletionItem], system: [DeletionItem], dryRun: Bool, operationID: UUID
+    ) async -> (results: [DeletionResult], bundleDone: Bool) {
+        var results = await deleter.run([bundle], mode: .moveToTrash, dryRun: dryRun, operationID: operationID)
+        let bundleDone = results.contains { result in
+            switch result.outcome {
+            case .movedToTrash, .wouldDelete: true
+            default: false
+            }
+        }
+        if bundleDone {
+            results += await deleter.run(owned, mode: .moveToTrash, dryRun: dryRun, operationID: operationID)
+            results += await removeThroughHelper(system, dryRun: dryRun, operationID: operationID)
+        } else {
+            // Data without its app is worse than an app without its data: keep everything if the bundle stays.
+            results += (owned + system).map { DeletionResult(item: $0, outcome: .notAttempted) }
+        }
+        return (results, bundleDone)
+    }
+
+    /// The bundle as a deletion item, guarded by the snapshot taken at review.
+    private static func deletionItem(for app: InstalledApp, bundle: BundleItem) -> DeletionItem {
+        DeletionItem(
+            path: app.id, ruleRoot: (app.id as NSString).deletingLastPathComponent, expected: bundle.snapshot,
+            ownerBundleID: app.bundleIdentifier, freedBytes: bundle.reclaimableSize, section: .applications)
+    }
+
+    /// Owned items chosen when an app is selected: those selected by default that the user's own rights cover.
+    private static func defaultSelection(_ items: [OwnedItem]) -> [OwnedItem] {
+        items.filter { $0.isSelectedByDefault && $0.handling == .removable && !$0.containsProtectedItem }
     }
 
     /// System leftovers go through the helper, which checks each one again. Launch items use its orphan check.
@@ -633,4 +653,140 @@ public final class AppsSession {
         return CleanupSummary(results: results)
     }
 
+}
+
+// MARK: - Removing several apps
+
+extension AppsSession {
+    /// Why a checked app was left installed.
+    public enum SkipReason: Sendable, Equatable {
+        /// Open (or Clenvra cannot tell); it must be quit first.
+        case running
+        /// Part of macOS or Clenvra, or a security or device-management agent.
+        case protected
+        /// The bundle moved, vanished or changed since it was listed, so the deletion gate refused it.
+        case changed
+        /// Its backup could not be made, so nothing of it was removed.
+        case backupFailed(String)
+    }
+
+    /// What removing the checked apps did.
+    public struct BatchUninstallResult: Sendable {
+        /// Names of the apps removed (or, in a dry run, that would be).
+        public var removed: [String] = []
+        /// Apps left installed, each with the reason.
+        public var skipped: [(name: String, reason: SkipReason)] = []
+        /// Every item of every app, as for one uninstall.
+        public var summary = CleanupSummary()
+        /// Backup folders made in this run, also for apps that were not removed afterwards.
+        public var backups: [URL] = []
+
+        public init() {}
+    }
+
+    /// The checked apps that are still installed, by name: exactly what a batch removal works on, including
+    /// apps hidden by the current search or filter.
+    public var checkedApps: [InstalledApp] {
+        apps.filter { checked.contains($0.id) }.sorted { lhs, rhs in
+            switch lhs.name.localizedStandardCompare(rhs.name) {
+            case .orderedAscending: true
+            case .orderedDescending: false
+            case .orderedSame: lhs.id < rhs.id
+            }
+        }
+    }
+
+    public func toggleChecked(_ id: InstalledApp.ID) {
+        if checked.contains(id) {
+            checked.remove(id)
+        } else if apps.contains(where: { $0.id == id }) {
+            checked.insert(id)
+        }
+    }
+
+    /// Replaces the checks; ids of apps not in the inventory are dropped.
+    public func setChecked(_ ids: Set<InstalledApp.ID>) {
+        checked = ids.intersection(apps.map(\.id))
+    }
+
+    public func clearChecked() { checked = [] }
+
+    /// Removes every checked app the way `uninstall` removes one: the bundle and the files selected by default
+    /// go to the Trash, the bundle first. Running, protected or changed apps are skipped and reported. With a
+    /// `backup` folder each app is backed up first and kept if its backup fails. One Activity operation per run.
+    /// A dry run checks every item and makes no backups.
+    public func uninstallChecked(backup: URL?, dryRun: Bool = false) async -> BatchUninstallResult {
+        var result = BatchUninstallResult()
+        guard !isWorking else { return result }
+        isWorking = true
+        let operation = UUID()
+        var removedIDs: Set<InstalledApp.ID> = []
+        for app in checkedApps {
+            if Task.isCancelled { break }
+            let built = await buildDetail(for: app)
+            switch built.availability {
+            case .protected, .managed:
+                result.skipped.append((app.name, .protected))
+                continue
+            case .running:
+                result.skipped.append((app.name, .running))
+                continue
+            case .available:
+                break
+            }
+            guard let bundle = built.bundle else {
+                result.skipped.append((app.name, .changed))
+                continue
+            }
+            let chosen = Self.defaultSelection(built.items)
+            if let backup, !dryRun {
+                do {
+                    let made = try await AppBackup.create(app: app, items: [app.id] + chosen.map(\.path), in: backup)
+                    result.backups.append(made)
+                } catch let error as AppBackupError {
+                    result.skipped.append((app.name, .backupFailed(error.message)))
+                    continue
+                } catch {
+                    result.skipped.append((app.name, .backupFailed(error.localizedDescription)))
+                    continue
+                }
+            }
+            let owned = chosen.map { $0.deletionItem(owner: app.bundleIdentifier, section: .applications) }
+            let (results, bundleDone) = await remove(
+                bundle: Self.deletionItem(for: app, bundle: bundle), owned: owned, system: [], dryRun: dryRun,
+                operationID: operation)
+            result.summary.add(results)
+            if bundleDone {
+                result.removed.append(app.name)
+                removedIDs.insert(app.id)
+            } else {
+                result.skipped.append((app.name, .changed))
+            }
+        }
+        isWorking = false
+        if !dryRun, !removedIDs.isEmpty {
+            checked.subtract(removedIDs)
+            let shown = detail?.app.id
+            await load()
+            if let shown, removedIDs.contains(shown) { await select(nil) }
+        }
+        return result
+    }
+
+    /// Moves one backup folder to the Trash through the deletion gate, logged like any removal so it can be put
+    /// back from Activity. `nil` when the backup is no longer there.
+    public func trashBackup(_ backup: AppBackupInfo) async -> CleanupSummary? {
+        guard !isWorking, let resolved = realpath(backup.url.path(percentEncoded: false), nil) else { return nil }
+        let path = String(cString: resolved)
+        free(resolved)
+        var info = stat()
+        guard lstat(path, &info) == 0 else { return nil }
+        let item = DeletionItem(
+            path: path, ruleRoot: (path as NSString).deletingLastPathComponent, expected: FileSnapshot(info),
+            ownerBundleID: nil, freedBytes: backup.archiveBytes, section: .applications)
+        isWorking = true
+        let results = await deleter.run([item], mode: .moveToTrash)
+        isWorking = false
+        return CleanupSummary(results: results)
+    }
 }

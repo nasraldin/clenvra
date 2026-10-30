@@ -92,6 +92,13 @@ final class AppEnvironment {
 
     var policy: ProtectionPolicy { policyProvider.current }
 
+    /// Where apps are backed up before removal: the folder chosen in Settings › Applications, or
+    /// `~/Documents/Clenvra Backups`.
+    var appBackupFolder: URL {
+        settings.appBackupFolder.map { URL(filePath: $0, directoryHint: .isDirectory) }
+            ?? AppBackup.defaultFolder(home: home)
+    }
+
     /// Loads the installed-app list used to decide whether an item's owner is running.
     func loadInstalledApps() async {
         installedApps = await AppInventory.discover()
