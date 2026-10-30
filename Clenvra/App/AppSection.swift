@@ -11,6 +11,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case downloads
     case duplicates
     case similarPhotos
+    case otherClutter
     case storage
     case disks
     case applications
@@ -45,7 +46,9 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     var group: Group {
         switch self {
         case .overview: .summary
-        case .cleanup, .developer, .developerTools, .largeFiles, .downloads, .duplicates, .similarPhotos: .cleanUp
+        case .cleanup, .developer, .developerTools, .largeFiles, .downloads, .duplicates, .similarPhotos,
+            .otherClutter:
+            .cleanUp
         case .storage, .disks: .storage
         case .applications, .leftovers, .extensions, .startup: .applications
         case .system, .processes, .security, .permissions, .snapshots: .system
@@ -64,6 +67,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .downloads: "Downloads"
         case .duplicates: "Duplicates"
         case .similarPhotos: "Similar Photos"
+        case .otherClutter: "Other"
         case .storage: "Space Map"
         case .disks: "Mounted Disks"
         case .applications: "Applications"
@@ -89,6 +93,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .downloads: "arrow.down.circle"
         case .duplicates: "plus.square.on.square"
         case .similarPhotos: "photo.on.rectangle.angled"
+        case .otherClutter: "tray"
         case .storage: "chart.pie"
         case .disks: "externaldrive.connected.to.line.below"
         case .applications: "square.grid.2x2"
@@ -105,12 +110,12 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     }
 
     /// Pages that share one sidebar entry and switch with a control at the top of the page: the developer pages, and
-    /// the four pages that find personal files to clean up ("Clutter").
+    /// the five pages that find personal files to clean up ("Clutter").
     var siblings: [AppSection] {
         switch self {
         case .developer, .developerTools: [.developer, .developerTools]
-        case .largeFiles, .downloads, .duplicates, .similarPhotos:
-            [.largeFiles, .downloads, .duplicates, .similarPhotos]
+        case .largeFiles, .downloads, .duplicates, .similarPhotos, .otherClutter:
+            [.largeFiles, .downloads, .duplicates, .similarPhotos, .otherClutter]
         default: [self]
         }
     }

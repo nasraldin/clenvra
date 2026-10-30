@@ -308,6 +308,63 @@ struct StorageSessionTests {
                     modifiedAfter: now.addingTimeInterval(-730 * 86_400))) == ["photos.zip"])
     }
 
+    @Test("the clutter filter keeps one source or both")
+    func filterBySource() async {
+        let session = session()
+        await session.loadClutter()
+        func names(_ source: ClutterSource?) -> Set<String> {
+            Set(
+                session.clutterGroups(by: .kind, filter: ClutterFilter(source: source)).flatMap(\.items).map(
+                    \.item.name))
+        }
+        let downloads: Set<String> = ["Installer.dmg", "photos.zip", "Screenshot 2026-01-01 at 10.00.00.png"]
+        let screenshots: Set<String> = [
+            "Screenshot 2026-02-01 at 09.00.00.png", "Screen Recording 2026-02-01 at 09.05.00.mov",
+            "لقطة شاشة 2026-02-02.png",
+        ]
+
+        #expect(names(.downloads) == downloads)
+        #expect(names(.screenshots) == screenshots)
+        #expect(names(nil) == downloads.union(screenshots))
+    }
+
+    @Test("the selection holds only files of the visible tab, and switching tabs clears it")
+    func selectionFollowsSource() async {
+        let session = session()
+        await session.loadClutter()
+        session.list = .clutter
+        let download = path("Downloads/Installer.dmg")
+        let shot = path("Desktop/Screenshot 2026-02-01 at 09.00.00.png")
+
+        session.clutterSource = .downloads
+        session.setSelection([download, shot])
+        #expect(session.selection == [download])
+
+        session.clutterSource = .screenshots
+        #expect(session.selection.isEmpty)
+        session.setSelection([download, shot])
+        #expect(session.selection == [shot])
+
+        session.clutterSource = nil
+        session.setSelection([download, shot])
+        #expect(session.selection == [download, shot])
+    }
+
+    @Test("a screenshot saved into Downloads is listed once, as a download")
+    func screenshotInDownloadsCountsOnce() async {
+        for location in [path("Downloads"), "~/Downloads/", path("Downloads/../Downloads")] {
+            let session = session(screenshotsLocation: location)
+            await session.loadClutter()
+
+            let shots = session.clutter.filter { $0.item.name == "Screenshot 2026-01-01 at 10.00.00.png" }
+            #expect(shots.count == 1, "\(location)")
+            #expect(shots.first?.source == .downloads, "\(location)")
+            #expect(session.clutter.allSatisfy { $0.source == .downloads }, "\(location)")
+            #expect(Set(session.clutter.map(\.item.path)).count == session.clutter.count, "\(location)")
+            #expect(session.clutterGroups(by: .kind, filter: ClutterFilter(source: .screenshots)).isEmpty)
+        }
+    }
+
     private func setWhereFroms(_ relative: String, _ urls: [String]) throws {
         let data = try PropertyListSerialization.data(fromPropertyList: urls, format: .binary, options: 0)
         let result = data.withUnsafeBytes { buffer in

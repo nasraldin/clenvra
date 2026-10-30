@@ -2,9 +2,11 @@ import ClenvraKit
 import QuickLook
 import SwiftUI
 
-/// Downloads & Screenshots review, grouped by kind or age. Everything here needs review; nothing is pre-selected.
+/// The Downloads review (`.downloads`) or the Other review (`.screenshots`: screenshots and screen recordings),
+/// grouped by kind, age or source. Everything here needs review; nothing is pre-selected.
 struct ClutterView: View {
     let session: StorageSession
+    let source: ClutterSource
 
     @State private var grouping = ClutterGrouping.kind
     @State private var previewURL: URL?
@@ -13,7 +15,16 @@ struct ClutterView: View {
     @State private var customFrom = Calendar.current.date(byAdding: .month, value: -3, to: .now) ?? .now
     @State private var customTo = Date.now
     /// Groups the person closed, remembered across launches (F4).
-    private let expansion = ExpandedGroups("downloads")
+    private let expansion: ExpandedGroups
+
+    init(session: StorageSession, source: ClutterSource) {
+        self.session = session
+        self.source = source
+        expansion = ExpandedGroups(source == .downloads ? "downloads" : "otherClutter")
+    }
+
+    /// This tab's files, before the age and size filters.
+    private var items: [ClutterItem] { session.clutter.filter { $0.source == source } }
 
     var body: some View {
         page
@@ -63,7 +74,7 @@ struct ClutterView: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
             HStack {
-                if let folder = session.screenshotsPath {
+                if source == .screenshots, let folder = session.screenshotsPath {
                     Text("Screenshots folder:")
                         .foregroundStyle(.secondary)
                     PathText(path: folder)
@@ -129,8 +140,8 @@ struct ClutterView: View {
             previewURL = URL(filePath: path)
             return .handled
         }
-        .quickLookPreview($previewURL, in: session.clutter.map { URL(filePath: $0.item.path) })
-        .pageState(isShown: session.clutter.isEmpty) {
+        .quickLookPreview($previewURL, in: items.map { URL(filePath: $0.item.path) })
+        .pageState(isShown: items.isEmpty) {
             if session.isLoadingClutter {
                 ProgressView()
             } else {
@@ -141,7 +152,11 @@ struct ClutterView: View {
                         Image(systemName: "checkmark.circle")
                     }
                 } description: {
-                    Text("Downloads is empty and there are no screenshots.")
+                    if source == .downloads {
+                        Text("Downloads is empty.")
+                    } else {
+                        Text("There are no screenshots or screen recordings.")
+                    }
                 }
             }
         }
@@ -150,6 +165,7 @@ struct ClutterView: View {
     private var filter: ClutterFilter {
         var filter = age.filter(now: .now, customFrom: customFrom, customTo: customTo)
         filter.minimumBytes = minimumSize.bytes
+        filter.source = source
         return filter
     }
 

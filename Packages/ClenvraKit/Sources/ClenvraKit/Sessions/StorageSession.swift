@@ -50,6 +50,11 @@ public final class StorageSession {
     public var list = StorageList.browser {
         didSet { if list != oldValue { selection = [] } }
     }
+    /// Which source of the clutter list is visible (the Downloads tab or the Other tab; `nil` shows both). Changing
+    /// it clears the selection, so a file chosen on one tab is never moved to the Trash from the other.
+    public var clutterSource: ClutterSource? {
+        didSet { if clutterSource != oldValue { selection = [] } }
+    }
     /// Minimum allocated size of Large & Old files, in bytes.
     public var largeFileMinimum: Int64 = 50_000_000 {
         didSet { pruneSelection() }
@@ -336,7 +341,8 @@ public final class StorageSession {
         return StorageScanner.normalize(path)
     }
 
-    /// Reads ~/Downloads (files only) and the screenshots folder (system-named screenshots and recordings only).
+    /// Reads ~/Downloads (files only, source `.downloads`) and the screenshots folder (system-named screenshots and
+    /// recordings only, source `.screenshots`). A file in Downloads is always `.downloads` and is listed once.
     public func loadClutter() async {
         isLoadingClutter = true
         defer {
@@ -369,7 +375,8 @@ public final class StorageSession {
                 item: item, kind: ClutterKind.classify(name: entry.name), age: .of(entry.modificationDate, now: date),
                 source: .downloads, sourceHost: downloadHosts[entry.name])
         }
-        if let shotsFolder {
+        // A screenshot saved into Downloads is a download: the Downloads tab lists it, the Other tab does not.
+        if let shotsFolder, shotsFolder != downloads {
             for entry in shotEntries where entry.kind == .file {
                 guard let kind = ClutterKind.screenshotKind(forName: entry.name) else { continue }
                 let item = fileItem(entry, in: shotsFolder, ruleRoot: shotsFolder)
@@ -441,7 +448,7 @@ public final class StorageSession {
             switch list {
             case .browser: children
             case .largeFiles: largeFiles
-            case .clutter: clutter.map(\.item)
+            case .clutter: clutter.filter { clutterSource == nil || $0.source == clutterSource }.map(\.item)
             }
         return Dictionary(items.map { ($0.path, $0) }, uniquingKeysWith: { first, _ in first })
     }

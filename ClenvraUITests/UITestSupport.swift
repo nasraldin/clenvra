@@ -4,7 +4,7 @@ import XCTest
 /// The sidebar pages in display order, as their `sidebar.<id>` / `section.<id>` identifiers.
 let allSections = [
     "overview", "cleanup", "developer", "developerTools", "largeFiles", "downloads", "duplicates", "similarPhotos",
-    "storage", "disks",
+    "otherClutter", "storage", "disks",
     "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "permissions", "snapshots",
     "activity",
 ]
@@ -39,7 +39,7 @@ func launchApp(language: String, appearance: Appearance = .light, arguments: [St
 let switcherPages: [String: (row: String, index: Int)] = [
     "developer": ("developer", 0), "developerTools": ("developer", 1),
     "largeFiles": ("largeFiles", 0), "downloads": ("largeFiles", 1), "duplicates": ("largeFiles", 2),
-    "similarPhotos": ("largeFiles", 3),
+    "similarPhotos": ("largeFiles", 3), "otherClutter": ("largeFiles", 4),
 ]
 
 @MainActor

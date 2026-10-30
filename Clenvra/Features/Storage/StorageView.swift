@@ -21,6 +21,7 @@ struct StorageView: View {
         case .largeFiles: .largeFiles
         case .clutter: .downloads
         case .similarPhotos: .similarPhotos
+        case .otherClutter: .otherClutter
         }
     }
 
@@ -59,6 +60,7 @@ struct StorageView: View {
         .task {
             if let list = page.list {
                 session.list = list
+                session.clutterSource = page.clutterSource
             } else {
                 // Nothing selected in a hidden list may be moved to the Trash.
                 session.setSelection([])
@@ -80,15 +82,16 @@ struct StorageView: View {
     @ViewBuilder private var scanContent: some View {
         switch page.list ?? .browser {
         case .clutter:
-            ClutterView(session: session)
+            ClutterView(session: session, source: page.clutterSource ?? .downloads)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("review.results")
                 .accessibilityLabel(Text(pageSection.title))
                 .pageState(isShown: !session.hasLoadedClutter && !session.isLoadingClutter) {
                     ScanPrompt(
-                        section: .downloads,
-                        description:
-                            "List the files in Downloads and your screenshots by kind, age and source, so you can remove what you no longer need."
+                        section: pageSection,
+                        description: page == .otherClutter
+                            ? "Find screenshots, screen recordings and other files that do not belong to the other tabs."
+                            : "List the files in Downloads by kind, age and source, so you can remove what you no longer need."
                     ) {
                         Task { await session.loadClutter() }
                     }
@@ -200,7 +203,7 @@ struct StorageView: View {
                 isDisabled: isBusy,
                 scan: {
                     Task {
-                        if page == .clutter {
+                        if page.list == .clutter {
                             await session.loadClutter()
                         } else {
                             await session.scan()
@@ -257,16 +260,26 @@ struct StorageView: View {
     }
 }
 
-/// The storage pages: the scan's three lists, plus Similar Photos.
+/// The storage pages: the scan's three lists, plus Similar Photos. Downloads (`clutter`) and Other (`otherClutter`)
+/// share the clutter list; each shows only its own source.
 enum StoragePage: Hashable {
-    case browser, largeFiles, clutter, similarPhotos
+    case browser, largeFiles, clutter, similarPhotos, otherClutter
 
     var list: StorageList? {
         switch self {
         case .browser: .browser
         case .largeFiles: .largeFiles
-        case .clutter: .clutter
+        case .clutter, .otherClutter: .clutter
         case .similarPhotos: nil
+        }
+    }
+
+    /// The part of the clutter list the page shows; `nil` on the other pages.
+    var clutterSource: ClutterSource? {
+        switch self {
+        case .clutter: .downloads
+        case .otherClutter: .screenshots
+        case .browser, .largeFiles, .similarPhotos: nil
         }
     }
 }

@@ -126,14 +126,21 @@ public struct ClutterFilter: Sendable, Equatable {
     public var modifiedAfter: Date?
     /// Only files that free at least this many bytes.
     public var minimumBytes: Int64
+    /// Only files from this source (the Downloads tab or the Other tab); `nil` keeps both.
+    public var source: ClutterSource?
 
-    public init(modifiedBefore: Date? = nil, modifiedAfter: Date? = nil, minimumBytes: Int64 = 0) {
+    public init(
+        modifiedBefore: Date? = nil, modifiedAfter: Date? = nil, minimumBytes: Int64 = 0,
+        source: ClutterSource? = nil
+    ) {
         self.modifiedBefore = modifiedBefore
         self.modifiedAfter = modifiedAfter
         self.minimumBytes = minimumBytes
+        self.source = source
     }
 
     public func matches(_ clutter: ClutterItem) -> Bool {
+        if let source, clutter.source != source { return false }
         let date = clutter.item.modificationDate
         if let modifiedBefore, let date, date >= modifiedBefore { return false }
         if let modifiedAfter {

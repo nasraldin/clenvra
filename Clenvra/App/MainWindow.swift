@@ -166,6 +166,8 @@ struct MainWindow: View {
             storage(.clutter)
         case .similarPhotos:
             storage(.similarPhotos)
+        case .otherClutter:
+            storage(.otherClutter)
         case .duplicates:
             DuplicatesView(session: environment.duplicatesSession)
         case .applications:
