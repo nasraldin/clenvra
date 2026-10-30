@@ -42,6 +42,17 @@ Plan: [`superpowers/specs/2026-10-28-ui-redesign-design.md`](superpowers/specs/2
 - **Groups everywhere (F4):** every grouped page remembers which groups are closed across launches (`GroupExpansion` in the kit, tested), and Option-click opens or closes all of them, as in Finder. Activity's history starts closed.
 - **Startup inspector shows who signed the program** (Apple, Mac App Store, identified developer, ad hoc, not signed, broken), read with the public Security framework (`CodeSignature`, tested).
 
+### Owner feedback round (2026-10-30)
+
+- **Sidebar:** Developer (Junk · Tools) and **Clutter** (Large & Old · Downloads · Duplicates · Similar Photos) are one row each, with a switcher in the toolbar centre; the row reopens the tab used last. The sidebar button shrinks the sidebar to an icon strip; View › Hide Sidebar still hides it.
+- **Toolbar:** icon-only buttons everywhere (`ToolbarLabel`), with Settings › General › Toolbar › Show names with icons. Expand All / Collapse All on every grouped page; Scan and Stop are one button (`ScanButton`).
+- **No toolbar reloads:** replacing a page's list (Scan prompt → progress → results) made SwiftUI rebuild the whole toolbar 2–3 times per scan (measured with the debug `-ClenvraUIDiagnostics <file>` log). Every list page now keeps its list and draws those states over it (`pageState`). Similar Photos is the exception (see its comment).
+- **Details panel:** drawn by the page (`detailsPanel`), not `.inspector`: on macOS 27 the system inspector inside the split view's detail column collapses the sidebar for a moment every time it opens (seen in screen recordings on the owner's Mac; the macOS 26 VM does not show it). ⌃⌘I toggles it.
+- **Applications** is a full-width table; the app's review opens in the details panel when an app is chosen.
+- **Disk bars** only on Space Map; Large & Old has a Scan Location menu in the toolbar.
+- **Security links** use the current System Settings pane IDs (`SystemSettingsPane`, tested against the installed panes). macOS has no link to the Firewall page, so that button opens Network and says to choose Firewall.
+- **Debugging UI on macOS 27:** `UIDiagnosticsProbeUITests` (opt-in, `CLENVRA_PROBE=1`) fails on purpose so Xcode keeps a screen recording; run it on a macOS 27 Mac when a visual bug does not show in the VM. `CLENVRA_AUDIT_SECTIONS=a,b` limits the accessibility audit to some pages.
+
 ### Fixed on 2026-10-28 (work Mac verification)
 
 - **Launch freeze (serious, also hit real users):** `MenuBarExtra(isInserted:)` was bound to `@AppStorage`. MenuBarExtra writes the binding back on every scene update, so the App body re-ran forever: main thread at 100%, memory over 1 GB, beach ball, UI tests failing with "has not loaded accessibility". It happened on most launches, not all. Fixed in `1024588`; found by bisecting to `55ec750`. **Rule: never bind `MenuBarExtra(isInserted:)` without dropping no-op writes, and never put `.task` or state writes in menu-style menu bar content.**
