@@ -246,7 +246,7 @@ private enum LenientJSON {
     }
 }
 
-/// Xcode simulators: unavailable devices (deletable with simctl) and installed runtimes (visibility only).
+/// Xcode simulators: unavailable devices and installed runtimes, deletable with simctl when it allows it.
 struct SimulatorAdapter: ToolAdapter {
     struct DeviceSummary: Equatable {
         let unavailableCount: Int
@@ -281,7 +281,7 @@ struct SimulatorAdapter: ToolAdapter {
                 ))
         }
         let runtimes = await ToolProbe.output(runner, xcrun, ["simctl", "runtime", "list", "-j"])
-        rows += runtimes.map(Self.parseRuntimes) ?? []
+        rows += runtimes.map { Self.parseRuntimes($0, xcrun: xcrun) } ?? []
         return rows
     }
 
@@ -305,7 +305,9 @@ struct SimulatorAdapter: ToolAdapter {
     }
 
     /// One row per runtime from `simctl runtime list -j`, sorted by identifier; malformed entries are skipped.
-    static func parseRuntimes(_ output: String) -> [ToolStorage] {
+    /// A runtime gets `simctl runtime delete <uuid>` only when simctl marks it deletable and names it by a UUID, so
+    /// nothing else (such as `all` or an option) can ever reach the command line.
+    static func parseRuntimes(_ output: String, xcrun: String = "/usr/bin/xcrun") -> [ToolStorage] {
         guard let runtimes = LenientJSON.object(output) else { return [] }
         return runtimes.keys.sorted().compactMap { key in
             guard let runtime = runtimes[key] as? [String: Any] else { return nil }
@@ -313,13 +315,29 @@ struct SimulatorAdapter: ToolAdapter {
                 .flatMap { $0.split(separator: ".").last?.split(separator: "-").first }
                 .map(String.init)
             let name = [platform, runtime["version"] as? String].compactMap { $0 }.joined(separator: " ")
+            let label = name.isEmpty ? String(localized: "this runtime") : name
+            let cleanup = deletableIdentifier(runtime).map {
+                ToolCleanupAction(executable: xcrun, arguments: ["simctl", "runtime", "delete", $0], risk: .review)
+            }
             return ToolStorage(
                 id: "simulators.runtime.\(key)",
                 tool: name.isEmpty ? LocalizedStringResource("Simulator runtime") : "\(name) Simulator runtime",
                 category: .simulators, location: runtime["path"] as? String,
-                size: LenientJSON.int64(runtime["sizeBytes"]), cleanup: nil,
-                note: "Remove unused runtimes in Xcode › Settings › Components.")
+                size: LenientJSON.int64(runtime["sizeBytes"]), cleanup: cleanup,
+                note: cleanup == nil
+                    ? "Remove unused runtimes in Xcode › Settings › Components."
+                    : "Needed only to run apps on \(label). Xcode can download it again. Simulators using it are shut down first."
+            )
         }
+    }
+
+    /// The runtime's UUID when simctl reports `"deletable": true` (a real JSON boolean); otherwise `nil`.
+    private static func deletableIdentifier(_ runtime: [String: Any]) -> String? {
+        guard let deletable = runtime["deletable"] as? NSNumber, CFGetTypeID(deletable) == CFBooleanGetTypeID(),
+            deletable.boolValue, let identifier = runtime["identifier"] as? String, !identifier.isEmpty,
+            UUID(uuidString: identifier) != nil
+        else { return nil }
+        return identifier
     }
 }
 

@@ -460,7 +460,7 @@ struct ToolAdaptersTests {
         #expect(!rows.contains { $0.id == "simulators.unavailable" })
     }
 
-    @Test("runtimes are listed by size for review only")
+    @Test("runtimes are listed by size; only a deletable one offers simctl runtime delete")
     func runtimes() async throws {
         let fixture = try simulatorFixture()
         let runner = FakeCommandRunner()
@@ -478,10 +478,16 @@ struct ToolAdaptersTests {
         #expect(rows[0].location == "/Library/Developer/CoreSimulator/Images/iOS.dmg")
         #expect(String(localized: rows[1].tool) == "watchOS 11.0 Simulator runtime")
         #expect(rows[1].size == nil)
-        #expect(rows.allSatisfy { $0.cleanup == nil && $0.category == .simulators })
+        #expect(rows.allSatisfy { $0.category == .simulators })
         #expect(
-            rows.allSatisfy { $0.note.map { String(localized: $0) }?.contains("Xcode › Settings › Components") == true }
-        )
+            rows[0].cleanup?.command.arguments == [
+                "simctl", "runtime", "delete", "DB299C15-2AB3-4D7D-8740-4AE9600BE250",
+            ])
+        #expect(rows[0].cleanup?.risk == .review)
+        #expect(rows[0].note.map { String(localized: $0) }?.contains("shut down first") == true)
+        // No `deletable` key: visibility only, pointing to Xcode.
+        #expect(rows[1].cleanup == nil)
+        #expect(rows[1].note.map { String(localized: $0) }?.contains("Xcode › Settings › Components") == true)
     }
 
     @Test("garbage simctl output yields no rows", arguments: ["", "{", "[]", #"{"devices":[1]}"#, "null"])
@@ -862,14 +868,19 @@ struct ToolAdaptersTests {
         #expect(rows.count >= 25)
         #expect(Set(rows.map(\.id)).count == rows.count)
         let actions = rows.compactMap(\.cleanup)
-        #expect(actions.count == 17)
+        #expect(actions.count == 18)
         let forbidden = ["volume", "--volumes", "system prune", "rm ", "delete", "erase", "kill", "stop"]
         for action in actions {
             #expect(action.command.executable.hasPrefix("/"))
             #expect(action.isIrreversible)
             #expect(action.command.timeout == .seconds(600))
             let line = ([action.command.executable] + action.command.arguments).joined(separator: " ")
-            let allowed = action.command.arguments == ["simctl", "delete", "unavailable"]
+            // The only deletes allowed: unavailable simulators, and one runtime named by its UUID.
+            let arguments = action.command.arguments
+            let allowed =
+                arguments == ["simctl", "delete", "unavailable"]
+                || (arguments.count == 4 && arguments.prefix(3) == ["simctl", "runtime", "delete"]
+                    && UUID(uuidString: arguments[3]) != nil)
             for word in forbidden where !(allowed && word == "delete") {
                 #expect(!line.contains(word), "\(line) contains \(word)")
             }
