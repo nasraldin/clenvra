@@ -328,6 +328,21 @@ struct StorageSessionTests {
         #expect(names(nil) == downloads.union(screenshots))
     }
 
+    @Test("the clutter filter matches the file name, ignoring case and spaces around the text")
+    func filterByName() async {
+        let session = session()
+        await session.loadClutter()
+        func names(_ text: String) -> Set<String> {
+            Set(
+                session.clutterGroups(by: .kind, filter: ClutterFilter(nameContains: text)).flatMap(\.items).map(
+                    \.item.name))
+        }
+        #expect(names("  INSTALLER ") == ["Installer.dmg"])
+        #expect(names("لقطة") == ["لقطة شاشة 2026-02-02.png"])
+        #expect(names("nothing like this").isEmpty)
+        #expect(names("").count == 6)
+    }
+
     @Test("the selection holds only files of the visible tab, and switching tabs clears it")
     func selectionFollowsSource() async {
         let session = session()

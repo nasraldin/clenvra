@@ -1,0 +1,19 @@
+{
+  "Downloads is empty.": {"ar": "مجلد التنزيلات فارغ."},
+  "Find screenshots, screen recordings and other files that do not belong to the other tabs.": {"ar": "اعثر على لقطات الشاشة وتسجيلات الشاشة والملفات الأخرى التي لا تنتمي إلى علامات التبويب الأخرى."},
+  "List the files in Downloads by kind, age and source, so you can remove what you no longer need.": {"ar": "اعرض الملفات في مجلد التنزيلات حسب النوع والعمر والمصدر، لتزيل ما لم تعد بحاجة إليه."},
+  "No snapshots match “%@”.": {"ar": "لا توجد لقطات تطابق «%@»."},
+  "Other": {"ar": "أخرى"},
+  "Search": {"ar": "بحث"},
+  "Search (⌘F)": {"ar": "بحث (⌘F)"},
+  "Search Clenvra": {"ar": "البحث في Clenvra"},
+  "Search Disks": {"ar": "البحث في الأقراص"},
+  "Search Health": {"ar": "البحث في الحالة"},
+  "Search Processes": {"ar": "البحث في العمليات"},
+  "Search Security Checks": {"ar": "البحث في فحوصات الأمان"},
+  "Search Snapshots": {"ar": "البحث في اللقطات"},
+  "Search This Folder": {"ar": "البحث في هذا المجلد"},
+  "Search Tools": {"ar": "البحث في الأدوات"},
+  "Search by File Name": {"ar": "البحث باسم الملف"},
+  "There are no screenshots or screen recordings.": {"ar": "لا توجد لقطات شاشة أو تسجيلات شاشة."}
+}

@@ -1,3 +1,4 @@
+import AppKit
 import ClenvraKit
 import SwiftUI
 
@@ -40,14 +41,109 @@ private struct PageSearch: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            // At the trailing end of the toolbar; macOS shrinks it to an icon when the toolbar is short of space.
-            // (`searchToolbarBehavior(.minimize)` is unavailable on macOS.)
-            .searchable(text: $text, placement: .toolbar, prompt: Text(prompt))
+            // An icon at the trailing end of the toolbar that opens a field. (`searchToolbarBehavior(.minimize)`,
+            // which does this on iOS, is unavailable on macOS; the system field there only folds when space is short.)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    ToolbarSearch(text: $text, prompt: prompt)
+                }
+            }
             .onAppear(perform: takeQuery)
             .onChange(of: router?.generation) { takeQuery() }
     }
 
     private func takeQuery() {
         if let query = router?.take(for: section) { text = query }
+    }
+}
+
+/// The search icon; clicking it (or ⌘F) opens a search field in its place. The field closes again when it is empty
+/// and loses focus, or on Esc. One toolbar item throughout, so the toolbar is never rebuilt.
+private struct ToolbarSearch: View {
+    @Binding var text: String
+    let prompt: LocalizedStringResource
+    @State private var isOpen = false
+
+    var body: some View {
+        Group {
+            if isOpen || !text.isEmpty {
+                SearchField(text: $text, prompt: String(localized: prompt)) { isOpen = false }
+                    .frame(width: 220)
+            } else {
+                Button {
+                    isOpen = true
+                } label: {
+                    Label {
+                        Text("Search")
+                    } icon: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                }
+                .help(Text("Search (⌘F)"))
+            }
+        }
+        .accessibilityIdentifier("page.search")
+        // Outside the `if`, so ⌘F works while the field is open too (it focuses it again).
+        .background {
+            Button {
+                isOpen = true
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("f", modifiers: .command)
+            .opacity(0)
+            .accessibilityHidden(true)
+        }
+    }
+}
+
+/// A native search field that takes focus when it appears and calls `close` when it is left empty.
+private struct SearchField: NSViewRepresentable {
+    @Binding var text: String
+    let prompt: String
+    let close: () -> Void
+
+    func makeNSView(context: Context) -> NSSearchField {
+        let field = NSSearchField()
+        field.placeholderString = prompt
+        field.setAccessibilityLabel(prompt)
+        field.sendsSearchStringImmediately = true
+        field.delegate = context.coordinator
+        field.stringValue = text
+        DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
+        return field
+    }
+
+    func updateNSView(_ field: NSSearchField, context: Context) {
+        context.coordinator.parent = self
+        if field.stringValue != text { field.stringValue = text }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    @MainActor final class Coordinator: NSObject, NSSearchFieldDelegate {
+        var parent: SearchField
+        init(parent: SearchField) { self.parent = parent }
+
+        func controlTextDidChange(_ notification: Notification) {
+            guard let field = notification.object as? NSSearchField else { return }
+            parent.text = field.stringValue
+        }
+
+        func controlTextDidEndEditing(_ notification: Notification) {
+            if parent.text.isEmpty { parent.close() }
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+            guard selector == #selector(NSResponder.cancelOperation(_:)) else { return false }
+            // Esc clears the text first, as in Finder; on an empty field it closes it.
+            if parent.text.isEmpty {
+                control.window?.makeFirstResponder(nil)
+                parent.close()
+            } else {
+                parent.text = ""
+            }
+            return true
+        }
     }
 }

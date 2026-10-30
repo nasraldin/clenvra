@@ -14,6 +14,7 @@ struct ClutterView: View {
     @State private var minimumSize = SizeFilter.any
     @State private var customFrom = Calendar.current.date(byAdding: .month, value: -3, to: .now) ?? .now
     @State private var customTo = Date.now
+    @State private var searchText = ""
     /// Groups the person closed, remembered across launches (F4).
     private let expansion: ExpandedGroups
 
@@ -28,6 +29,10 @@ struct ClutterView: View {
 
     var body: some View {
         page
+            .pageSearch(
+                text: $searchText, prompt: "Search by File Name",
+                section: source == .downloads ? .downloads : .otherClutter
+            )
             .toolbar {
                 ToolbarItem {
                     ExpandAllButton(allExpanded: expansion.allBinding(groups.map { String(describing: $0.id) }))
@@ -166,6 +171,7 @@ struct ClutterView: View {
         var filter = age.filter(now: .now, customFrom: customFrom, customTo: customTo)
         filter.minimumBytes = minimumSize.bytes
         filter.source = source
+        filter.nameContains = searchText
         return filter
     }
 

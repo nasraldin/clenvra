@@ -3510,12 +3510,12 @@
         }
       }
     },
-    "Downloads is empty and there are no screenshots.": {
+    "Downloads is empty.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مجلد التنزيلات فارغ ولا توجد لقطات شاشة."
+            "value": "مجلد التنزيلات فارغ."
           }
         }
       }
@@ -3926,6 +3926,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابحث عن الملفات التي تركتها تطبيقات أزلتها بالفعل: الإعدادات والذاكرة المؤقتة والحاويات وملفات الدعم."
+          }
+        }
+      }
+    },
+    "Find screenshots, screen recordings and other files that do not belong to the other tabs.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعثر على لقطات الشاشة وتسجيلات الشاشة والملفات الأخرى التي لا تنتمي إلى علامات التبويب الأخرى."
           }
         }
       }
@@ -5284,12 +5294,12 @@
         }
       }
     },
-    "List the files in Downloads and your screenshots by kind, age and source, so you can remove what you no longer need.": {
+    "List the files in Downloads by kind, age and source, so you can remove what you no longer need.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "اعرض ملفات التنزيلات ولقطات الشاشة حسب النوع والعمر والمصدر، لتزيل ما لم تعد تحتاج إليه."
+            "value": "اعرض الملفات في مجلد التنزيلات حسب النوع والعمر والمصدر، لتزيل ما لم تعد بحاجة إليه."
           }
         }
       }
@@ -6308,6 +6318,16 @@
         }
       }
     },
+    "No snapshots match “%@”.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد لقطات تطابق «%@»."
+          }
+        }
+      }
+    },
     "No supported browser keeps history, cookies or site data on this Mac.": {
       "localizations": {
         "ar": {
@@ -6923,6 +6943,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أجهزة OrbStack وحاوياته ووحدات تخزينه. معروضة للاطلاع فقط؛ تُحذف صور Docker غير المستخدمة من صفوف Docker."
+          }
+        }
+      }
+    },
+    "Other": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أخرى"
           }
         }
       }
@@ -8310,12 +8340,62 @@
         }
       }
     },
+    "Search": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بحث"
+          }
+        }
+      }
+    },
+    "Search (⌘F)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بحث (⌘F)"
+          }
+        }
+      }
+    },
+    "Search Clenvra": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في Clenvra"
+          }
+        }
+      }
+    },
+    "Search Disks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في الأقراص"
+          }
+        }
+      }
+    },
     "Search Extensions": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "البحث في الامتدادات"
+          }
+        }
+      }
+    },
+    "Search Health": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في الحالة"
           }
         }
       }
@@ -8340,6 +8420,36 @@
         }
       }
     },
+    "Search Processes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في العمليات"
+          }
+        }
+      }
+    },
+    "Search Security Checks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في فحوصات الأمان"
+          }
+        }
+      }
+    },
+    "Search Snapshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في اللقطات"
+          }
+        }
+      }
+    },
     "Search Startup Items": {
       "localizations": {
         "ar": {
@@ -8350,12 +8460,42 @@
         }
       }
     },
+    "Search This Folder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في هذا المجلد"
+          }
+        }
+      }
+    },
+    "Search Tools": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في الأدوات"
+          }
+        }
+      }
+    },
     "Search apps": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "البحث في التطبيقات"
+          }
+        }
+      }
+    },
+    "Search by File Name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث باسم الملف"
           }
         }
       }
@@ -9767,6 +9907,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ثم اختر جدار الحماية."
+          }
+        }
+      }
+    },
+    "There are no screenshots or screen recordings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد لقطات شاشة أو تسجيلات شاشة."
           }
         }
       }
