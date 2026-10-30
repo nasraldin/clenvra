@@ -234,7 +234,8 @@ public final class ProcessSampler: Sendable {
                 procName = "pid-\(pid)"
             }
 
-            let totalCpuNs = rusage.ri_user_time + rusage.ri_system_time
+            // rusage counts Mach ticks, which are not nanoseconds on Apple silicon.
+            let totalCpuNs = ProcessDetails.machTicksToNanoseconds(rusage.ri_user_time + rusage.ri_system_time)
             samples.append(
                 RawProcessSample(
                     pid: pid,
