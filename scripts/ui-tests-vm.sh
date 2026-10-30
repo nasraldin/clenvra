@@ -25,7 +25,8 @@ tart list | awk '{print $2}' | grep -qx "$VM" || { echo "✘ No VM named $VM (se
 mkdir -p "$OUT"
 
 echo "▸ Starting $VM (no window)"
-tart run "$VM" --no-graphics --dir=repo:"$REPO" >"$OUT/vm.log" 2>&1 &
+# CLENVRA_VM_DISK attaches an extra test drive (a raw image file) for tests that need a second disk.
+tart run "$VM" --no-graphics --dir=repo:"$REPO" ${CLENVRA_VM_DISK:+--disk="$CLENVRA_VM_DISK"} >"$OUT/vm.log" 2>&1 &
 VM_PID=$!
 trap 'tart stop "$VM" >/dev/null 2>&1 || true; wait $VM_PID 2>/dev/null || true' EXIT
 
@@ -48,12 +49,18 @@ fi
 
 echo "▸ UI tests: $FILTER"
 set +e
-tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} ${CLENVRA_PROBE:+TEST_RUNNER_CLENVRA_PROBE=1} ${CLENVRA_AUDIT_SECTIONS:+TEST_RUNNER_CLENVRA_AUDIT_SECTIONS=$CLENVRA_AUDIT_SECTIONS} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
+tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} ${CLENVRA_PROBE:+TEST_RUNNER_CLENVRA_PROBE=1} ${CLENVRA_E2E:+TEST_RUNNER_CLENVRA_E2E=1} ${CLENVRA_AUDIT_SECTIONS:+TEST_RUNNER_CLENVRA_AUDIT_SECTIONS=$CLENVRA_AUDIT_SECTIONS} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
   -destination 'platform=macOS,arch=arm64' -derivedDataPath ~/dd -resultBundlePath ~/Results.xcresult \
   -only-testing:$FILTER -quiet \
   CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="
 STATUS=$?
 set -e
+
+# Optional checks inside the VM after the tests (for example that the end-to-end test removed its seeded files).
+if [[ -n "${CLENVRA_VM_VERIFY:-}" ]]; then
+  echo "▸ VM verify"
+  tart exec "$VM" /bin/zsh -c "$CLENVRA_VM_VERIFY" || STATUS=1
+fi
 
 echo "▸ Copying results back"
 tart exec "$VM" /bin/zsh -c "rm -rf '$GUEST_REPO/.build/ui-vm/Results.xcresult' && cp -R ~/Results.xcresult '$GUEST_REPO/.build/ui-vm/'" || true
