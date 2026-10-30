@@ -452,6 +452,35 @@ struct StorageSessionTests {
         #expect(session.selection.isEmpty)
     }
 
+    @Test("Space Map checks (what Move to Trash uses) and the table's row selection never change each other")
+    func browserChecksAreIndependentOfRowSelection() async {
+        let session = session()
+        await session.scan()
+        await session.open(path("Projects"))
+
+        session.setRowSelection([path("Projects/big"), path("Projects/.env")])
+        #expect(session.rowSelection == [path("Projects/big"), path("Projects/.env")])
+        #expect(session.selection.isEmpty)
+
+        session.toggleChecked(path("Projects/notes.txt"))
+        session.toggleChecked(path("Projects/.env"))
+        #expect(session.selection == [path("Projects/notes.txt")])
+        #expect(session.rowSelection == [path("Projects/big"), path("Projects/.env")])
+
+        session.setRowSelection([])
+        #expect(session.selection == [path("Projects/notes.txt")])
+
+        session.toggleChecked(path("Projects/notes.txt"))
+        #expect(session.selection.isEmpty)
+
+        // Rows outside the folder shown are never selected; opening another folder clears both.
+        session.setRowSelection([path("Projects/small"), path("Downloads/photos.zip")])
+        #expect(session.rowSelection == [path("Projects/small")])
+        session.toggleChecked(path("Projects/small"))
+        await session.open(path("Projects/big"))
+        #expect(session.rowSelection.isEmpty && session.selection.isEmpty)
+    }
+
     @Test("after moving items to the Trash, the disks are read again so free space is current (F2)")
     func volumesRefreshAfterCleanup() async throws {
         let reads = Mutex(0)

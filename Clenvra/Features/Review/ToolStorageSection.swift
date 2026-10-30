@@ -7,6 +7,8 @@ struct DeveloperToolsView: View {
     let session: ToolStorageSession?
 
     @State private var searchText = ""
+    @State private var isConfirmingBatch = false
+    @State private var showingBatchResult = false
 
     var body: some View {
         Group { page }
@@ -58,6 +60,29 @@ struct DeveloperToolsView: View {
                     .help(Text("Check your tools again (⌘R)"))
                     .disabled(session.phase == .inspecting)
                 }
+                ToolbarSpacer(.fixed)
+                ToolbarItem {
+                    PrimaryActionButton(
+                        title: "Clean \(session.checked.count) Tools…", symbol: "sparkles",
+                        help: "Review and run the cleanup command of every checked tool (⌘⌫)",
+                        isDisabled: session.checked.isEmpty || session.phase != .ready
+                    ) {
+                        isConfirmingBatch = true
+                    }
+                }
+            }
+            .sheet(isPresented: $isConfirmingBatch) {
+                // Every checked tool, including any the search hides: the sheet lists exactly what will run.
+                ConfirmToolBatchSheet(rows: session.checkedRows) {
+                    isConfirmingBatch = false
+                    Task {
+                        await session.runCheckedCleanups()
+                        showingBatchResult = true
+                    }
+                }
+            }
+            .sheet(isPresented: $showingBatchResult) {
+                if let runs = session.lastBatch { ToolBatchResultSheet(runs: runs) }
             }
         } else {
             ProgressView {
@@ -85,10 +110,23 @@ struct ToolStorageSection: View {
                     Text("Checking developer tools…").foregroundStyle(.secondary)
                 }
             }
-            ForEach(session.rows.filter { $0.matches(query) }) { row in
-                ToolRow(row: row, isRunning: session.phase == .running(rowID: row.id)) {
+            ForEach(shownRows) { row in
+                ToolRow(
+                    row: row, isRunning: session.phase == .running(rowID: row.id),
+                    isChecked: Binding(
+                        get: { session.checked.contains(row.id) },
+                        set: { if $0 != session.checked.contains(row.id) { session.toggleChecked(row.id) } })
+                ) {
                     confirming = row
                 }
+                .disabled(isBusy)
+            }
+        } header: {
+            if !checkableShown.isEmpty {
+                Toggle(isOn: allShownChecked) {
+                    Text("Select All Shown")
+                }
+                .toggleStyle(.checkbox)
                 .disabled(isBusy)
             }
         } footer: {
@@ -112,6 +150,21 @@ struct ToolStorageSection: View {
     private var isBusy: Bool {
         if case .running = session.phase { true } else { false }
     }
+
+    private var shownRows: [ToolStorage] { session.rows.filter { $0.matches(query) } }
+
+    /// Shown rows that have a cleanup command, the only ones that can be checked.
+    private var checkableShown: Set<String> { Set(shownRows.filter { $0.cleanup != nil }.map(\.id)) }
+
+    /// Checks or unchecks every tool shown; checks on tools the search hides are kept.
+    private var allShownChecked: Binding<Bool> {
+        Binding(
+            get: { !checkableShown.isEmpty && checkableShown.isSubset(of: session.checked) },
+            set: { checked in
+                session.setChecked(
+                    checked ? session.checked.union(checkableShown) : session.checked.subtracting(checkableShown))
+            })
+    }
 }
 
 extension ToolStorage {
@@ -129,10 +182,24 @@ extension ToolStorage {
 private struct ToolRow: View {
     let row: ToolStorage
     let isRunning: Bool
+    @Binding var isChecked: Bool
     let clean: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
+            // Only tools with their own cleanup command can be checked; the others keep the space for alignment.
+            Group {
+                if row.cleanup != nil {
+                    Toggle(isOn: $isChecked) {
+                        Text("Include \(String(localized: row.tool))")
+                    }
+                    .toggleStyle(.checkbox)
+                    .labelsHidden()
+                } else {
+                    Color.clear
+                }
+            }
+            .frame(width: 18)
             Image(systemName: row.category.symbol)
                 .foregroundStyle(.secondary)
                 .frame(width: 20)
@@ -214,7 +281,7 @@ private struct ToolRunResultSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let result = run.result, result.terminationReason == .exited, result.exitStatus == 0 {
+            if run.succeeded {
                 Label {
                     Text("Finished")
                 } icon: {
@@ -252,9 +319,119 @@ private struct ToolRunResultSheet: View {
         .frame(width: 560)
     }
 
-    private var outputText: String {
-        let lines = run.output.map(\.text)
+    private var outputText: String { run.outputText }
+}
+
+extension ToolStorageSession.Run {
+    fileprivate var succeeded: Bool {
+        if let result, result.terminationReason == .exited, result.exitStatus == 0 { true } else { false }
+    }
+
+    fileprivate var outputText: String {
+        let lines = output.map(\.text)
         if !lines.isEmpty { return lines.joined(separator: "\n") }
-        return [run.result?.standardOutput, run.result?.standardError].compactMap { $0 }.joined(separator: "\n")
+        return [result?.standardOutput, result?.standardError].compactMap { $0 }.joined(separator: "\n")
+    }
+}
+
+/// One confirmation for several tools: every checked tool with the exact command that will run.
+private struct ConfirmToolBatchSheet: View {
+    let rows: [ToolStorage]
+    let confirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Run these commands?").font(.title3.bold())
+            Text("They run one after another, in this order.").foregroundStyle(.secondary)
+            List(rows) { row in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(row.tool).bold()
+                        Spacer()
+                        if let size = row.size { SizeText(bytes: size).foregroundStyle(.secondary) }
+                    }
+                    if let summary = row.cleanup?.summary {
+                        Text(verbatim: summary)
+                            .font(.callout.monospaced())
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .environment(\.layoutDirection, .leftToRight)
+                            .textSelection(.enabled)
+                    }
+                    if let note = row.note { Text(note).font(.callout).foregroundStyle(.secondary) }
+                }
+                .padding(.vertical, 2)
+            }
+            .frame(minHeight: 120, idealHeight: 240, maxHeight: 320)
+            Label {
+                Text("This does not use the Trash and cannot be undone.")
+            } icon: {
+                Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+            }
+            HStack {
+                Spacer()
+                Button(role: .cancel) {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                }
+                .keyboardShortcut(.defaultAction)
+                Button(role: .destructive, action: confirm) {
+                    Text("Run")
+                }
+                .disabled(rows.isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 520)
+    }
+}
+
+/// What happened for each tool of a batch, in the order they ran.
+private struct ToolBatchResultSheet: View {
+    let runs: [ToolStorageSession.Run]
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Finished").font(.title3.bold())
+            List(runs, id: \.rowID) { run in
+                DisclosureGroup {
+                    Text(verbatim: run.outputText)
+                        .font(.caption.monospaced())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .environment(\.layoutDirection, .leftToRight)
+                        .textSelection(.enabled)
+                } label: {
+                    HStack(spacing: 8) {
+                        if run.succeeded {
+                            Image(systemName: "checkmark.circle").foregroundStyle(.green)
+                                .accessibilityLabel(Text("Finished"))
+                        } else {
+                            Image(systemName: "xmark.octagon").foregroundStyle(.red)
+                                .accessibilityLabel(Text("The command did not finish successfully"))
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(run.tool)
+                            Text(verbatim: run.summary).font(.callout.monospaced()).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .frame(minHeight: 160, idealHeight: 280, maxHeight: 360)
+            HStack {
+                Spacer()
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Done")
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(24)
+        .frame(width: 560)
     }
 }
