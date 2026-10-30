@@ -53,6 +53,29 @@ Plan: [`superpowers/specs/2026-10-28-ui-redesign-design.md`](superpowers/specs/2
 - **Security links** use the current System Settings pane IDs (`SystemSettingsPane`, tested against the installed panes). macOS has no link to the Firewall page, so that button opens Network and says to choose Firewall.
 - **Debugging UI on macOS 27:** `UIDiagnosticsProbeUITests` (opt-in, `CLENVRA_PROBE=1`) fails on purpose so Xcode keeps a screen recording; run it on a macOS 27 Mac when a visual bug does not show in the VM. `CLENVRA_AUDIT_SECTIONS=a,b` limits the accessibility audit to some pages.
 
+### Gap features (2026-10-30)
+
+Six features from `docs/product/feature-gaps.md`, built by six OpenCode agents in parallel worktrees from
+`docs/superpowers/plans/2026-10-30-gap-features.md`, reviewed and merged by the lead:
+
+- **Remove simulator runtimes** (Developer Tools): `xcrun simctl runtime delete <uuid>`, only for runtimes `simctl`
+  marks deletable and names by UUID; Review, irreversible, confirmed.
+- **Permissions** (new System page): reads both privacy databases read-only (needs Full Disk Access; a failed read
+  shows "Allow Full Disk Access", never an empty list); Revoke runs `tccutil reset <service> <bundle id>` and is
+  reported as done only if the grant is really gone (system-wide grants and apps that are no longer installed
+  fail and open System Settings instead; seen in the VM: `tccutil` exits 64 for an unknown app and 0 for a
+  system-wide grant it may not have removed).
+- **Blurry or dark photos** in Similar Photos: Vision aesthetics score below −0.1 (screenshots and documents
+  excluded); never preselected; a photo in a similar group keeps the keep-one rule.
+- **What's in System Data** (Space Map toolbar): swap, local snapshots, simulator runtimes, purgeable space.
+- **Trash on every drive** (System Junk): each writable internal or external drive's `.Trashes/<uid>`, re-read at
+  every scan; disk images and network drives excluded; permanent, never preselected.
+- **Leftovers of apps already in the Trash**: data of an app found in `~/.Trash` is listed even if it changed in
+  the last 30 days, with the evidence "“App” is in the Trash"; an installed app's data is never listed.
+- **Testing rule (owner):** destructive paths are proven only on test data: package tests with temporary
+  folders and fakes, and `scripts/e2e-gap-features.sh`, which seeds a throwaway clone of the UI-test VM
+  (trashed app, second drive, generated photos) and checks the files on disk afterwards.
+
 ### Fixed on 2026-10-28 (work Mac verification)
 
 - **Launch freeze (serious, also hit real users):** `MenuBarExtra(isInserted:)` was bound to `@AppStorage`. MenuBarExtra writes the binding back on every scene update, so the App body re-ran forever: main thread at 100%, memory over 1 GB, beach ball, UI tests failing with "has not loaded accessibility". It happened on most launches, not all. Fixed in `1024588`; found by bisecting to `55ec750`. **Rule: never bind `MenuBarExtra(isInserted:)` without dropping no-op writes, and never put `.task` or state writes in menu-style menu bar content.**

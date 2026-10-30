@@ -21,12 +21,17 @@ edition), CCleaner, AppCleaner 3.7.
 ## Summary
 
 1. **Our own plan is nearly complete**, with one gap that matters a lot: simulator runtimes are listed but cannot be
-   removed. On the work Mac that is **44.5 GB**, more than the free space left.
+   removed. On the work Mac that is **24.8 GB** (`sizeBytes` reported by `simctl`; an earlier draft said 44.5 GB,
+   which was the size of the mounted simulator volumes, not what deleting frees).
 2. **Worth building next, by measured value:** remove simulator runtimes · app permissions review · blurry and dark
    photos · "System Data" explained · Trash on every drive · leftovers of apps already in the Trash.
 3. **Downgraded after checking:** disk health (Apple's internal SSD only ever reports "Verified"), broken preference
    files (none of 597 on the work Mac; CleanMyMac needs an ignore list to avoid false alarms), Homebrew manager and
    installer packages (little to gain, and most packages here belong to company-managed tools).
+
+## Status (2026-10-30)
+
+Rows 1–6 shipped: see `docs/superpowers/plans/2026-10-30-gap-features.md` and `docs/STATUS.md`.
 
 ## Ranked list
 
@@ -35,10 +40,10 @@ Trash first, public APIs and Apple's own command-line tools only, no background 
 
 | # | Gap | Who has it (evidence) | Measured on the work Mac | How we would build it (evidence) | Risk | Effort | Decision |
 |---|---|---|---|---|---|---|---|
-| 1 | **Remove simulator runtimes** (our DEV-2 promised it; only listing ships) | Our own plan (DEV-2). CleanMyMac's "Xcode junk" covers build data and indexes only (Vendor); none of the checked apps says it removes runtimes | **3 runtimes, 44.5 GB** (iOS 27.0 18.0 GB, iOS 27.1 17.7 GB, iOS 18.6 8.8 GB) | `xcrun simctl runtime delete <id>`, shown before it runs, Review (needed to test on that iOS version; Xcode can download it again) (Tested: `simctl runtime list -j` already parsed) | M | S | **Build now** |
+| 1 | **Remove simulator runtimes** (our DEV-2 promised it; only listing ships) | Our own plan (DEV-2). CleanMyMac's "Xcode junk" covers build data and indexes only (Vendor); none of the checked apps says it removes runtimes | **3 runtimes, 24.8 GB** (iOS 18.6 8.8 GB, iOS 27.0 8.1 GB, iOS 27.1 7.9 GB, from `sizeBytes`) | `xcrun simctl runtime delete <id>`, shown before it runs, Review (needed to test on that iOS version; Xcode can download it again) (Tested: `simctl runtime list -j` already parsed) | M | S | **Build now** |
 | 2 | **App permissions review** (camera, microphone, screen recording, Full Disk Access, accessibility…) with revoke | CleanMyMac, Nektony, Pearcleaner (Vendor); CleanMyMac reads `TCC.db` with `SELECT * FROM access` and revokes with `/usr/bin/tccutil` (**Inspected**) | 43 apps with Full Disk Access, 11 with Accessibility, 8 with Screen Recording; camera: Brave, Teams, Zoom, Remote Desktop and others | macOS 27: Apple's `tccutil list -s <service>` lists apps per permission (**Tested**); macOS 26 has only `tccutil reset` (**Tested** in the VM), so there we read `TCC.db` read-only like CleanMyMac (needs Full Disk Access; undocumented format, parsed defensively). Revoke: `tccutil reset <service> <bundle id>` | M | M | **Build** |
 | 3 | **Blurry and dark photos** in Similar Photos | CCleaner Analyze Photos (Vendor); CCleaner computes its own `blurryScore` and `darkScore` with Core Image and exposure data (**Inspected**) | Not measured: personal photos were not read | Vision `VNCalculateImageAestheticsScoresRequest` (**Tested** on Apple wallpapers: originals +0.65 to +0.79; blurred copies −0.16 to −0.20; darkened copies −0.19 to −0.42). Review only, never preselected | M | M | **Build** |
-| 4 | **"System Data" explained** | DaisyDisk (Vendor) | 6.1 GB swap in use; 44.5 GB of simulator runtimes on their own volumes; no local snapshots | Space Map entry summing swap (`vm.swapusage`), local snapshots (`tmutil`), simulator and other disk images, purgeable space, `~/Library` by kind (**Tested**: each command returns these figures) | L | M | **Build** |
+| 4 | **"System Data" explained** | DaisyDisk (Vendor) | 6.1 GB swap in use; 24.8 GB of simulator runtimes; no local snapshots | Space Map entry summing swap (`vm.swapusage`), local snapshots (`tmutil`), simulator and other disk images, purgeable space, `~/Library` by kind (**Tested**: each command returns these figures) | L | M | **Build** |
 | 5 | **Trash on every drive** (our CL-5 promised it) | CleanMyMac scans `.Trashes` (**Inspected**) | 0: no external drive connected | Each mounted volume's `.Trashes/<uid>` with the existing Trash rule | M (irreversible) | S | **Build** (cheap; matters on Macs with external drives) |
 | 6 | **Leftovers of apps already in the Trash** | Pearcleaner Sentinel, AppCleaner SmartDelete (Vendor) | 0 apps in the Trash today | When Leftovers opens, read app bundles in the Trash and run the existing ownership evidence; no background monitor | H (as Leftovers) | S | **Build** (cheap; common way people delete apps) |
 | 7 | **Trash-size reminder** | CleanMyMac Menu (Vendor) | Trash is empty today | Existing scheduled scan and notification, threshold in Settings | L | S | Later |

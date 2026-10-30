@@ -42,7 +42,7 @@ This file is both `verified-feature-matrix.md` and `feature-inventory.md`. Overl
 | CL-2 | User logs & crash reports | MacSai, Mole (V) | `~/Library/Logs`, `DiagnosticReports` > 7 days | Age + type | — | L | 1.0 |
 | CL-3 | Installers & disk images | CMM (V) | `.dmg/.pkg/.xip/.zip` installers; flags "app already installed" | UTType + Info inspection | — | L | 1.0 |
 | CL-4 | iOS/iPadOS backups & firmware | CMM (P), Mole (V) | `MobileSync/Backup` (Review, shows device name/date), `.ipsw` in iTunes/Configurator folders (Safe) | `Info.plist` in backup | FDA | M | 1.0 |
-| CL-5 | Trash | CMM, MacSai (V) | User + per-volume Trash sizes; empty | fd-based removal | FDA | M (irreversible) | 1.0 |
+| CL-5 | Trash | CMM, MacSai (V) | User + per-volume Trash sizes; empty (per-volume shipped 2026-10-30) | fd-based removal | FDA | M (irreversible) | 1.0 |
 | CL-6 | Browser caches | CC, MacSai (V) | Safari, Chrome, Edge, Brave, Arc, Vivaldi, Opera, Firefox, Zen: cache folders only | Profile-lock + running checks | FDA (Safari) | M | 1.0 |
 | CL-7 | Browser history, cookies, sessions | CC, CMM (V) | Per browser, per data type, explicit opt-in; warns about sign-outs | Per-browser files, never while running | FDA | H | 1.1 |
 | CL-8 | System caches & logs | MacSai, Mole (V) | `/Library/Caches`, `/Library/Logs`, old `/private/var/log` archives (allowlist) | Helper | admin | M | 1.1 (Helper) |
@@ -55,7 +55,7 @@ This file is both `verified-feature-matrix.md` and `feature-inventory.md`. Overl
 | ID | Feature | Sources | Behaviour | Technique / API | Risk | Release |
 |---|---|---|---|---|---|---|
 | DEV-1 | Xcode DerivedData, previews, module caches | MacSai, Mole (V) | Skip while building | Paths | L | 1.0 |
-| DEV-2 | Simulators & runtimes | MacSai (V) | Unavailable devices; runtimes by size | `xcrun simctl delete unavailable`, `simctl runtime delete` | M | 1.0 |
+| DEV-2 | Simulators & runtimes | MacSai (V) | Unavailable devices; runtimes by size, removable with `simctl runtime delete` (shipped 2026-10-30) | `xcrun simctl delete unavailable`, `simctl runtime delete` | M | 1.0 |
 | DEV-3 | Device support, Archives | MacSai (V) | Old DeviceSupport (Safe); Archives (Review, dSYMs) | Paths | M | 1.0 |
 | DEV-4 | Package caches | MacSai, Mole (V) | npm, pnpm, Yarn, Bun, Homebrew, CocoaPods, SwiftPM, Gradle, Maven, Cargo, Go, pip/uv/conda, NuGet | Tool command first, path only where none | M | 1.0 |
 | DEV-5 | Project artefacts | MacSai, Mole (V) | `node_modules`, `.build`, `target`, `build`, `dist`, `.gradle`, `Pods`, `.venv` in inactive projects | Marker files; user roots | M | 1.0 |
@@ -98,6 +98,7 @@ This file is both `verified-feature-matrix.md` and `feature-inventory.md`. Overl
 | SY-2 | Heavy processes | CMM, MacSai (V) | Top CPU/memory users; Quit/Force Quit (confirmed) | `proc_pid_rusage`, `NSRunningApplication` | M | 1.0 |
 | SY-3 | Security checks | — (honest replacement for antivirus) | SIP, FileVault, Gatekeeper, firewall, XProtect version/date, unsigned/un-notarised apps and launch items | `csr_get_active_config`, `fdesetup status`, `spctl --status`, `SecStaticCode` | L | 1.0 |
 | SY-4 | Local Time Machine snapshots | MacSai (V) | List; delete (explain impact) | `tmutil listlocalsnapshots` / `deletelocalsnapshots` | M | 1.1 (Helper) |
+| SY-6 | App permissions | CMM, Nektony, Pearcleaner (V) | Review TCC grants; revoke with `tccutil reset` | SQLite read-only + `tccutil` | M | 1.1 (shipped 2026-10-30) |
 | SY-5 | Menu bar extra | CMM, CC, MacSai (V) | Free space, memory, quick scan | `MenuBarExtra` (opt-in) | L | 1.2 |
 
 ## Settings, safety, convenience
