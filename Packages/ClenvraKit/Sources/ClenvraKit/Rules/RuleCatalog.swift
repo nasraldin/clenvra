@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// The built-in cleanup rules. Adding a category is adding a row here; the scanner, deletion gate and review UI
 /// are shared. Rules whose root does not exist on a Mac (tool not installed) simply produce nothing.
@@ -80,6 +80,19 @@ public enum RuleCatalog {
             id: "trash.user", category: .trash, root: .home(".Trash"), selection: .children(), risk: .review,
             action: .removePermanently, ownership: .none)
     ]
+
+    /// The Trash of each other drive: Finder keeps a drive's deleted items in `<drive>/.Trashes/<uid>`. Not part of
+    /// `standard`: drives come and go, so the app reads the mounted drives at every scan (writable, internal or
+    /// external only; never the startup disk, disk images or network shares). A drive ejected since then simply
+    /// has no folder, and an item that vanished before cleaning is skipped as "not found" by the deletion gate.
+    public static func volumeTrash(volumeRoots: [String], uid: uid_t) -> [CleanupRule] {
+        volumeRoots.map { root in
+            let base = root.count > 1 && root.hasSuffix("/") ? String(root.dropLast()) : root
+            return CleanupRule(
+                id: "trash.volume.\(base)", category: .trash, root: .absolute("\(base)/.Trashes/\(uid)"),
+                selection: .children(), risk: .review, action: .removePermanently, ownership: .none)
+        }
+    }
 
     // MARK: - Browsers
 

@@ -130,10 +130,12 @@ final class AppEnvironment {
             section == .cleanup ? cleanupRules : RuleCatalog.standard.filter { $0.category.isDeveloper }
         let policy = policy
         let ownerState: @Sendable (String) -> OwnerState = { [ownership] in ownership.state(of: $0) }
+        var extraRules: @Sendable () -> [CleanupRule] = { [] }
+        if section == .cleanup { extraRules = OtherDriveTrash.rules }
         return CleanupSession(
             rules: rules, section: section, home: home, policy: policy, ownerState: ownerState,
             deleter: makeDeleter(ownerState: ownerState), privileged: helper,
-            ownerBundlePath: { [ownership] in ownership.bundlePath(of: $0) })
+            ownerBundlePath: { [ownership] in ownership.bundlePath(of: $0) }, extraRules: extraRules)
     }
 
     private func makeBrowserDataSession() -> BrowserDataSession {
@@ -174,6 +176,17 @@ nonisolated final class OwnershipProvider: Sendable {
 
     func state(of bundleIdentifier: String) -> OwnerState {
         activity.withLock { $0 }?.state(of: bundleIdentifier) ?? .unknown
+    }
+}
+
+/// The Trash of every other writable drive mounted right now, read again at every Cleanup scan. The startup disk's
+/// Trash is `~/.Trash`; disk images, network shares and read-only drives get no rule.
+nonisolated enum OtherDriveTrash {
+    @Sendable static func rules() -> [CleanupRule] {
+        let roots = VolumeInventory.mountedVolumes()
+            .filter { !$0.isRoot && !$0.isReadOnly && ($0.kind == .internal || $0.kind == .external) }
+            .map(\.id.path)
+        return RuleCatalog.volumeTrash(volumeRoots: roots, uid: getuid())
     }
 }
 

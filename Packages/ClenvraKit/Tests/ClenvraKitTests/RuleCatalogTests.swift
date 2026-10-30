@@ -138,6 +138,34 @@ struct RuleCatalogTests {
         #expect(!names.contains("User"))
     }
 
+    @Test("each extra drive gets one review-only rule that empties its Trash for this user")
+    func volumeTrashRules() throws {
+        let rules = RuleCatalog.volumeTrash(volumeRoots: ["/Volumes/Backup"], uid: 501)
+
+        let rule = try #require(rules.first)
+        #expect(rules.count == 1)
+        #expect(rule.id == "trash.volume./Volumes/Backup")
+        #expect(rule.category == .trash)
+        #expect(rule.root.path(home: home) == "/Volumes/Backup/.Trashes/501")
+        #expect(rule.selection == .children())
+        #expect(rule.action == .removePermanently)
+        #expect(rule.risk == .review)
+        #expect(rule.ownership == .none)
+        #expect(rule.elevation == .none)
+    }
+
+    @Test("no extra drives, no rules")
+    func noVolumesNoRules() {
+        #expect(RuleCatalog.volumeTrash(volumeRoots: [], uid: 501).isEmpty)
+    }
+
+    @Test("items in a drive's Trash are not protected; /Volumes itself is")
+    func volumeTrashIsNotProtected() {
+        let policy = ProtectionPolicy(home: home)
+        #expect(policy.protection(for: "/Volumes/Backup/.Trashes/501/Old Project") == nil)
+        #expect(policy.protection(for: "/Volumes") != nil)
+    }
+
     @Test("the standard catalog finds real items in a fixture home")
     func scansFixtureHome() async throws {
         let scratch = try TemporaryDirectory()
