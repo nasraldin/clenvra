@@ -10,8 +10,34 @@ struct OverviewView: View {
 
     @State private var volumes: [Volume] = []
     @State private var fullDiskAccess = FullDiskAccess.Status.unknown
+    @State private var searchText = ""
+    @Environment(SearchRouter.self) private var router: SearchRouter?
 
     var body: some View {
+        let query = AppSearch.normalized(searchText)
+        // The results cover the dashboard rather than replace it, so its toolbar and work stay in place.
+        dashboard
+            .pageState(isShown: !query.isEmpty) {
+                OverviewSearchResults(
+                    query: query,
+                    results: AppSearch.results(
+                        for: query, in: OverviewSearchIndex.entries(environment: environment, volumes: volumes)),
+                    open: open)
+            }
+            .pageSearch(text: $searchText, prompt: "Search Clenvra", section: .overview)
+    }
+
+    /// Opens the page a search result belongs to, with the result's text in that page's search field.
+    private func open(_ entry: SearchEntry) {
+        guard let section = AppSection(rawValue: entry.destination) else { return }
+        if let router {
+            router.open(section, query: entry.query)
+        } else {
+            navigate(section)
+        }
+    }
+
+    private var dashboard: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 disks

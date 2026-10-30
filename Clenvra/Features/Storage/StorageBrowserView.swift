@@ -8,6 +8,13 @@ struct StorageBrowserView: View {
 
     @State private var previewURL: URL?
     @AppStorage("storage.mapStyle") private var mapStyle = StorageMapStyle.treemap
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
+
+    /// The current folder's children whose name matches the search; the map always shows the whole folder.
+    private var rows: [StorageItem] {
+        query.isEmpty ? session.children : session.children.filter { $0.name.localizedStandardContains(query) }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,6 +23,9 @@ struct StorageBrowserView: View {
             VSplitView {
                 table
                     .frame(minHeight: 200)
+                    .pageState(isShown: !session.children.isEmpty && rows.isEmpty) {
+                        ContentUnavailableView.search(text: query)
+                    }
                 map
                     .frame(minHeight: 160, idealHeight: 240)
             }
@@ -29,6 +39,7 @@ struct StorageBrowserView: View {
                 }
             }
         }
+        .pageSearch(text: $searchText, prompt: "Search This Folder", section: .storage)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
@@ -112,7 +123,7 @@ struct StorageBrowserView: View {
 
     private var table: some View {
         let largest = max(session.children.first?.allocatedSize ?? 1, 1)
-        return Table(session.children, selection: selectionBinding) {
+        return Table(rows, selection: selectionBinding) {
             TableColumn("Name") { item in
                 ItemNameCell(item: item, showsOpen: item.kind == .directory) {
                     Task { await session.open(item.path) }
@@ -163,7 +174,7 @@ struct StorageBrowserView: View {
             previewURL = URL(filePath: path)
             return .handled
         }
-        .quickLookPreview($previewURL, in: session.children.map { URL(filePath: $0.path) })
+        .quickLookPreview($previewURL, in: rows.map { URL(filePath: $0.path) })
         .accessibilityLabel(Text("Folders and files"))
         // No floating control overlaps this edge (the map pane follows it), so no fading edge effect.
         .scrollEdgeEffectHidden(true, for: .bottom)

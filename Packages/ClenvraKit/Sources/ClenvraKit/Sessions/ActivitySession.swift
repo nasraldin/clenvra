@@ -73,7 +73,7 @@ public final class ActivitySession {
     /// The operations that survive the current section filter and path search, newest first.
     /// Searching narrows each operation to its matching items.
     public var visibleOperations: [Operation] {
-        let query = searchText
+        let query = AppSearch.normalized(searchText)
         var result: [Operation] = []
         for operation in operations {
             if let filter = sectionFilter, operation.section != filter { continue }
@@ -81,7 +81,7 @@ public final class ActivitySession {
                 result.append(operation)
                 continue
             }
-            let items = operation.items.filter { $0.path.localizedCaseInsensitiveContains(query) }
+            let items = operation.items.filter { $0.path.localizedStandardContains(query) }
             guard !items.isEmpty else { continue }
             result.append(
                 Self.operation(id: operation.id, date: operation.date, section: operation.section, items: items))

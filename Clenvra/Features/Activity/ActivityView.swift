@@ -23,7 +23,7 @@ struct ActivityView: View {
             .detailsPanel(isPresented: $showsInspector, width: 290) {
                 inspector
             }
-            .searchable(text: $session.searchText, prompt: Text("Search by Path"))
+            .pageSearch(text: $session.searchText, prompt: "Search by Path", section: .activity)
             .alert(
                 "Could Not Put Back",
                 isPresented: Binding(

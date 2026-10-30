@@ -215,8 +215,8 @@ public final class AppsSession {
                 case .homebrew: homebrewToken(for: app) != nil
                 }
             guard included else { return false }
-            return query.isEmpty || app.name.localizedCaseInsensitiveContains(query)
-                || app.bundleIdentifier?.localizedCaseInsensitiveContains(query) == true
+            return query.isEmpty || app.name.localizedStandardContains(query)
+                || app.bundleIdentifier?.localizedStandardContains(query) == true
         }
         return filtered.sorted { lhs, rhs in
             switch sortOrder {

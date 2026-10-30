@@ -31,7 +31,7 @@ struct DuplicatesView: View {
             .detailsPanel(isPresented: $showsInspector, width: 280) {
                 DuplicateInspector(session: session, highlighted: highlighted)
             }
-            .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
+            .pageSearch(text: $query, prompt: "Search by Name or Location", section: .duplicates)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.markedCount, bytes: session.markedBytes) {
                     isConfirming = false
@@ -48,7 +48,7 @@ struct DuplicatesView: View {
     private var content: some View {
         DuplicateGroupsList(
             session: session, previewURL: $previewURL, highlighted: $highlighted,
-            showsInspector: $showsInspector, query: query
+            showsInspector: $showsInspector, query: AppSearch.normalized(query)
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("review.results")

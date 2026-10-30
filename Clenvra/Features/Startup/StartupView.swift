@@ -14,7 +14,8 @@ struct StartupView: View {
     private let groups = ExpandedGroups("startup")
     @State private var removing: LaunchItem?
     @State private var message: LocalizedStringResource?
-    @State private var query = ""
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
 
     var body: some View {
         table
@@ -35,7 +36,7 @@ struct StartupView: View {
                     report: { message = $0 }
                 )
             }
-            .searchable(text: $query, placement: .toolbar, prompt: Text("Search Startup Items"))
+            .pageSearch(text: $searchText, prompt: "Search Startup Items", section: .startup)
             // Listing what is installed is instant and changes nothing, like Finder showing a folder.
             .task(id: installedApps.count) { await session.load(installedApps: installedApps) }
             .confirmationDialog(
@@ -204,7 +205,7 @@ struct StartupView: View {
     private func matches(_ item: LaunchItem) -> Bool {
         guard !query.isEmpty else { return true }
         return [item.label, item.program, ownerName(of: item), item.displayName].compactMap { $0 }
-            .contains { $0.localizedCaseInsensitiveContains(query) }
+            .contains { $0.localizedStandardContains(query) }
     }
 
     private func ownerName(of item: LaunchItem) -> String? {

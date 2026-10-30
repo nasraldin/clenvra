@@ -19,7 +19,8 @@ struct RuleReviewView<MoreActions: View>: View {
 
     @State private var highlighted: Set<ReviewRow.ID> = []
     @State private var sortOrder = [KeyPathComparator(\ReviewRow.size, order: .reverse)]
-    @State private var query = ""
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
     @State private var showsInspector = false
     @State private var isConfirming = false
     @State private var shownSummary: ShownSummary?
@@ -48,7 +49,7 @@ struct RuleReviewView<MoreActions: View>: View {
             .detailsPanel(isPresented: $showsInspector, width: 280) {
                 ReviewInspector(candidates: highlightedCandidates, session: session)
             }
-            .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
+            .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: section)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(
                     count: session.selectedCount, bytes: session.selectedBytes,
@@ -342,7 +343,7 @@ struct RuleReviewView<MoreActions: View>: View {
     private func matches(in group: CleanupSession.Group) -> [CleanupCandidate] {
         guard !query.isEmpty else { return group.candidates }
         return group.candidates.filter {
-            $0.name.localizedCaseInsensitiveContains(query) || $0.path.localizedCaseInsensitiveContains(query)
+            $0.name.localizedStandardContains(query) || $0.path.localizedStandardContains(query)
         }
     }
 

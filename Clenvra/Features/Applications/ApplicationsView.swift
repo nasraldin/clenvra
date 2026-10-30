@@ -148,7 +148,7 @@ private struct AppListView: View {
                     }
                 }
             }
-            .searchable(text: $session.searchText, placement: .toolbar, prompt: Text("Search apps"))
+            .pageSearch(text: $session.searchText, prompt: "Search apps", section: .applications)
             .toolbar {
                 ToolbarItem {
                     filterMenu
