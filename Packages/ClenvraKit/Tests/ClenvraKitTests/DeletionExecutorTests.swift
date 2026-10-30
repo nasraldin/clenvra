@@ -86,6 +86,21 @@ struct DeletionExecutorTests {
         #expect(try SafeWalk.resolve(trashPath).snapshot.identity == planned.expected.identity)
     }
 
+    /// The Trash of another drive: `<drive>/.Trashes` is search-only (`d-wx--x--t`), the user's folder inside it is
+    /// theirs. Emptying it removes the item for good.
+    @Test("removes for good through a folder that can be searched but not read")
+    func irreversibleThroughSearchOnlyFolder() async throws {
+        try fixture.file("cache/trashes/501/old-file.bin", bytes: 4)
+        #expect(chmod(path("cache/trashes"), 0o311) == 0)
+        defer { chmod(path("cache/trashes"), 0o755) }
+        let planned = try item("cache/trashes/501/old-file.bin")
+
+        let results = await executor(trash: fixtureTrash).run([planned], mode: .irreversible)
+
+        #expect(results.first?.outcome == .removedPermanently)
+        #expect(!exists("cache/trashes/501/old-file.bin"))
+    }
+
     @Test("a dry run checks everything and changes nothing")
     func dryRun() async throws {
         try fixture.file("cache/a.bin", bytes: 4)

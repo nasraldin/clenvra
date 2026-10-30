@@ -25,6 +25,19 @@ struct SafeWalkTests {
         return FileIdentity(device: info.st_dev, inode: info.st_ino)
     }
 
+    /// A drive's `.Trashes` is `d-wx--x--t root`: it can be passed through but not read. The walk must only need
+    /// to pass through the folders on the way, like `rm` does.
+    @Test("passes through a folder that can be searched but not read")
+    func passesThroughSearchOnlyFolder() throws {
+        try fixture.file("trashes/501/old-file.bin", bytes: 3)
+        #expect(chmod(path("trashes"), 0o311) == 0)
+        defer { chmod(path("trashes"), 0o755) }
+
+        let item = try SafeWalk.resolve(path("trashes/501/old-file.bin"))
+        #expect(item.snapshot.logicalSize == 3)
+        #expect(try SafeWalk.openDirectory(path("trashes/501")).identity() == lstatIdentity(path("trashes/501")))
+    }
+
     @Test("resolves the parent directory and a snapshot of the item without following anything")
     func resolvesNestedFile() throws {
         try fixture.file("a/b/file.txt", bytes: 7)

@@ -8,6 +8,8 @@ import Foundation
 /// Entries are read in bulk with `getattrlistbulk(2)`, one syscall per batch instead of several per file.
 public struct OpenDirectory: ~Copyable, Sendable {
     private static let openFlags = O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
+    /// For folders only passed through: needs search permission, not read (a drive's `.Trashes` is `d-wx--x--t`).
+    private static let searchFlags = O_SEARCH | O_NOFOLLOW | O_CLOEXEC
     private static let bufferSize = 128 * 1024
 
     private let fd: Int32
@@ -37,6 +39,16 @@ public struct OpenDirectory: ~Copyable, Sendable {
             throw FileSystemError(code: EINVAL, operation: "open", path: name)
         }
         let child = Darwin.openat(fd, name, Self.openFlags)
+        guard child >= 0 else { throw .current("open", name) }
+        return OpenDirectory(fd: child, label: name)
+    }
+
+    /// Opens a direct child directory only to pass through it (no listing), without following symlinks.
+    public func searchChild(named name: String) throws(FileSystemError) -> OpenDirectory {
+        guard Self.isPlainName(name) else {
+            throw FileSystemError(code: EINVAL, operation: "open", path: name)
+        }
+        let child = Darwin.openat(fd, name, Self.searchFlags)
         guard child >= 0 else { throw .current("open", name) }
         return OpenDirectory(fd: child, label: name)
     }

@@ -72,10 +72,7 @@ public enum SafeWalk {
         guard let leaf = components.last else { throw .isVolumeRoot }
 
         do {
-            var directory = try OpenDirectory(path: "/")
-            for component in components.dropLast() {
-                directory = try directory.openChild(named: component)
-            }
+            let directory = try walk(to: components.dropLast())
             let info = try directory.statChild(named: leaf)
             return ResolvedItem(
                 parent: directory, name: leaf, snapshot: FileSnapshot(info), flags: info.st_flags,
@@ -94,14 +91,21 @@ public enum SafeWalk {
             throw .invalidPath(error)
         }
         do {
-            var directory = try OpenDirectory(path: "/")
-            for component in components {
-                directory = try directory.openChild(named: component)
-            }
-            return directory
+            return try walk(to: components[...])
         } catch {
             throw refusal(for: error)
         }
+    }
+
+    /// Opens the last of `components` normally, passing through the ones before it with search permission only.
+    private static func walk(to components: ArraySlice<String>) throws(FileSystemError) -> OpenDirectory {
+        var directory = try OpenDirectory(path: "/")
+        for (index, component) in components.enumerated() {
+            directory =
+                index == components.count - 1
+                ? try directory.openChild(named: component) : try directory.searchChild(named: component)
+        }
+        return directory
     }
 
     static func refusal(for error: FileSystemError) -> SafetyRefusal {
