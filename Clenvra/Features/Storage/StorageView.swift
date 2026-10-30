@@ -7,8 +7,11 @@ struct StorageView: View {
     let session: StorageSession
     let similarPhotos: SimilarPhotosSession
     let page: StoragePage
+    /// Opens another page, for the links in "What's in System Data".
+    let navigate: (AppSection) -> Void
 
     @State private var isConfirming = false
+    @State private var isShowingSystemData = false
     @State private var shownSummary: StorageShownSummary?
     private var showsSimilarPhotos: Bool { page == .similarPhotos }
 
@@ -167,6 +170,24 @@ struct StorageView: View {
         if page == .largeFiles {
             ToolbarItem {
                 ScanTargetMenu(session: session)
+            }
+        }
+
+        if page == .browser {
+            ToolbarItem {
+                Button {
+                    isShowingSystemData.toggle()
+                } label: {
+                    ToolbarLabel(title: "What's in System Data", symbol: "questionmark.circle")
+                }
+                .help(Text("What's in System Data"))
+                .accessibilityIdentifier("storage.systemDataButton")
+                .popover(isPresented: $isShowingSystemData, arrowEdge: .bottom) {
+                    SystemDataView(rootVolume: session.volumes.first(where: \.isRoot)) { section in
+                        isShowingSystemData = false
+                        navigate(section)
+                    }
+                }
             }
         }
 

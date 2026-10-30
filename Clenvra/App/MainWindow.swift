@@ -185,8 +185,11 @@ struct MainWindow: View {
     }
 
     private func storage(_ page: StoragePage) -> some View {
-        StorageView(session: environment.storageSession, similarPhotos: environment.similarPhotosSession, page: page)
-            .id(page)
+        StorageView(
+            session: environment.storageSession, similarPhotos: environment.similarPhotosSession, page: page,
+            navigate: { selection = $0 }
+        )
+        .id(page)
     }
 
     private func applications(_ page: ApplicationsPage) -> some View {
