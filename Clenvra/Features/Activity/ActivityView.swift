@@ -20,9 +20,8 @@ struct ActivityView: View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar { toolbar }
-            .inspector(isPresented: $showsInspector) {
+            .detailsPanel(isPresented: $showsInspector, width: 290) {
                 inspector
-                    .inspectorColumnWidth(min: 240, ideal: 290, max: 360)
             }
             .searchable(text: $session.searchText, prompt: Text("Search by Path"))
             .alert(
@@ -57,25 +56,26 @@ struct ActivityView: View {
     }
 
     @ViewBuilder private var content: some View {
-        if !didLoad {
-            Color.clear
-        } else if session.operations.isEmpty {
-            emptyState
-        } else if session.visibleOperations.isEmpty {
-            ContentUnavailableView {
-                Label {
-                    Text("No Results")
-                } icon: {
-                    Image(systemName: "magnifyingglass")
-                }
-            } description: {
-                Text("Try a different path or another section.")
-            }
+        list
             .accessibilityIdentifier("review.results")
-        } else {
-            list
-                .accessibilityIdentifier("review.results")
-        }
+            .pageState(isShown: session.visibleOperations.isEmpty) {
+                if !didLoad {
+                    Color.clear
+                } else if session.operations.isEmpty {
+                    emptyState
+                } else {
+                    ContentUnavailableView {
+                        Label {
+                            Text("No Results")
+                        } icon: {
+                            Image(systemName: "magnifyingglass")
+                        }
+                    } description: {
+                        Text("Try a different path or another section.")
+                    }
+                    .accessibilityIdentifier("review.results")
+                }
+            }
     }
 
     private var emptyState: some View {
@@ -280,12 +280,22 @@ struct ActivityView: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup {
-            Picker("Filter by Section", selection: $session.sectionFilter) {
-                Text("All Sections").tag(nil as ActivityRecord.Section?)
-                ForEach(ActivityRecord.Section.allCases, id: \.self) { section in
-                    Text(section.title).tag(section as ActivityRecord.Section?)
+            Menu {
+                Picker("Filter by Section", selection: $session.sectionFilter) {
+                    Text("All Sections").tag(nil as ActivityRecord.Section?)
+                    ForEach(ActivityRecord.Section.allCases, id: \.self) { section in
+                        Text(section.title).tag(section as ActivityRecord.Section?)
+                    }
                 }
+                .pickerStyle(.inline)
+            } label: {
+                ToolbarLabel(
+                    title: "Filter by Section",
+                    symbol: session.sectionFilter == nil
+                        ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
             }
+            .menuIndicator(.hidden)
+            .help(Text("Show the activity of one section"))
 
             Button {
                 Task {
@@ -293,13 +303,12 @@ struct ActivityView: View {
                     await loadIfNeeded()
                 }
             } label: {
-                Label {
-                    Text("Refresh")
-                } icon: {
-                    Image(systemName: "arrow.clockwise")
-                }
+                ToolbarLabel(title: "Refresh", symbol: "arrow.clockwise")
             }
             .keyboardShortcut("r", modifiers: .command)
+
+            ExpandAllButton(allExpanded: expansion.allBinding(session.visibleOperations.map(\.id.uuidString)))
+                .disabled(session.visibleOperations.isEmpty)
 
             Menu {
                 Button {
@@ -313,11 +322,7 @@ struct ActivityView: View {
                     Text("Export Report as Markdown…")
                 }
             } label: {
-                Label {
-                    Text("Export…")
-                } icon: {
-                    Image(systemName: "square.and.arrow.up")
-                }
+                ToolbarLabel(title: "Export…", symbol: "square.and.arrow.up")
             }
             .accessibilityIdentifier("activity.export")
             .disabled(didLoad && session.visibleOperations.isEmpty)

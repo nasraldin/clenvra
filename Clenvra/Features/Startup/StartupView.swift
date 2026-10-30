@@ -17,55 +17,52 @@ struct StartupView: View {
     @State private var query = ""
 
     var body: some View {
-        Group {
-            if session.isLoading && session.items.isEmpty {
-                ProgressView {
-                    Text("Reading startup items…")
+        table
+            .pageState(isShown: visibleGroups.isEmpty && (session.isLoading || !query.isEmpty)) {
+                if session.isLoading {
+                    ProgressView {
+                        Text("Reading startup items…")
+                    }
+                } else {
+                    ContentUnavailableView.search(text: query)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if visibleGroups.isEmpty && !query.isEmpty {
-                ContentUnavailableView.search(text: query)
-            } else {
-                table
             }
-        }
-        .toolbar { toolbar }
-        .inspector(isPresented: $showsInspector) {
-            StartupInspector(
-                item: highlightedItems.count == 1 ? highlightedItems.first : nil, session: session,
-                ownerName: highlightedItems.first.flatMap(ownerName), remove: { removing = $0 },
-                report: { message = $0 }
-            )
-            .inspectorColumnWidth(min: 260, ideal: 300, max: 380)
-        }
-        .searchable(text: $query, placement: .toolbar, prompt: Text("Search Startup Items"))
-        // Listing what is installed is instant and changes nothing, like Finder showing a folder.
-        .task(id: installedApps.count) { await session.load(installedApps: installedApps) }
-        .confirmationDialog(
-            Text("Remove this startup item?"),
-            isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
-            presenting: removing
-        ) { item in
-            Button(role: .destructive) {
-                Task { message = await session.remove(item).message }
-            } label: {
-                Text("Stop and Move to Trash")
+            .toolbar { toolbar }
+            .detailsPanel(isPresented: $showsInspector, width: 300) {
+                StartupInspector(
+                    item: highlightedItems.count == 1 ? highlightedItems.first : nil, session: session,
+                    ownerName: highlightedItems.first.flatMap(ownerName), remove: { removing = $0 },
+                    report: { message = $0 }
+                )
             }
-        } message: { _ in
-            Text("It is stopped now and will not start again. Its file goes to the Trash, so you can put it back.")
-        }
-        .alert(
-            Text(AppSection.startup.title),
-            isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })
-        ) {
-            Button {
-                message = nil
-            } label: {
-                Text("OK")
+            .searchable(text: $query, placement: .toolbar, prompt: Text("Search Startup Items"))
+            // Listing what is installed is instant and changes nothing, like Finder showing a folder.
+            .task(id: installedApps.count) { await session.load(installedApps: installedApps) }
+            .confirmationDialog(
+                Text("Remove this startup item?"),
+                isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
+                presenting: removing
+            ) { item in
+                Button(role: .destructive) {
+                    Task { message = await session.remove(item).message }
+                } label: {
+                    Text("Stop and Move to Trash")
+                }
+            } message: { _ in
+                Text("It is stopped now and will not start again. Its file goes to the Trash, so you can put it back.")
             }
-        } message: {
-            if let message { Text(message) }
-        }
+            .alert(
+                Text(AppSection.startup.title),
+                isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })
+            ) {
+                Button {
+                    message = nil
+                } label: {
+                    Text("OK")
+                }
+            } message: {
+                if let message { Text(message) }
+            }
     }
 
     // MARK: - Table
@@ -167,14 +164,13 @@ struct StartupView: View {
             Button {
                 Task { await session.load(installedApps: installedApps) }
             } label: {
-                Label {
-                    Text("Refresh")
-                } icon: {
-                    Image(systemName: "arrow.clockwise")
-                }
+                ToolbarLabel(title: "Refresh", symbol: "arrow.clockwise")
             }
             .keyboardShortcut("r", modifiers: .command)
             .help(Text("Read the startup items again (⌘R)"))
+
+            ExpandAllButton(allExpanded: groups.allBinding(visibleGroups.map { String(describing: $0.group) }))
+                .disabled(visibleGroups.isEmpty)
 
             Menu {
                 Button {
@@ -183,27 +179,14 @@ struct StartupView: View {
                     Text("Open Login Items Settings")
                 }
             } label: {
-                Label {
-                    Text("More")
-                } icon: {
-                    Image(systemName: "ellipsis")
-                }
+                ToolbarLabel(title: "More", symbol: "ellipsis")
             }
             .menuIndicator(.hidden)
             .help(Text("More actions"))
         }
 
         ToolbarItem {
-            Button {
-                showsInspector.toggle()
-            } label: {
-                Label {
-                    Text(showsInspector ? "Hide Details" : "Show Details")
-                } icon: {
-                    Image(systemName: "sidebar.trailing")
-                }
-            }
-            .help(Text("Show or hide the details of the highlighted item (⌃⌘I)"))
+            InspectorToggle(isPresented: $showsInspector)
         }
     }
 

@@ -23,8 +23,9 @@ struct StorageView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !showsSimilarPhotos {
-                VolumeBarsView(session: session, showsTarget: page != .clutter)
+            // The disks belong to Space Map; the cleanup pages show only their own results.
+            if page == .browser {
+                VolumeBarsView(session: session)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                 Divider()
@@ -37,7 +38,7 @@ struct StorageView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .toolbar { toolbar }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             if !showsSimilarPhotos { statusBar }
         }
         .sheet(isPresented: $isConfirming) {
@@ -73,36 +74,33 @@ struct StorageView: View {
     @ViewBuilder private var scanContent: some View {
         switch page.list ?? .browser {
         case .clutter:
-            if session.hasLoadedClutter || session.isLoadingClutter {
-                ClutterView(session: session)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier("review.results")
-                    .accessibilityLabel(Text(pageSection.title))
-            } else {
-                ScanPrompt(
-                    section: .downloads,
-                    description:
-                        "List the files in Downloads and your screenshots by kind, age and source, so you can remove what you no longer need."
-                ) {
-                    Task { await session.loadClutter() }
+            ClutterView(session: session)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("review.results")
+                .accessibilityLabel(Text(pageSection.title))
+                .pageState(isShown: !session.hasLoadedClutter && !session.isLoadingClutter) {
+                    ScanPrompt(
+                        section: .downloads,
+                        description:
+                            "List the files in Downloads and your screenshots by kind, age and source, so you can remove what you no longer need."
+                    ) {
+                        Task { await session.loadClutter() }
+                    }
                 }
-            }
-        case .browser, .largeFiles:
-            if session.snapshot == nil {
-                scanState
-            } else if page == .browser {
-                StorageBrowserView(session: session)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier("review.results")
-                    .accessibilityLabel(Text(pageSection.title))
-                    .disabled(isBusy)
-            } else {
-                LargeFilesView(session: session)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier("review.results")
-                    .accessibilityLabel(Text(pageSection.title))
-                    .disabled(isBusy)
-            }
+        case .browser:
+            StorageBrowserView(session: session)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("review.results")
+                .accessibilityLabel(Text(pageSection.title))
+                .disabled(isBusy)
+                .pageState(isShown: session.snapshot == nil) { scanState }
+        case .largeFiles:
+            LargeFilesView(session: session)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("review.results")
+                .accessibilityLabel(Text(pageSection.title))
+                .disabled(isBusy)
+                .pageState(isShown: session.snapshot == nil) { scanState }
         }
     }
 
@@ -166,20 +164,17 @@ struct StorageView: View {
     }
 
     @ToolbarContentBuilder private var scanToolbar: some ToolbarContent {
+        if page == .largeFiles {
+            ToolbarItem {
+                ScanTargetMenu(session: session)
+            }
+        }
+
         ToolbarItemGroup {
-            if case .scanning = session.phase {
-                Button {
-                    session.cancelScan()
-                } label: {
-                    Label {
-                        Text("Stop Scan")
-                    } icon: {
-                        Image(systemName: "stop.circle")
-                    }
-                }
-                .keyboardShortcut(.cancelAction)
-            } else {
-                Button {
+            ScanButton(
+                isScanning: { if case .scanning = session.phase { true } else { false } }(), title: "Rescan",
+                isDisabled: isBusy,
+                scan: {
                     Task {
                         if page == .clutter {
                             await session.loadClutter()
@@ -187,16 +182,7 @@ struct StorageView: View {
                             await session.scan()
                         }
                     }
-                } label: {
-                    Label {
-                        Text("Rescan")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .keyboardShortcut("r", modifiers: .command)
-                .disabled(isBusy)
-            }
+                }, stop: { session.cancelScan() })
         }
 
         ToolbarSpacer(.fixed)
@@ -241,9 +227,9 @@ struct StorageView: View {
             Spacer()
         }
         .font(.callout)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(.bar)
+        .statusBarBackground()
     }
 }
 

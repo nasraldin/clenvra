@@ -21,11 +21,10 @@ struct DuplicateGroupsList: View {
                 notices
                 Divider()
             }
-            if visibleGroups.isEmpty {
-                ContentUnavailableView.search(text: query)
-            } else {
-                table
-            }
+            table
+                .pageState(isShown: visibleGroups.isEmpty && !query.isEmpty) {
+                    ContentUnavailableView.search(text: query)
+                }
         }
     }
 
@@ -145,6 +144,11 @@ struct DuplicateGroupsList: View {
         } primaryAction: { ids in
             highlighted = ids
             showsInspector = true
+        }
+        .toolbar {
+            ToolbarItem {
+                ExpandAllButton(allExpanded: expansion.allBinding(visibleGroups.map(\.id)))
+            }
         }
         .onKeyPress(.space) {
             guard let path = files(for: highlighted).first?.path else { return .ignored }

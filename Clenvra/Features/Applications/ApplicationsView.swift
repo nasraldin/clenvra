@@ -16,6 +16,8 @@ struct ApplicationsView: View {
     let checksForUpdates: Bool
     let page: ApplicationsPage
     @State private var selectedID: String?
+    /// The review opens when an app is chosen; until then the list has the whole page.
+    @State private var showsDetail = false
 
     var body: some View {
         VStack(spacing: 0) { content }
@@ -23,6 +25,9 @@ struct ApplicationsView: View {
                 if page == .installed {
                     ToolbarItem {
                         CheckForUpdatesButton(session: session, updates: updates, isEnabled: checksForUpdates)
+                    }
+                    ToolbarItem {
+                        InspectorToggle(isPresented: $showsDetail)
                     }
                 }
             }
@@ -43,15 +48,15 @@ struct ApplicationsView: View {
     @ViewBuilder private var content: some View {
         switch page {
         case .installed:
-            HSplitView {
-                AppListView(
-                    session: session, updates: updates, showsUpdates: checksForUpdates, selectedID: $selectedID
-                )
-                .frame(minWidth: 280, idealWidth: 340, maxWidth: 480)
+            // The list fills the page; the selected app's review is in the inspector, as on every other page.
+            AppListView(
+                session: session, updates: updates, showsUpdates: checksForUpdates, selectedID: $selectedID
+            )
+            .detailsPanel(isPresented: $showsDetail, width: 400) {
                 AppDetailView(session: session, update: checksForUpdates ? selectedUpdate : nil)
-                    .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
             }
             .onChange(of: selectedID) { _, newValue in
+                if newValue != nil { showsDetail = true }
                 Task { await session.select(newValue) }
             }
         case .leftovers:
@@ -115,53 +120,53 @@ private struct AppListView: View {
     }
 
     var body: some View {
-        Group {
-            if session.phase != .ready && session.apps.isEmpty {
-                ProgressView {
-                    Text("Looking for apps…")
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if listedApps.isEmpty, showsUpdatesOnly && showsUpdates {
-                ContentUnavailableView {
-                    Label {
-                        Text("No updates")
-                    } icon: {
-                        Image(systemName: "arrow.down.app")
+        table
+            .pageState(isShown: listedApps.isEmpty) {
+                if session.phase != .ready && session.apps.isEmpty {
+                    ProgressView {
+                        Text("Looking for apps…")
                     }
-                } description: {
-                    Text("Apps with a newer version appear here after you check for updates.")
-                }
-            } else if listedApps.isEmpty {
-                ContentUnavailableView {
-                    Label {
-                        Text("No apps")
-                    } icon: {
-                        Image(systemName: "app.dashed")
+                } else if showsUpdatesOnly && showsUpdates {
+                    ContentUnavailableView {
+                        Label {
+                            Text("No updates")
+                        } icon: {
+                            Image(systemName: "arrow.down.app")
+                        }
+                    } description: {
+                        Text("Apps with a newer version appear here after you check for updates.")
                     }
-                } description: {
-                    Text("No apps match the current search or filter.")
+                } else {
+                    ContentUnavailableView {
+                        Label {
+                            Text("No apps")
+                        } icon: {
+                            Image(systemName: "app.dashed")
+                        }
+                    } description: {
+                        Text("No apps match the current search or filter.")
+                    }
                 }
-            } else {
-                table
             }
-        }
-        .searchable(text: $session.searchText, placement: .sidebar, prompt: Text("Search apps"))
-        .safeAreaInset(edge: .top) {
-            VStack(spacing: 6) {
-                filterPicker
-                if showsUpdates {
+            .searchable(text: $session.searchText, placement: .toolbar, prompt: Text("Search apps"))
+            .toolbar {
+                ToolbarItem {
+                    filterMenu
+                }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if showsUpdates, updates.phase != .idle {
                     UpdateCheckProgress(updates: updates)
+                        .controlSize(.small)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .statusBarBackground()
                 }
             }
-            .controlSize(.small)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.bar)
-        }
-        .onChange(of: sortOrder) {
-            // Sorting by size needs every app measured, not only the visible ones.
-            if sortOrder.first?.keyPath == \AppRow.size as AnyKeyPath { Task { await session.measureAll() } }
-        }
+            .onChange(of: sortOrder) {
+                // Sorting by size needs every app measured, not only the visible ones.
+                if sortOrder.first?.keyPath == \AppRow.size as AnyKeyPath { Task { await session.measureAll() } }
+            }
     }
 
     private var table: some View {
@@ -207,19 +212,30 @@ private struct AppListView: View {
         .accessibilityIdentifier("review.results")
     }
 
-    private var filterPicker: some View {
-        Picker(selection: listFilter) {
-            Text("All").tag(ListFilter.apps(.all))
-            Text("Unused for 6 Months").tag(ListFilter.apps(.unused))
-            Text("App Store").tag(ListFilter.apps(.appStore))
-            Text("Homebrew").tag(ListFilter.apps(.homebrew))
-            if showsUpdates {
-                Text("Updates").tag(ListFilter.updates)
+    /// Which apps the table lists, as a filter menu in the toolbar; the icon fills while a filter is on.
+    private var filterMenu: some View {
+        Menu {
+            Picker(selection: listFilter) {
+                Text("All").tag(ListFilter.apps(.all))
+                Text("Unused for 6 Months").tag(ListFilter.apps(.unused))
+                Text("App Store").tag(ListFilter.apps(.appStore))
+                Text("Homebrew").tag(ListFilter.apps(.homebrew))
+                if showsUpdates {
+                    Text("Updates").tag(ListFilter.updates)
+                }
+            } label: {
+                Text("Show")
             }
+            .pickerStyle(.inline)
         } label: {
-            Text("Show")
+            ToolbarLabel(
+                title: "Show",
+                symbol: listFilter.wrappedValue == .apps(.all)
+                    ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill")
         }
-        .visibleLabel("Show")
+        .menuIndicator(.hidden)
+        .help(Text("Choose which apps to list"))
+        .accessibilityIdentifier("applications.filter")
     }
 }
 
@@ -244,21 +260,22 @@ private struct AppNameCell: View {
     let app: InstalledApp
     var availableVersion: String?
 
+    private var subtitle: String {
+        let source = app.source.title.map { String(localized: $0) }
+        return [app.version, source].compactMap { $0 }.joined(separator: " · ")
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             AppIcon(path: app.id, size: 24)
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: app.name)
                     .lineLimit(1)
-                HStack(spacing: 6) {
-                    if let version = app.version {
-                        Text(verbatim: version)
-                    }
-                    SourceBadge(source: app.source)
-                }
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+                // One text ("2.10 · Apple"), so it reads and is measured as one line rather than tiny fragments.
+                Text(subtitle)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 if let availableVersion {
                     UpdateBadge(version: availableVersion)
                 }
@@ -286,12 +303,19 @@ struct SourceBadge: View {
     let source: InstalledApp.Source
 
     var body: some View {
-        switch source {
-        case .appStore: Text("App Store")
-        case .homebrew: Text("Homebrew")
-        case .setapp: Text("Setapp")
-        case .apple: Text("Apple")
-        case .other: EmptyView()
+        if let title = source.title { Text(title) }
+    }
+}
+
+extension InstalledApp.Source {
+    /// Where the app came from, or nil when unknown.
+    var title: LocalizedStringResource? {
+        switch self {
+        case .appStore: "App Store"
+        case .homebrew: "Homebrew"
+        case .setapp: "Setapp"
+        case .apple: "Apple"
+        case .other: nil
         }
     }
 }

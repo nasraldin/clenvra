@@ -8,7 +8,12 @@ struct DeveloperToolsView: View {
 
     var body: some View {
         if let session {
-            if session.phase == .idle && session.rows.isEmpty {
+            List {
+                ToolStorageSection(session: session)
+            }
+            .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.developerTools.title))
+            .pageState(isShown: session.phase == .idle && session.rows.isEmpty) {
                 ContentUnavailableView {
                     Label {
                         Text(AppSection.developerTools.title)
@@ -29,27 +34,17 @@ struct DeveloperToolsView: View {
                     .controlSize(.large)
                     .accessibilityIdentifier("review.scan")
                 }
-            } else {
-                List {
-                    ToolStorageSection(session: session)
-                }
-                .accessibilityIdentifier("review.results")
-                .accessibilityLabel(Text(AppSection.developerTools.title))
-                .toolbar {
-                    ToolbarItem {
-                        Button {
-                            Task { await session.inspect() }
-                        } label: {
-                            Label {
-                                Text("Check Again")
-                            } icon: {
-                                Image(systemName: "arrow.clockwise")
-                            }
-                        }
-                        .keyboardShortcut("r", modifiers: .command)
-                        .help(Text("Check your tools again (⌘R)"))
-                        .disabled(session.phase == .inspecting)
+            }
+            .toolbar {
+                ToolbarItem {
+                    Button {
+                        Task { await session.inspect() }
+                    } label: {
+                        ToolbarLabel(title: "Check Again", symbol: "arrow.clockwise")
                     }
+                    .keyboardShortcut("r", modifiers: .command)
+                    .help(Text("Check your tools again (⌘R)"))
+                    .disabled(session.phase == .inspecting)
                 }
             }
         } else {

@@ -317,7 +317,49 @@ private struct SystemProcessesView: View {
 
             Divider()
 
-            if processes.isEmpty {
+            Table(processes, selection: $selected) {
+                TableColumn("Process") { proc in
+                    HStack(spacing: 8) {
+                        Image(systemName: proc.appBundlePath != nil ? "app.dashed" : "terminal")
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(proc.name)
+                                .fontWeight(.medium)
+                            PathText(path: proc.executablePath)
+                        }
+                    }
+                }
+                .width(min: 200, ideal: 300)
+
+                TableColumn("CPU") { proc in
+                    Text(proc.cpuPercent / 100, format: .percent.precision(.fractionLength(1)))
+                        .monospacedDigit()
+                }
+                .width(ideal: 80)
+
+                TableColumn("Memory") { proc in
+                    SizeText(bytes: Int64(proc.memoryBytes))
+                }
+                .width(ideal: 100)
+
+                TableColumn("Kind") { proc in
+                    Text(proc.isQuittableApp ? "App" : "Not an App")
+                        .foregroundStyle(.secondary)
+                }
+                .width(ideal: 100)
+            }
+            .accessibilityLabel(Text("Processes"))
+            .contextMenu(forSelectionType: ProcessInfoItem.ID.self) { ids in
+                if let id = ids.first, let proc = processes.first(where: { $0.id == id }), proc.isQuittableApp {
+                    Button {
+                        requestQuit(proc)
+                    } label: {
+                        Text(session.failedPoliteQuits.contains(proc.id) ? "Force Quit…" : "Quit…")
+                    }
+                }
+            }
+            .pageState(isShown: processes.isEmpty) {
                 ContentUnavailableView {
                     Label {
                         Text("No heavy processes detected")
@@ -326,50 +368,6 @@ private struct SystemProcessesView: View {
                     }
                 } description: {
                     Text("Sampling active host processes…")
-                }
-                .frame(maxHeight: .infinity)
-            } else {
-                Table(processes, selection: $selected) {
-                    TableColumn("Process") { proc in
-                        HStack(spacing: 8) {
-                            Image(systemName: proc.appBundlePath != nil ? "app.dashed" : "terminal")
-                                .foregroundStyle(.secondary)
-                                .accessibilityHidden(true)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(proc.name)
-                                    .fontWeight(.medium)
-                                PathText(path: proc.executablePath)
-                            }
-                        }
-                    }
-                    .width(min: 200, ideal: 300)
-
-                    TableColumn("CPU") { proc in
-                        Text(proc.cpuPercent / 100, format: .percent.precision(.fractionLength(1)))
-                            .monospacedDigit()
-                    }
-                    .width(ideal: 80)
-
-                    TableColumn("Memory") { proc in
-                        SizeText(bytes: Int64(proc.memoryBytes))
-                    }
-                    .width(ideal: 100)
-
-                    TableColumn("Kind") { proc in
-                        Text(proc.isQuittableApp ? "App" : "Not an App")
-                            .foregroundStyle(.secondary)
-                    }
-                    .width(ideal: 100)
-                }
-                .accessibilityLabel(Text("Processes"))
-                .contextMenu(forSelectionType: ProcessInfoItem.ID.self) { ids in
-                    if let id = ids.first, let proc = processes.first(where: { $0.id == id }), proc.isQuittableApp {
-                        Button {
-                            requestQuit(proc)
-                        } label: {
-                            Text(session.failedPoliteQuits.contains(proc.id) ? "Force Quit…" : "Quit…")
-                        }
-                    }
                 }
             }
         }
@@ -448,11 +446,7 @@ private struct SystemSecurityView: View {
                 Button {
                     Task { await session.refreshSecurity() }
                 } label: {
-                    Label {
-                        Text("Check Again")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
+                    ToolbarLabel(title: "Check Again", symbol: "arrow.clockwise")
                 }
                 .keyboardShortcut("r", modifiers: .command)
                 .help(Text("Read the security settings again (⌘R)"))
@@ -489,9 +483,21 @@ private struct SecurityCheckRow: View {
                     .environment(\.layoutDirection, .leftToRight)
 
                 if let url = check.settingsURL {
-                    Link("Open System Settings", destination: url)
+                    if check.id == "firewall" {
+                        // macOS has no link to the Firewall page itself; it is a row in Network.
+                        Link(destination: url) {
+                            Text("Open Network Settings…")
+                        }
                         .font(.callout)
                         .padding(.top, 2)
+                        Text("Then choose Firewall.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Link("Open System Settings", destination: url)
+                            .font(.callout)
+                            .padding(.top, 2)
+                    }
                 }
             }
         }
@@ -612,11 +618,7 @@ private struct SnapshotsView: View {
                 Button {
                     Task { await session.load() }
                 } label: {
-                    Label {
-                        Text("Refresh")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
+                    ToolbarLabel(title: "Refresh", symbol: "arrow.clockwise")
                 }
                 .keyboardShortcut("r", modifiers: .command)
                 .help(Text("List the snapshots again (⌘R)"))

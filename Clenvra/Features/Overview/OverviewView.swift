@@ -22,7 +22,7 @@ struct OverviewView: View {
                     health: environment.systemSession.health, startupVolume: startupVolume, navigate: navigate)
             }
             .padding(20)
-            .frame(maxWidth: 900, alignment: .leading)
+            // Fills the page at any width (with or without the sidebar); the tile grid adds columns as it grows.
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .toolbar {
@@ -30,11 +30,7 @@ struct OverviewView: View {
                 Button {
                     startScan(rescan: true)
                 } label: {
-                    Label {
-                        Text("Rescan")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
+                    ToolbarLabel(title: "Rescan", symbol: "arrow.clockwise")
                 }
                 .keyboardShortcut("r")
                 .disabled(isScanning || !hasScanned)

@@ -8,8 +8,8 @@ struct SimilarPhotoGroupsList: View {
     let session: SimilarPhotosSession
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
-    /// Groups the person closed, remembered across launches (F4).
-    private let expansion = ExpandedGroups("similarPhotos")
+    /// Whether a group is open; the page owns the state so its toolbar can open or close them all.
+    let isExpanded: (String) -> Binding<Bool>
 
     var body: some View {
         ScrollView {
@@ -30,7 +30,7 @@ struct SimilarPhotoGroupsList: View {
                 ForEach(session.groups) { group in
                     SimilarPhotoGroupSection(
                         group: group, session: session, focusedPath: $focusedPath, previewURL: $previewURL,
-                        isExpanded: expansion.binding(group.id) { session.groups.map(\.id) })
+                        isExpanded: isExpanded(group.id))
                     Divider()
                         .padding(.horizontal, 16)
                 }

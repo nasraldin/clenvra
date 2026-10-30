@@ -105,11 +105,7 @@ struct AppDetailView: View {
                         FileActionsMenu(paths: [path])
                     }
                 } label: {
-                    Label {
-                        Text("More")
-                    } icon: {
-                        Image(systemName: "ellipsis")
-                    }
+                    ToolbarLabel(title: "More", symbol: "ellipsis")
                 }
                 .menuIndicator(.hidden)
                 .help(Text("More actions"))

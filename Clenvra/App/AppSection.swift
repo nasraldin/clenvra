@@ -98,6 +98,46 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// Pages that share one sidebar entry and switch with a control at the top of the page: the developer pages, and
+    /// the four pages that find personal files to clean up ("Clutter").
+    var siblings: [AppSection] {
+        switch self {
+        case .developer, .developerTools: [.developer, .developerTools]
+        case .largeFiles, .downloads, .duplicates, .similarPhotos:
+            [.largeFiles, .downloads, .duplicates, .similarPhotos]
+        default: [self]
+        }
+    }
+
+    /// The page whose row stands for this page in the sidebar.
+    var sidebarEntry: AppSection { siblings[0] }
+
+    /// The sidebar row's name: the shared name for pages with siblings, otherwise the page name.
+    var sidebarTitle: LocalizedStringResource {
+        switch self {
+        case .developer: "Developer"
+        case .largeFiles: "Clutter"
+        default: title
+        }
+    }
+
+    var sidebarSymbol: String {
+        switch self {
+        case .largeFiles: "archivebox"
+        default: symbol
+        }
+    }
+
+    /// The short name in the page switcher (the sidebar row already names the group).
+    var switcherTitle: LocalizedStringResource {
+        switch self {
+        case .developer: "Junk"
+        case .developerTools: "Tools"
+        case .largeFiles: "Large & Old"
+        default: title
+        }
+    }
+
     /// ⌘1…⌘9 for the most used pages; the others are in the Go menu without a number.
     var shortcut: KeyEquivalent? {
         switch self {

@@ -18,7 +18,7 @@ struct LeftoversView: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !session.leftovers.isEmpty {
                     SelectionStatusBar(
                         count: session.leftoverSelection.count, bytes: session.leftoverSelectedBytes,
@@ -26,9 +26,8 @@ struct LeftoversView: View {
                 }
             }
             .toolbar { toolbar }
-            .inspector(isPresented: $showsInspector) {
+            .detailsPanel(isPresented: $showsInspector, width: 280) {
                 inspector
-                    .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
             }
             .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
             .sheet(isPresented: $isConfirming) {
@@ -59,7 +58,14 @@ struct LeftoversView: View {
 
     // MARK: - Content
 
-    @ViewBuilder private var content: some View {
+    private var content: some View {
+        table
+            .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(AppSection.leftovers.title))
+            .pageState(isShown: rows.isEmpty) { state }
+    }
+
+    @ViewBuilder private var state: some View {
         if !session.hasScannedLeftovers && !session.isScanningLeftovers {
             ScanPrompt(
                 section: .leftovers,
@@ -69,13 +75,12 @@ struct LeftoversView: View {
                 scan()
             }
             .disabled(session.phase != .ready)
-        } else if session.isScanningLeftovers && session.leftovers.isEmpty {
+        } else if session.isScanningLeftovers {
             ProgressView {
                 Text("Looking for leftovers…")
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("review.scanning")
-        } else if rows.isEmpty {
+        } else {
             Group {
                 if query.isEmpty {
                     ContentUnavailableView {
@@ -94,10 +99,6 @@ struct LeftoversView: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.leftovers.title))
-        } else {
-            table
-                .accessibilityIdentifier("review.results")
-                .accessibilityLabel(Text(AppSection.leftovers.title))
         }
     }
 
@@ -213,11 +214,7 @@ struct LeftoversView: View {
             Button {
                 scan()
             } label: {
-                Label {
-                    Text(session.hasScannedLeftovers ? "Rescan" : "Scan")
-                } icon: {
-                    Image(systemName: "arrow.clockwise")
-                }
+                ToolbarLabel(title: session.hasScannedLeftovers ? "Rescan" : "Scan", symbol: "arrow.clockwise")
             }
             .keyboardShortcut("r", modifiers: .command)
             .help(Text("Look for leftovers again (⌘R)"))
@@ -234,11 +231,7 @@ struct LeftoversView: View {
                 }
                 .disabled(isBusy || session.leftoverSelection.isEmpty)
             } label: {
-                Label {
-                    Text("More")
-                } icon: {
-                    Image(systemName: "ellipsis")
-                }
+                ToolbarLabel(title: "More", symbol: "ellipsis")
             }
             .menuIndicator(.hidden)
             .help(Text("More actions"))

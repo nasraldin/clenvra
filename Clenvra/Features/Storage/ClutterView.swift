@@ -16,6 +16,16 @@ struct ClutterView: View {
     private let expansion = ExpandedGroups("downloads")
 
     var body: some View {
+        page
+            .toolbar {
+                ToolbarItem {
+                    ExpandAllButton(allExpanded: expansion.allBinding(groups.map { String(describing: $0.id) }))
+                        .disabled(groups.isEmpty)
+                }
+            }
+    }
+
+    private var page: some View {
         VStack(spacing: 0) {
             HStack {
                 Picker(selection: $grouping) {
@@ -93,47 +103,47 @@ struct ClutterView: View {
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
-    @ViewBuilder private var content: some View {
-        if session.isLoadingClutter, session.clutter.isEmpty {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if session.clutter.isEmpty {
-            ContentUnavailableView {
-                Label {
-                    Text("Nothing to review")
-                } icon: {
-                    Image(systemName: "checkmark.circle")
-                }
-            } description: {
-                Text("Downloads is empty and there are no screenshots.")
-            }
-        } else {
-            List(selection: selectionBinding) {
-                ForEach(groups) { group in
-                    Section(isExpanded: expandedBinding(group.id)) {
-                        ForEach(group.items) { clutter in
-                            ClutterRow(clutter: clutter)
-                                .tag(clutter.id)
-                        }
-                    } header: {
-                        HStack {
-                            Text(group.key.title)
-                            Spacer()
-                            SizeText(bytes: group.totalBytes)
-                                .foregroundStyle(.secondary)
-                        }
+    private var content: some View {
+        List(selection: selectionBinding) {
+            ForEach(groups) { group in
+                Section(isExpanded: expandedBinding(group.id)) {
+                    ForEach(group.items) { clutter in
+                        ClutterRow(clutter: clutter)
+                            .tag(clutter.id)
+                    }
+                } header: {
+                    HStack {
+                        Text(group.key.title)
+                        Spacer()
+                        SizeText(bytes: group.totalBytes)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
-            .contextMenu(forSelectionType: String.self) { paths in
-                ItemActionsMenu(paths: paths, previewURL: $previewURL)
+        }
+        .contextMenu(forSelectionType: String.self) { paths in
+            ItemActionsMenu(paths: paths, previewURL: $previewURL)
+        }
+        .onKeyPress(.space) {
+            guard let path = session.selection.first else { return .ignored }
+            previewURL = URL(filePath: path)
+            return .handled
+        }
+        .quickLookPreview($previewURL, in: session.clutter.map { URL(filePath: $0.item.path) })
+        .pageState(isShown: session.clutter.isEmpty) {
+            if session.isLoadingClutter {
+                ProgressView()
+            } else {
+                ContentUnavailableView {
+                    Label {
+                        Text("Nothing to review")
+                    } icon: {
+                        Image(systemName: "checkmark.circle")
+                    }
+                } description: {
+                    Text("Downloads is empty and there are no screenshots.")
+                }
             }
-            .onKeyPress(.space) {
-                guard let path = session.selection.first else { return .ignored }
-                previewURL = URL(filePath: path)
-                return .handled
-            }
-            .quickLookPreview($previewURL, in: session.clutter.map { URL(filePath: $0.item.path) })
         }
     }
 

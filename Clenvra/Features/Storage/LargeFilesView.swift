@@ -19,7 +19,50 @@ struct LargeFilesView: View {
         VStack(spacing: 0) {
             filters
             Divider()
-            if files.isEmpty {
+            Table(files, selection: selectionBinding, sortOrder: $sortOrder) {
+                TableColumn(Text("Name"), value: \.name) { item in
+                    VStack(alignment: .leading, spacing: 2) {
+                        FileNameCell(name: item.name, path: item.path)
+                        PathText(path: (item.path as NSString).deletingLastPathComponent)
+                    }
+                }
+                .width(min: 240, ideal: 420)
+                TableColumn(Text("Size"), value: \.allocatedSize) { item in
+                    SizeText(bytes: item.allocatedSize)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .width(min: 80, ideal: 100)
+                TableColumn(Text("Frees ≈"), value: \.reclaimableSize) { item in
+                    SizeText(bytes: item.reclaimableSize)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .width(min: 70, ideal: 90)
+                TableColumn(Text("Modified"), value: \.modifiedSort) { item in
+                    DateCell(date: item.modificationDate)
+                }
+                .width(min: 80, ideal: 110)
+            }
+            .accessibilityLabel(Text("Large and old files"))
+            .contextMenu(forSelectionType: StorageItem.ID.self) { paths in
+                Button {
+                    session.setSelection(paths)
+                    showsInspector = true
+                } label: {
+                    Text("Show Details")
+                }
+                ItemActionsMenu(paths: paths, previewURL: $previewURL)
+            } primaryAction: { paths in
+                session.setSelection(paths)
+                showsInspector = true
+            }
+            .onKeyPress(.space) {
+                guard let path = session.selection.first else { return .ignored }
+                previewURL = URL(filePath: path)
+                return .handled
+            }
+            .quickLookPreview($previewURL, in: files.map { URL(filePath: $0.path) })
+            .pageState(isShown: files.isEmpty) {
                 if query.isEmpty {
                     ContentUnavailableView {
                         Label {
@@ -33,56 +76,11 @@ struct LargeFilesView: View {
                 } else {
                     ContentUnavailableView.search(text: query)
                 }
-            } else {
-                Table(files, selection: selectionBinding, sortOrder: $sortOrder) {
-                    TableColumn(Text("Name"), value: \.name) { item in
-                        VStack(alignment: .leading, spacing: 2) {
-                            FileNameCell(name: item.name, path: item.path)
-                            PathText(path: (item.path as NSString).deletingLastPathComponent)
-                        }
-                    }
-                    .width(min: 240, ideal: 420)
-                    TableColumn(Text("Size"), value: \.allocatedSize) { item in
-                        SizeText(bytes: item.allocatedSize)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
-                    .width(min: 80, ideal: 100)
-                    TableColumn(Text("Frees ≈"), value: \.reclaimableSize) { item in
-                        SizeText(bytes: item.reclaimableSize)
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
-                    .width(min: 70, ideal: 90)
-                    TableColumn(Text("Modified"), value: \.modifiedSort) { item in
-                        DateCell(date: item.modificationDate)
-                    }
-                    .width(min: 80, ideal: 110)
-                }
-                .accessibilityLabel(Text("Large and old files"))
-                .contextMenu(forSelectionType: StorageItem.ID.self) { paths in
-                    Button {
-                        session.setSelection(paths)
-                        showsInspector = true
-                    } label: {
-                        Text("Show Details")
-                    }
-                    ItemActionsMenu(paths: paths, previewURL: $previewURL)
-                } primaryAction: { paths in
-                    session.setSelection(paths)
-                    showsInspector = true
-                }
-                .onKeyPress(.space) {
-                    guard let path = session.selection.first else { return .ignored }
-                    previewURL = URL(filePath: path)
-                    return .handled
-                }
-                .quickLookPreview($previewURL, in: files.map { URL(filePath: $0.path) })
             }
         }
         .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
-        .inspector(isPresented: $showsInspector) {
+        .detailsPanel(isPresented: $showsInspector, width: 280) {
             StorageItemInspector(items: session.largeFiles.filter { session.selection.contains($0.path) })
-                .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

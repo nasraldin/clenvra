@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var fullDiskAccess = FullDiskAccess.Status.unknown
     @State private var isShowingGuide = false
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
+    @AppStorage(ToolbarLabel.showsTitlesKey) private var toolbarShowsTitles = false
 
     private enum Message {
         case text(LocalizedStringResource)
@@ -166,6 +167,19 @@ struct SettingsView: View {
                 }
             } label: {
                 Text("App Updates:")
+            }
+            .padding(.top, 12)
+
+            LabeledContent {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(isOn: $toolbarShowsTitles) {
+                        Text("Show names with icons")
+                    }
+                    .accessibilityIdentifier("settings.toolbarShowsTitles")
+                    note("Toolbar buttons show only their icon. Point to a button to see its name.")
+                }
+            } label: {
+                Text("Toolbar:")
             }
             .padding(.top, 12)
 

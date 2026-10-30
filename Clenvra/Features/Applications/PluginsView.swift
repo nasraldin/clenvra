@@ -20,7 +20,7 @@ struct PluginsView: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 if session.removableCount > 0 {
                     SelectionStatusBar(
                         count: session.selectedCount, bytes: session.selectedBytes,
@@ -28,9 +28,8 @@ struct PluginsView: View {
                 }
             }
             .toolbar { toolbar }
-            .inspector(isPresented: $showsInspector) {
+            .detailsPanel(isPresented: $showsInspector, width: 290) {
                 inspector
-                    .inspectorColumnWidth(min: 240, ideal: 290, max: 360)
             }
             .searchable(text: $query, placement: .toolbar, prompt: Text("Search Extensions"))
             .sheet(isPresented: $isConfirming) {
@@ -55,7 +54,29 @@ struct PluginsView: View {
 
     // MARK: - Content
 
-    @ViewBuilder private var content: some View {
+    private var content: some View {
+        VStack(spacing: 0) {
+            if !session.issues.isEmpty {
+                Label {
+                    Text("Some extensions could not be listed, so this list may be incomplete.")
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                }
+                .font(.callout)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                Divider()
+            }
+            table
+                .accessibilityIdentifier("review.results")
+                .accessibilityLabel(Text(AppSection.extensions.title))
+        }
+        .pageState(isShown: visibleGroups.isEmpty) { state }
+    }
+
+    @ViewBuilder private var state: some View {
         if session.phase == .idle {
             ScanPrompt(
                 section: .extensions,
@@ -64,13 +85,12 @@ struct PluginsView: View {
             ) {
                 scan()
             }
-        } else if session.phase == .scanning && session.groups.isEmpty {
+        } else if session.phase == .scanning {
             ProgressView {
                 Text("Looking for extensions and plug-ins…")
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("review.scanning")
-        } else if visibleGroups.isEmpty {
+        } else {
             Group {
                 if query.isEmpty {
                     ContentUnavailableView {
@@ -89,25 +109,6 @@ struct PluginsView: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.extensions.title))
-        } else {
-            VStack(spacing: 0) {
-                if !session.issues.isEmpty {
-                    Label {
-                        Text("Some extensions could not be listed, so this list may be incomplete.")
-                    } icon: {
-                        Image(systemName: "exclamationmark.triangle")
-                            .foregroundStyle(.orange)
-                    }
-                    .font(.callout)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    Divider()
-                }
-                table
-                    .accessibilityIdentifier("review.results")
-                    .accessibilityLabel(Text(AppSection.extensions.title))
-            }
         }
     }
 
@@ -262,23 +263,25 @@ struct PluginsView: View {
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup {
             Toggle(isOn: Binding(get: { session.showsAppleItems }, set: { session.showsAppleItems = $0 })) {
-                Text("Show Apple Items")
+                ToolbarLabel(title: "Show Apple Items", symbol: "apple.logo")
             }
+            .toggleStyle(.button)
             .help(Text("Also list the extensions built into macOS"))
             .accessibilityIdentifier("plugins.showApple")
 
             Button {
                 scan()
             } label: {
-                Label {
-                    Text(session.phase == .idle ? "Scan" : "Rescan")
-                } icon: {
-                    Image(systemName: "arrow.clockwise")
-                }
+                ToolbarLabel(title: session.phase == .idle ? "Scan" : "Rescan", symbol: "arrow.clockwise")
             }
             .keyboardShortcut("r", modifiers: .command)
             .help(Text("Look for extensions again (⌘R)"))
             .disabled(session.phase == .scanning || session.phase == .removing)
+
+            ExpandAllButton(
+                allExpanded: expansion.allBinding(session.groups.map { String(describing: $0.kind) })
+            )
+            .disabled(session.groups.isEmpty)
         }
 
         ToolbarSpacer(.fixed)

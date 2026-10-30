@@ -12,7 +12,8 @@ struct ClenvraApp: App {
     var body: some Scene {
         WindowGroup(id: "main") {
             MainWindow(selection: $selection, environment: environment)
-                .frame(minWidth: 900, minHeight: 560)
+                // Room for the sidebar, a list and the details panel side by side.
+                .frame(minWidth: 1000, minHeight: 560)
                 .task { await environment.loadInstalledApps() }
                 .task { await environment.prepareTools() }
                 .task { await environment.refreshHelper() }
@@ -33,11 +34,13 @@ struct ClenvraApp: App {
                 .onAppear(perform: Self.placeOnMainDisplayForUITests)
         }
         .defaultSize(width: 1100, height: 720)
+        // The window can't be made narrower than its content's minimum, so the sidebar, a list and the details
+        // panel always fit side by side (otherwise macOS 27 hides the sidebar while the panel opens).
+        .windowResizability(.contentMinSize)
         .commands {
             // View › Show/Hide Sidebar (⌃⌘S) and the toolbar items, as in every Mac app.
             SidebarCommands()
             ToolbarCommands()
-            InspectorCommands()
             // Its own key: "Go" alone is also the Go language in Developer, which must not be translated.
             CommandMenu(Text("menu.go", comment: "Menu that switches between sections")) {
                 ForEach(AppSection.Group.allCases, id: \.self) { group in
@@ -78,6 +81,7 @@ struct ClenvraApp: App {
     /// Debug builds only.
     private static func placeOnMainDisplayForUITests() {
         #if DEBUG
+            UIDiagnostics.start()
             guard UserDefaults.standard.bool(forKey: "ClenvraUITestMainDisplay"),
                 let screen = NSScreen.screens.first
             else { return }

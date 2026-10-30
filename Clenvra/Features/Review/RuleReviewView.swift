@@ -41,13 +41,12 @@ struct RuleReviewView<MoreActions: View>: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !session.groups.isEmpty || isScanning { statusBar }
             }
             .toolbar { toolbar }
-            .inspector(isPresented: $showsInspector) {
+            .detailsPanel(isPresented: $showsInspector, width: 280) {
                 ReviewInspector(candidates: highlightedCandidates, session: session)
-                    .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
             }
             .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
             .sheet(isPresented: $isConfirming) {
@@ -66,7 +65,19 @@ struct RuleReviewView<MoreActions: View>: View {
 
     // MARK: - Content
 
-    @ViewBuilder private var content: some View {
+    private var content: some View {
+        table
+            .accessibilityIdentifier("review.results")
+            .accessibilityLabel(Text(section.title))
+            .pageState(isShown: showsState) { state }
+    }
+
+    /// Before the first scan, while the first results come in, and when nothing is listed.
+    private var showsState: Bool {
+        (session.lastScanned == nil && !isScanning) || visibleGroups.isEmpty
+    }
+
+    @ViewBuilder private var state: some View {
         if session.lastScanned == nil && !isScanning {
             ContentUnavailableView {
                 Label {
@@ -94,29 +105,21 @@ struct RuleReviewView<MoreActions: View>: View {
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("review.scanning")
-        } else if visibleGroups.isEmpty {
-            Group {
-                if query.isEmpty {
-                    ContentUnavailableView {
-                        Label {
-                            Text("Nothing to clean")
-                        } icon: {
-                            Image(systemName: "checkmark.circle")
-                        }
-                    } description: {
-                        Text("No items were found in this section on this Mac.")
-                    }
-                } else {
-                    ContentUnavailableView.search(text: query)
+        } else if query.isEmpty {
+            ContentUnavailableView {
+                Label {
+                    Text("Nothing to clean")
+                } icon: {
+                    Image(systemName: "checkmark.circle")
                 }
+            } description: {
+                Text("No items were found in this section on this Mac.")
             }
             .accessibilityIdentifier("review.results")
         } else {
-            table
+            ContentUnavailableView.search(text: query)
                 .accessibilityIdentifier("review.results")
-                .accessibilityLabel(Text(section.title))
         }
     }
 
@@ -170,6 +173,8 @@ struct RuleReviewView<MoreActions: View>: View {
                 }
             }
         }
+        // Group rows already separate the list; grey stripes under short names fall below readable contrast.
+        .alternatingRowBackgrounds(.disabled)
         .contextMenu(forSelectionType: ReviewRow.ID.self) { ids in
             contextMenu(for: ids)
         } primaryAction: { ids in
@@ -248,15 +253,14 @@ struct RuleReviewView<MoreActions: View>: View {
             Button {
                 Task { await session.scan() }
             } label: {
-                Label {
-                    Text(session.lastScanned == nil ? "Scan" : "Rescan")
-                } icon: {
-                    Image(systemName: "arrow.clockwise")
-                }
+                ToolbarLabel(title: session.lastScanned == nil ? "Scan" : "Rescan", symbol: "arrow.clockwise")
             }
             .keyboardShortcut("r", modifiers: .command)
             .help(Text("Look for items again (⌘R)"))
             .disabled(isBusy)
+
+            ExpandAllButton(allExpanded: groups.allBinding(session.groups.map(\.category.rawValue)))
+                .disabled(session.groups.isEmpty)
 
             Menu {
                 Button {
@@ -267,11 +271,7 @@ struct RuleReviewView<MoreActions: View>: View {
                 .disabled(isBusy || session.selection.isEmpty)
                 moreActions
             } label: {
-                Label {
-                    Text("More")
-                } icon: {
-                    Image(systemName: "ellipsis")
-                }
+                ToolbarLabel(title: "More", symbol: "ellipsis")
             }
             .menuIndicator(.hidden)
             .help(Text("More actions"))
@@ -280,34 +280,16 @@ struct RuleReviewView<MoreActions: View>: View {
         ToolbarSpacer(.fixed)
 
         ToolbarItem {
-            Button {
+            PrimaryActionButton(
+                help: "Review and move the included items to the Trash (⌘⌫)",
+                isDisabled: isBusy || session.selection.isEmpty
+            ) {
                 isConfirming = true
-            } label: {
-                Label {
-                    Text("Move to Trash…")
-                } icon: {
-                    Image(systemName: "trash")
-                }
-                .labelStyle(.titleAndIcon)
             }
-            .buttonStyle(.borderedProminent)
-            .keyboardShortcut(.delete, modifiers: .command)
-            .help(Text("Review and move the included items to the Trash (⌘⌫)"))
-            .disabled(isBusy || session.selection.isEmpty)
-            .accessibilityIdentifier("review.moveToTrash")
         }
 
         ToolbarItem {
-            Button {
-                showsInspector.toggle()
-            } label: {
-                Label {
-                    Text(showsInspector ? "Hide Details" : "Show Details")
-                } icon: {
-                    Image(systemName: "sidebar.trailing")
-                }
-            }
-            .help(Text("Show or hide the details of the highlighted item (⌃⌘I)"))
+            InspectorToggle(isPresented: $showsInspector)
         }
     }
 
@@ -334,9 +316,9 @@ struct RuleReviewView<MoreActions: View>: View {
             Spacer()
         }
         .font(.callout)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(.bar)
+        .statusBarBackground()
     }
 
     // MARK: - Data
@@ -436,16 +418,7 @@ private struct ReviewNameCell: View {
 
     var body: some View {
         if let candidate = row.candidate {
-            Label {
-                Text(verbatim: candidate.name)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            } icon: {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: candidate.path))
-                    .resizable()
-                    .frame(width: 16, height: 16)
-            }
-            .help(Text(verbatim: candidate.path))
+            FileNameCell(name: candidate.name, path: candidate.path)
         } else {
             Label {
                 Text(row.category.title)

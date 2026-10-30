@@ -12,11 +12,7 @@ struct CheckForUpdatesButton: View {
         Button {
             Task { await updates.check(session.apps, homebrewToken: session.homebrewToken(for:)) }
         } label: {
-            Label {
-                Text("Check for Updates")
-            } icon: {
-                Image(systemName: "arrow.down.app")
-            }
+            ToolbarLabel(title: "Check for Updates", symbol: "arrow.down.app")
         }
         .disabled(!isEnabled || isChecking || session.apps.isEmpty)
         .help(isEnabled ? Text("Check for Updates") : Text("Turn on update checks in Settings"))

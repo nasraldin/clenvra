@@ -14,11 +14,14 @@ struct SimilarPhotosView: View {
     @State private var previewURL: URL?
     @State private var focusedPath: String?
 
+    /// Groups the person closed, remembered across launches (F4).
+    private let expansion = ExpandedGroups("similarPhotos")
+
     var body: some View {
         VStack(spacing: 0) { content }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar { toolbar }
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !session.groups.isEmpty { statusBar }
             }
             .sheet(isPresented: $isConfirming) {
@@ -34,7 +37,29 @@ struct SimilarPhotosView: View {
             .task { await session.loadDefaultRoots() }
     }
 
+    /// Unlike the table pages, the start and progress screens replace the photo list: drawn over it, the list's
+    /// photo grid confuses the accessibility tree. The page's toolbar does not depend on the list, so it stays put.
     @ViewBuilder private var content: some View {
+        if showsState {
+            state
+        } else {
+            SimilarPhotoGroupsList(
+                session: session, focusedPath: $focusedPath, previewURL: $previewURL,
+                isExpanded: { id in expansion.binding(id) { session.groups.map(\.id) } }
+            )
+            .accessibilityIdentifier("review.results")
+        }
+    }
+
+    private var showsState: Bool {
+        switch session.phase {
+        case .idle, .scanning: true
+        case .ready: session.groups.isEmpty
+        case .removing: false
+        }
+    }
+
+    @ViewBuilder private var state: some View {
         switch session.phase {
         case .idle:
             SimilarPhotosStartView(session: session) {
@@ -44,7 +69,7 @@ struct SimilarPhotosView: View {
             SimilarPhotosProgressView(progress: progress) {
                 session.cancelScan()
             }
-        case .ready where session.groups.isEmpty:
+        case .ready, .removing:
             VStack(spacing: 0) {
                 ContentUnavailableView {
                     Label {
@@ -70,39 +95,18 @@ struct SimilarPhotosView: View {
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
-        case .ready, .removing:
-            SimilarPhotoGroupsList(session: session, focusedPath: $focusedPath, previewURL: $previewURL)
-                .accessibilityElement(children: .contain)
-                .accessibilityIdentifier("review.results")
         }
     }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup {
-            if case .scanning = session.phase {
-                Button {
-                    session.cancelScan()
-                } label: {
-                    Label {
-                        Text("Stop")
-                    } icon: {
-                        Image(systemName: "stop.circle")
-                    }
-                }
-                .keyboardShortcut(".", modifiers: .command)
-            } else {
-                Button {
-                    Task { await session.scan() }
-                } label: {
-                    Label {
-                        Text("Scan")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .keyboardShortcut("r", modifiers: .command)
-                .disabled(session.phase == .removing || session.roots.isEmpty)
-            }
+            ScanButton(
+                isScanning: { if case .scanning = session.phase { true } else { false } }(),
+                isDisabled: session.phase == .removing || session.roots.isEmpty,
+                scan: { Task { await session.scan() } }, stop: { session.cancelScan() })
+
+            ExpandAllButton(allExpanded: expansion.allBinding(session.groups.map(\.id)))
+                .disabled(session.groups.isEmpty)
 
             Menu {
                 Button {
@@ -117,22 +121,14 @@ struct SimilarPhotosView: View {
                     Text("Unmark All")
                 }
             } label: {
-                Label {
-                    Text("Choose Photos")
-                } icon: {
-                    Image(systemName: "checklist")
-                }
+                ToolbarLabel(title: "Choose Photos", symbol: "checklist")
             }
             .disabled(session.phase != .ready || session.groups.isEmpty)
 
             Button {
                 isShowingOptions.toggle()
             } label: {
-                Label {
-                    Text("Search Options")
-                } icon: {
-                    Image(systemName: "slider.horizontal.3")
-                }
+                ToolbarLabel(title: "Search Options", symbol: "slider.horizontal.3")
             }
             .disabled(session.phase == .idle)
             // A popover, not an inspector: an inspector here would push the results under the toolbar.

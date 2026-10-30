@@ -200,7 +200,7 @@ extension Volume {
 
 extension FullDiskAccess {
     /// Privacy & Security › Full Disk Access in System Settings.
-    static let settingsURL = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+    static let settingsURL: URL? = SystemSettingsPane.fullDiskAccess.url
 
     /// Probes off the main thread; the probe touches the filesystem.
     static func currentStatus(home: String) async -> Status {

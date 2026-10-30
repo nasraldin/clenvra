@@ -13,20 +13,19 @@ struct StorageBrowserView: View {
         VStack(spacing: 0) {
             pathBar
             Divider()
-            if session.children.isEmpty {
+            VSplitView {
+                table
+                    .frame(minHeight: 200)
+                map
+                    .frame(minHeight: 160, idealHeight: 240)
+            }
+            .pageState(isShown: session.children.isEmpty) {
                 ContentUnavailableView {
                     Label {
                         Text("This folder is empty")
                     } icon: {
                         Image(systemName: "folder")
                     }
-                }
-            } else {
-                VSplitView {
-                    table
-                        .frame(minHeight: 200)
-                    map
-                        .frame(minHeight: 160, idealHeight: 240)
                 }
             }
         }
@@ -35,11 +34,7 @@ struct StorageBrowserView: View {
                 Button {
                     Task { await session.goUp() }
                 } label: {
-                    Label {
-                        Text("Back")
-                    } icon: {
-                        Image(systemName: "chevron.backward")
-                    }
+                    ToolbarLabel(title: "Back", symbol: "chevron.backward")
                 }
                 .keyboardShortcut("[", modifiers: .command)
                 .disabled(!session.canGoUp)

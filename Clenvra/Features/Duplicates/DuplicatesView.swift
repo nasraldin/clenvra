@@ -21,16 +21,15 @@ struct DuplicatesView: View {
         VStack(spacing: 0) { content }
             .accessibilityElement(children: .contain)
             .toolbar { toolbar }
-            .safeAreaInset(edge: .bottom) {
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !session.groups.isEmpty {
                     SelectionStatusBar(
                         count: session.markedCount, bytes: session.markedBytes,
                         working: session.phase == .removing ? "Moving to the Trash…" : nil)
                 }
             }
-            .inspector(isPresented: $showsInspector) {
+            .detailsPanel(isPresented: $showsInspector, width: 280) {
                 DuplicateInspector(session: session, highlighted: highlighted)
-                    .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
             }
             .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
             .sheet(isPresented: $isConfirming) {
@@ -46,7 +45,26 @@ struct DuplicatesView: View {
             .task { await session.loadDefaultRoots() }
     }
 
-    @ViewBuilder private var content: some View {
+    private var content: some View {
+        DuplicateGroupsList(
+            session: session, previewURL: $previewURL, highlighted: $highlighted,
+            showsInspector: $showsInspector, query: query
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("review.results")
+        .accessibilityLabel(Text(AppSection.duplicates.title))
+        .pageState(isShown: showsState) { state }
+    }
+
+    private var showsState: Bool {
+        switch session.phase {
+        case .idle, .scanning: true
+        case .ready: session.groups.isEmpty
+        case .removing: false
+        }
+    }
+
+    @ViewBuilder private var state: some View {
         switch session.phase {
         case .idle:
             DuplicatesStartView(session: session) {
@@ -56,7 +74,7 @@ struct DuplicatesView: View {
             DuplicatesProgressView(progress: progress) {
                 session.cancelScan()
             }
-        case .ready where session.groups.isEmpty:
+        case .ready, .removing:
             ContentUnavailableView {
                 Label {
                     Text("No duplicates found")
@@ -77,43 +95,15 @@ struct DuplicatesView: View {
                 }
             }
             .accessibilityIdentifier("review.results")
-        case .ready, .removing:
-            DuplicateGroupsList(
-                session: session, previewURL: $previewURL, highlighted: $highlighted,
-                showsInspector: $showsInspector, query: query
-            )
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("review.results")
-            .accessibilityLabel(Text(AppSection.duplicates.title))
         }
     }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup {
-            if case .scanning = session.phase {
-                Button {
-                    session.cancelScan()
-                } label: {
-                    Label {
-                        Text("Stop")
-                    } icon: {
-                        Image(systemName: "stop.circle")
-                    }
-                }
-                .keyboardShortcut(".", modifiers: .command)
-            } else {
-                Button {
-                    Task { await session.scan() }
-                } label: {
-                    Label {
-                        Text("Scan")
-                    } icon: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .keyboardShortcut("r", modifiers: .command)
-                .disabled(session.phase == .removing || session.roots.isEmpty)
-            }
+            ScanButton(
+                isScanning: { if case .scanning = session.phase { true } else { false } }(),
+                isDisabled: session.phase == .removing || session.roots.isEmpty,
+                scan: { Task { await session.scan() } }, stop: { session.cancelScan() })
 
             Menu {
                 Button {
@@ -144,22 +134,14 @@ struct DuplicatesView: View {
                     Text("Unmark All")
                 }
             } label: {
-                Label {
-                    Text("Choose Copies")
-                } icon: {
-                    Image(systemName: "checklist")
-                }
+                ToolbarLabel(title: "Choose Copies", symbol: "checklist")
             }
             .disabled(session.phase != .ready || session.groups.isEmpty)
 
             Button {
                 isShowingOptions.toggle()
             } label: {
-                Label {
-                    Text("Search Options")
-                } icon: {
-                    Image(systemName: "slider.horizontal.3")
-                }
+                ToolbarLabel(title: "Search Options", symbol: "slider.horizontal.3")
             }
             .help(Text("Choose the folders to search and the smallest file size"))
             .disabled(session.phase == .idle)
