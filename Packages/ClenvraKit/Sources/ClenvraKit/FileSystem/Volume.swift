@@ -1,3 +1,4 @@
+import DiskArbitration
 public import Foundation
 
 /// Represents a user-visible storage volume for capacity reporting and cleanup analysis in overview screens.
@@ -43,6 +44,10 @@ public struct Volume: Sendable, Hashable, Identifiable {
     }
 
     /// Quantifies reclaimable cache space that macOS can free automatically under pressure.
+    /// A disk you can hold or plug in (the startup disk, other internal or external drives); not a disk image or a
+    /// network share. Overview and Space Map show only these.
+    public var isRealDisk: Bool { kind == .internal || kind == .external }
+
     public var purgeableEstimate: Int64 {
         guard let important = availableForImportantUsage else {
             return 0
@@ -268,11 +273,13 @@ public enum VolumeInventory {
 
         var seenPaths = Set<String>()
         var volumes: [Volume] = []
+        let session = DASessionCreate(kCFAllocatorDefault)
         for url in urls {
             guard let values = try? url.resourceValues(forKeys: Set(keys)) else {
                 continue
             }
-            let raw = RawValues(url: url, values: values)
+            var raw = RawValues(url: url, values: values)
+            raw.isDiskImage = session.map { isDiskImage(url, session: $0) }
             guard let volume = makeVolume(raw) else {
                 continue
             }
@@ -281,5 +288,16 @@ public enum VolumeInventory {
             }
         }
         return sort(volumes)
+    }
+
+    /// Disk Arbitration names the transport of a disk image "Disk Image"; URL resource values cannot tell it from an
+    /// external drive.
+    private static func isDiskImage(_ url: URL, session: DASession) -> Bool {
+        guard let disk = DADiskCreateFromVolumePath(kCFAllocatorDefault, session, url as CFURL),
+            let description = DADiskCopyDescription(disk) as? [String: Any]
+        else { return false }
+        let diskImage = "Disk Image"
+        return description[kDADiskDescriptionDeviceProtocolKey as String] as? String == diskImage
+            || description[kDADiskDescriptionDeviceModelKey as String] as? String == diskImage
     }
 }

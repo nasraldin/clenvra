@@ -81,7 +81,8 @@ public final class StorageSession {
     public init(
         home: String, policy: ProtectionPolicy, deleter: DeletionExecutor, screenshotsLocation: String? = nil,
         options: ScanOptions = ScanOptions(largeFileThreshold: 50_000_000),
-        volumes: @escaping @Sendable () -> [Volume] = { VolumeInventory.mountedVolumes() },
+        // Real disks only: disk images (installers) have their own page, Mounted Disks.
+        volumes: @escaping @Sendable () -> [Volume] = { VolumeInventory.mountedVolumes().filter(\.isRealDisk) },
         executor: FSExecutor = .shared, now: @escaping @Sendable () -> Date = { Date() }
     ) {
         let home = StorageScanner.normalize(home)
