@@ -100,7 +100,7 @@ public final class SecurityChecker: Sendable {
             status = .unknown
         }
         let detail = trimmed.isEmpty ? "FileVault status unavailable" : trimmed
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?FileVault")
+        let url = SystemSettingsPane.fileVault.url
         return SecurityCheck(id: "fileVault", status: status, detail: detail, settingsURL: url)
     }
 
@@ -117,7 +117,7 @@ public final class SecurityChecker: Sendable {
             status = .unknown
         }
         let detail = trimmed.isEmpty ? "Gatekeeper status unavailable" : trimmed
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security")
+        let url = SystemSettingsPane.gatekeeper.url
         return SecurityCheck(id: "gatekeeper", status: status, detail: detail, settingsURL: url)
     }
 
@@ -134,7 +134,7 @@ public final class SecurityChecker: Sendable {
             status = .unknown
         }
         let detail = trimmed.isEmpty ? "Firewall status unavailable" : trimmed
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Firewall")
+        let url = SystemSettingsPane.firewall.url
         return SecurityCheck(id: "firewall", status: status, detail: detail, settingsURL: url)
     }
 
@@ -162,7 +162,7 @@ public final class SecurityChecker: Sendable {
 
     /// Pure parser for background software update preferences.
     public static func parseSecurityUpdates(critical: Bool?, config: Bool?) -> SecurityCheck {
-        let url = URL(string: "x-apple.systempreferences:com.apple.SoftwareUpdateSettings.extension")
+        let url = SystemSettingsPane.softwareUpdate.url
         guard let critical, let config else {
             return SecurityCheck(
                 id: "securityUpdates",
@@ -211,7 +211,7 @@ public final class SecurityChecker: Sendable {
             let result = try await runner.run(cmd)
             return Self.parseFileVault(output: result.standardOutput, exitStatus: result.exitStatus)
         } catch {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?FileVault")
+            let url = SystemSettingsPane.fileVault.url
             return SecurityCheck(
                 id: "fileVault",
                 status: .unknown,
@@ -227,7 +227,7 @@ public final class SecurityChecker: Sendable {
             let result = try await runner.run(cmd)
             return Self.parseGatekeeper(output: result.standardOutput, exitStatus: result.exitStatus)
         } catch {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security")
+            let url = SystemSettingsPane.gatekeeper.url
             return SecurityCheck(
                 id: "gatekeeper",
                 status: .unknown,
@@ -246,7 +246,7 @@ public final class SecurityChecker: Sendable {
             let result = try await runner.run(cmd)
             return Self.parseFirewall(output: result.standardOutput, exitStatus: result.exitStatus)
         } catch {
-            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Firewall")
+            let url = SystemSettingsPane.firewall.url
             return SecurityCheck(
                 id: "firewall",
                 status: .unknown,
