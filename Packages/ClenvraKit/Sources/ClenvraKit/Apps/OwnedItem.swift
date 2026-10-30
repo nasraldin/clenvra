@@ -18,6 +18,8 @@ public enum Evidence: Sendable, Hashable {
     case exactName(String)
     /// The name contains the app's name as a whole word; a guess, never acted on by default.
     case nameMatch(String)
+    /// An app with this name, whose identifier the item shares lineage with, is in the Trash.
+    case appInTrash(String)
 }
 
 /// One file or folder an app owns outside its bundle, with how sure Clenvra is and why.

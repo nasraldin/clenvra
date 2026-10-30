@@ -432,6 +432,61 @@ struct OwnershipResolverTests {
             await fixture.resolver().leftovers(installedApps: [app], inventoryIsComplete: false, now: now).isEmpty)
     }
 
+    // MARK: - Leftovers of apps in the Trash
+
+    /// `~/.Trash/Foo.app` (`com.example.foo`) and its Application Support folder, modified today.
+    private func trashedFoo() throws -> [InstalledApp] {
+        try AppBundleFixture(identifier: "com.example.foo").create(at: fixture.path(".Trash/Foo.app"))
+        try fixture.file("Library/Application Support/com.example.foo/data")
+        return AppInventory.appsInTrash(trashRoots: [fixture.path(".Trash")])
+    }
+
+    @Test("data of an app in the Trash is listed even when new, as Likely and never pre-selected")
+    func trashedAppDataIsListedEvenIfNew() async throws {
+        let trashed = try trashedFoo()
+        #expect(trashed.map(\.bundleIdentifier) == ["com.example.foo"])
+
+        let found = await fixture.resolver().leftovers(installedApps: [app], trashedApps: trashed, now: Date())
+
+        let leftover = try #require(item(found, "Library/Application Support/com.example.foo"))
+        #expect(leftover.evidence.contains(.appInTrash("Foo")))
+        #expect(leftover.evidence.contains(.exactBundleIdentifierPath("com.example.foo")))
+        #expect(leftover.confidence == .likely)
+        #expect(!leftover.isSelectedByDefault)
+    }
+
+    @Test("without the app in the Trash, new data stays hidden by the 30-day rule")
+    func withoutTrashedAppNewDataIsHidden() async throws {
+        _ = try trashedFoo()
+
+        let found = await fixture.resolver().leftovers(installedApps: [app], now: Date())
+
+        #expect(item(found, "Library/Application Support/com.example.foo") == nil)
+    }
+
+    @Test("an installed app with the trashed app's identifier wins: its data is never listed")
+    func installedWins() async throws {
+        let trashed = try trashedFoo()
+        let installed = [app, fixture.otherApp("com.example.foo", name: "Foo")]
+
+        let found = await fixture.resolver().leftovers(installedApps: installed, trashedApps: trashed, now: Date())
+
+        #expect(item(found, "Library/Application Support/com.example.foo") == nil)
+    }
+
+    @Test("an installed app sharing the trashed app's identifier prefix keeps its data")
+    func installedLineageWins() async throws {
+        try AppBundleFixture(identifier: "com.example.foo.lite").create(at: fixture.path(".Trash/Foo Lite.app"))
+        try fixture.file("Library/Application Support/com.example.foo.lite/data")
+        try fixture.file("Library/Caches/com.example.foo/data")
+        let trashed = AppInventory.appsInTrash(trashRoots: [fixture.path(".Trash")])
+        let installed = [app, fixture.otherApp("com.example.foo", name: "Foo")]
+
+        let found = await fixture.resolver().leftovers(installedApps: installed, trashedApps: trashed, now: Date())
+
+        #expect(found.isEmpty)
+    }
+
     @Test(
         "never-flag prefixes", arguments: OwnershipResolver.neverFlagPrefixes)
     func neverFlag(_ prefix: String) {
