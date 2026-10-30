@@ -19,4 +19,11 @@ public enum SystemSettingsPane: String, CaseIterable, Sendable {
         return URL(string: "x-apple.systempreferences:" + target)
             ?? URL(filePath: "/System/Applications/System Settings.app")
     }
+
+    /// Privacy & Security, at the section named by `anchor` (such as `Privacy_Camera`), or at its top without one.
+    public static func privacy(anchor: String? = nil) -> URL {
+        let target = "com.apple.settings.PrivacySecurity.extension" + (anchor.map { "?" + $0 } ?? "")
+        return URL(string: "x-apple.systempreferences:" + target)
+            ?? URL(filePath: "/System/Applications/System Settings.app")
+    }
 }

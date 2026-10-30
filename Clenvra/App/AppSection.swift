@@ -19,6 +19,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case system
     case processes
     case security
+    case permissions
     case snapshots
     case activity
 
@@ -46,7 +47,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .cleanup, .developer, .developerTools, .largeFiles, .downloads, .duplicates, .similarPhotos: .cleanUp
         case .storage: .storage
         case .applications, .leftovers, .extensions, .startup: .applications
-        case .system, .processes, .security, .snapshots: .system
+        case .system, .processes, .security, .permissions, .snapshots: .system
         case .activity: .history
         }
     }
@@ -70,6 +71,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .system: "Health"
         case .processes: "Processes"
         case .security: "Security"
+        case .permissions: "Permissions"
         case .snapshots: "Snapshots"
         case .activity: "Activity"
         }
@@ -93,6 +95,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .system: "heart.text.square"
         case .processes: "cpu"
         case .security: "lock.shield"
+        case .permissions: "hand.raised"
         case .snapshots: "clock.badge.checkmark"
         case .activity: "clock.arrow.circlepath"
         }
