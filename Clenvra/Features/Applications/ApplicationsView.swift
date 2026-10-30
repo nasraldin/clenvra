@@ -148,7 +148,11 @@ private struct AppListView: View {
                     }
                 }
             }
-            .pageSearch(text: $session.searchText, prompt: "Search apps", section: .applications)
+            .pageSearch(text: $session.searchText, prompt: "Search apps", section: .applications) {
+                // A result opened from Overview must not be hidden by a filter left on.
+                session.filter = .all
+                showsUpdatesOnly = false
+            }
             .toolbar {
                 ToolbarItem {
                     filterMenu

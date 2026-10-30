@@ -258,7 +258,7 @@ struct LeftoversView: View {
             query.isEmpty
             ? session.leftovers
             : session.leftovers.filter {
-                $0.name.localizedStandardContains(query) || $0.path.localizedStandardContains(query)
+                AppSearch.matches(query, any: [$0.name, $0.path, String(localized: $0.kind.title)])
             }
         return matching.sorted(using: sortOrder)
     }

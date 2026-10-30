@@ -27,9 +27,10 @@ extension View {
     /// The page's search, at the right of the toolbar. It takes the query a search
     /// result handed over, when the page appears and when a new result for it arrives while it is open.
     func pageSearch(
-        text: Binding<String>, prompt: LocalizedStringResource, section: AppSection
+        text: Binding<String>, prompt: LocalizedStringResource, section: AppSection,
+        onHandoff: @escaping () -> Void = {}
     ) -> some View {
-        modifier(PageSearch(text: text, prompt: prompt, section: section))
+        modifier(PageSearch(text: text, prompt: prompt, section: section, onHandoff: onHandoff))
     }
 }
 
@@ -37,6 +38,8 @@ private struct PageSearch: ViewModifier {
     @Binding var text: String
     let prompt: LocalizedStringResource
     let section: AppSection
+    /// Runs when a search result hands this page a query, e.g. to clear a filter that would hide the result.
+    let onHandoff: () -> Void
     @Environment(SearchRouter.self) private var router: SearchRouter?
 
     func body(content: Content) -> some View {
@@ -53,7 +56,10 @@ private struct PageSearch: ViewModifier {
     }
 
     private func takeQuery() {
-        if let query = router?.take(for: section) { text = query }
+        if let query = router?.take(for: section) {
+            onHandoff()
+            text = query
+        }
     }
 }
 

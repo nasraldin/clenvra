@@ -34,6 +34,13 @@ public enum AppSearch {
         return query.isEmpty || candidate.localizedStandardContains(query)
     }
 
+    /// Whether any of a row's fields (name, location, kind, status…) contains the search text. Pages pass
+    /// everything the row shows, so search finds what the user sees, not only names.
+    public static func matches(_ text: String, any fields: [String?]) -> Bool {
+        let query = normalized(text)
+        return query.isEmpty || fields.contains { $0?.localizedStandardContains(query) == true }
+    }
+
     /// Entries matching the text: title prefix matches first, then other title matches, then subtitle or keyword
     /// matches. The input order is kept within each rank. An empty text gives no results.
     public static func results(for text: String, in entries: [SearchEntry], limit: Int = 50) -> [SearchEntry] {

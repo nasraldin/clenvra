@@ -79,7 +79,14 @@ struct DisksView: View {
     private var query: String { AppSearch.normalized(searchText) }
 
     private func filtered(_ disks: [MountedDisksSession.Disk]) -> [MountedDisksSession.Disk] {
-        query.isEmpty ? disks : disks.filter { $0.volume.name.localizedStandardContains(query) }
+        disks.filter {
+            AppSearch.matches(
+                query,
+                any: [
+                    $0.volume.name, $0.volume.id.path(percentEncoded: false), String(localized: $0.volume.kind.title),
+                    $0.volume.fileSystem, $0.imagePath,
+                ])
+        }
     }
 
     @ViewBuilder
@@ -218,7 +225,7 @@ private struct DiskInspector: View {
             ItemInspector(name: volume.name, path: volume.id.path(percentEncoded: false)) {
                 Section {
                     LabeledContent {
-                        Text(kindTitle(volume.kind))
+                        Text(volume.kind.title)
                     } label: {
                         Text("Kind")
                     }
@@ -278,9 +285,11 @@ private struct DiskInspector: View {
             NoSelectionInspector(description: "Select a disk to see its details.")
         }
     }
+}
 
-    private func kindTitle(_ kind: Volume.Kind) -> LocalizedStringResource {
-        switch kind {
+extension Volume.Kind {
+    fileprivate var title: LocalizedStringResource {
+        switch self {
         case .diskImage: "Disk Image"
         case .network: "Network Share"
         case .internal: "Internal Drive"

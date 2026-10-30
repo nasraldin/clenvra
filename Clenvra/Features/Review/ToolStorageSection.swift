@@ -117,7 +117,12 @@ struct ToolStorageSection: View {
 extension ToolStorage {
     /// Whether the tool's name matches the (already trimmed) search text; empty matches every tool.
     fileprivate func matches(_ query: String) -> Bool {
-        query.isEmpty || String(localized: tool).localizedStandardContains(query)
+        AppSearch.matches(
+            query,
+            any: [
+                String(localized: tool), location, String(localized: category.title),
+                note.map { String(localized: $0) },
+            ])
     }
 }
 

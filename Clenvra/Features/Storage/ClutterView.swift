@@ -171,11 +171,23 @@ struct ClutterView: View {
         var filter = age.filter(now: .now, customFrom: customFrom, customTo: customTo)
         filter.minimumBytes = minimumSize.bytes
         filter.source = source
-        filter.nameContains = searchText
+        filter.text = searchText
         return filter
     }
 
-    private var groups: [ClutterGroup] { session.clutterGroups(by: grouping, filter: filter) }
+    /// The groups the filters show. A search for a group's own title ("Installers", a website…) shows it whole.
+    private var groups: [ClutterGroup] {
+        guard !AppSearch.normalized(searchText).isEmpty else {
+            return session.clutterGroups(by: grouping, filter: filter)
+        }
+        var withoutText = filter
+        withoutText.text = ""
+        return session.clutterGroups(by: grouping, filter: withoutText).compactMap { group in
+            if AppSearch.matches(searchText, String(localized: group.key.title)) { return group }
+            let items = group.items.filter(filter.matches)
+            return items.isEmpty ? nil : ClutterGroup(key: group.key, items: items)
+        }
+    }
 
     private func expandedBinding(_ id: ClutterGroup.ID) -> Binding<Bool> {
         expansion.binding(String(describing: id)) { groups.map { String(describing: $0.id) } }

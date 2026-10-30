@@ -371,7 +371,7 @@ private struct SystemProcessesView: View {
     }
 
     private var processes: [ProcessInfoItem] {
-        query.isEmpty ? sampled : sampled.filter { $0.name.localizedStandardContains(query) }
+        sampled.filter { AppSearch.matches(query, any: [$0.name, $0.executablePath, $0.appBundlePath, "\($0.pid)"]) }
     }
 
     var body: some View {
@@ -514,7 +514,7 @@ private struct SystemSecurityView: View {
     private var checks: [SecurityCheck] {
         guard !query.isEmpty else { return session.securityChecks }
         return session.securityChecks.filter {
-            String(localized: SecurityCheckRow.title(for: $0.id)).localizedStandardContains(query)
+            AppSearch.matches(query, any: [String(localized: SecurityCheckRow.title(for: $0.id)), $0.detail])
         }
     }
 

@@ -128,23 +128,23 @@ public struct ClutterFilter: Sendable, Equatable {
     public var minimumBytes: Int64
     /// Only files from this source (the Downloads tab or the Other tab); `nil` keeps both.
     public var source: ClutterSource?
-    /// Only files whose name contains this text (the page search); empty keeps all.
-    public var nameContains: String
+    /// Only files whose name, location or website contains this text (the page search); empty keeps all.
+    public var text: String
 
     public init(
         modifiedBefore: Date? = nil, modifiedAfter: Date? = nil, minimumBytes: Int64 = 0,
-        source: ClutterSource? = nil, nameContains: String = ""
+        source: ClutterSource? = nil, text: String = ""
     ) {
         self.modifiedBefore = modifiedBefore
         self.modifiedAfter = modifiedAfter
         self.minimumBytes = minimumBytes
         self.source = source
-        self.nameContains = nameContains
+        self.text = text
     }
 
     public func matches(_ clutter: ClutterItem) -> Bool {
         if let source, clutter.source != source { return false }
-        if !AppSearch.matches(nameContains, clutter.item.name) { return false }
+        if !AppSearch.matches(text, any: [clutter.item.name, clutter.item.path, clutter.sourceHost]) { return false }
         let date = clutter.item.modificationDate
         if let modifiedBefore, let date, date >= modifiedBefore { return false }
         if let modifiedAfter {
@@ -186,6 +186,11 @@ public struct ClutterGroup: Sendable, Hashable, Identifiable {
     public let items: [ClutterItem]
 
     public var totalBytes: Int64 { items.reduce(0) { $0 + $1.item.allocatedSize } }
+
+    public init(key: Key, items: [ClutterItem]) {
+        self.key = key
+        self.items = items
+    }
 }
 
 /// How the Downloads & Screenshots review is grouped.

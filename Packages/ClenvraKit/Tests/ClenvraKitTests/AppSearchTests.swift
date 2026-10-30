@@ -61,6 +61,14 @@ struct AppSearchTests {
         #expect(results.map(\.title) == ["Safari"])
     }
 
+    @Test func matchesAnyField() {
+        let fields: [String?] = ["Installer.dmg", nil, "/Users/me/Downloads/Installer.dmg", "apple.com"]
+        #expect(AppSearch.matches(" APPLE ", any: fields))
+        #expect(AppSearch.matches("downloads", any: fields))
+        #expect(!AppSearch.matches("nothing", any: fields))
+        #expect(AppSearch.matches("", any: []))
+    }
+
     @Test func respectsLimit() {
         let entries = (1...80).map { Self.entry("File \($0)") }
         #expect(AppSearch.results(for: "file", in: entries).count == 50)

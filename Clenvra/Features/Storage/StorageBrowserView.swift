@@ -13,7 +13,7 @@ struct StorageBrowserView: View {
 
     /// The current folder's children whose name matches the search; the map always shows the whole folder.
     private var rows: [StorageItem] {
-        query.isEmpty ? session.children : session.children.filter { $0.name.localizedStandardContains(query) }
+        session.children.filter { AppSearch.matches(query, any: [$0.name, $0.path]) }
     }
 
     var body: some View {

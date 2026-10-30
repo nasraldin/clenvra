@@ -19,7 +19,7 @@ struct SimilarPhotoGroupsList: View {
 
     static func matches(_ photos: [SimilarPhoto], _ query: String) -> Bool {
         query.isEmpty
-            || photos.contains { ($0.path as NSString).lastPathComponent.localizedStandardContains(query) }
+            || photos.contains { $0.path.localizedStandardContains(query) }
     }
 
     private var visibleGroups: [SimilarPhotoGroup] {

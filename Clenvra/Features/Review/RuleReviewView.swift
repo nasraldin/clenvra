@@ -341,10 +341,9 @@ struct RuleReviewView<MoreActions: View>: View {
     }
 
     private func matches(in group: CleanupSession.Group) -> [CleanupCandidate] {
-        guard !query.isEmpty else { return group.candidates }
-        return group.candidates.filter {
-            $0.name.localizedStandardContains(query) || $0.path.localizedStandardContains(query)
-        }
+        // A search for the group's own title ("Xcode", "Logs"…) shows the whole group.
+        if AppSearch.matches(query, String(localized: group.category.title)) { return group.candidates }
+        return group.candidates.filter { AppSearch.matches(query, any: [$0.name, $0.path]) }
     }
 
     private func sortedRows(of group: CleanupSession.Group) -> [ReviewRow] {

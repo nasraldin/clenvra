@@ -94,9 +94,7 @@ struct LargeFilesView: View {
         let matching =
             query.isEmpty
             ? session.largeFiles
-            : session.largeFiles.filter {
-                $0.name.localizedStandardContains(query) || $0.path.localizedStandardContains(query)
-            }
+            : session.largeFiles.filter { AppSearch.matches(query, any: [$0.name, $0.path]) }
         return matching.sorted(using: sortOrder)
     }
 
