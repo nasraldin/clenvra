@@ -40,6 +40,9 @@ struct StorageView: View {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        // Anchored to the top: if the page is ever taller than the window, it is cut at the bottom, never pushed up
+        // under the toolbar.
+        .frame(maxHeight: .infinity, alignment: .top)
         .toolbar { toolbar }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !showsSimilarPhotos { statusBar }

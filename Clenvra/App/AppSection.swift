@@ -12,6 +12,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case duplicates
     case similarPhotos
     case storage
+    case disks
     case applications
     case leftovers
     case extensions
@@ -45,7 +46,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .overview: .summary
         case .cleanup, .developer, .developerTools, .largeFiles, .downloads, .duplicates, .similarPhotos: .cleanUp
-        case .storage: .storage
+        case .storage, .disks: .storage
         case .applications, .leftovers, .extensions, .startup: .applications
         case .system, .processes, .security, .permissions, .snapshots: .system
         case .activity: .history
@@ -64,6 +65,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "Duplicates"
         case .similarPhotos: "Similar Photos"
         case .storage: "Space Map"
+        case .disks: "Mounted Disks"
         case .applications: "Applications"
         case .leftovers: "Leftovers"
         case .extensions: "Extensions"
@@ -88,6 +90,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "plus.square.on.square"
         case .similarPhotos: "photo.on.rectangle.angled"
         case .storage: "chart.pie"
+        case .disks: "externaldrive.connected.to.line.below"
         case .applications: "square.grid.2x2"
         case .leftovers: "tray.full"
         case .extensions: "puzzlepiece.extension"

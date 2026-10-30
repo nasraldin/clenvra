@@ -54,6 +54,10 @@ final class AppEnvironment {
     @ObservationIgnored private(set) lazy var startupSession = StartupSession(
         reader: LaunchItemReader(), runner: ProcessCommandRunner(),
         deleter: makeDeleter { _ in .notRunning }, privileged: helper)
+    /// Disk images, other drives and network shares; ejecting runs off the main thread (it waits for the disk).
+    @ObservationIgnored private(set) lazy var mountedDisksSession = MountedDisksSession(eject: { url in
+        try await Task.detached { try NSWorkspace.shared.unmountAndEjectDevice(at: url) }.value
+    })
     /// Reads the privacy databases read-only; revoking goes through Apple's `tccutil` only.
     @ObservationIgnored private(set) lazy var permissionsSession = PermissionsSession(runner: ProcessCommandRunner())
     @ObservationIgnored private(set) lazy var scheduler = ScanScheduler(environment: self)

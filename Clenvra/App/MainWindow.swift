@@ -41,6 +41,9 @@ struct MainWindow: View {
                     page(selection)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // A new toolbar for each group of pages: moving from Developer (two tabs) to Clutter (four) otherwise
+                // keeps the old item widths on macOS 27, and the switcher overlaps the page's buttons.
+                .id(selection.sidebarEntry)
                 // Room for a list and its details panel from the start. The panel sits inside this column, so if the
                 // column's minimum grew when the panel opened, the window would take the width from the sidebar and
                 // macOS 27 would collapse it for a moment.
@@ -155,6 +158,8 @@ struct MainWindow: View {
             DeveloperToolsView(session: environment.toolSession)
         case .storage:
             storage(.browser)
+        case .disks:
+            DisksView(session: environment.mountedDisksSession)
         case .largeFiles:
             storage(.largeFiles)
         case .downloads:

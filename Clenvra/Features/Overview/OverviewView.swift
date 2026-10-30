@@ -48,11 +48,26 @@ struct OverviewView: View {
 
     private var disks: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ForEach(volumes) { volume in
+            ForEach(volumes.filter(\.isRealDisk)) { volume in
                 OverviewVolumeRow(volume: volume)
             }
             if volumes.isEmpty {
                 ProgressView().controlSize(.small)
+            }
+            // Disk images (installers and the like) are not disks you own; they are listed on their own page.
+            let images = volumes.filter { $0.kind == .diskImage }.count
+            if images > 0 {
+                Button {
+                    navigate(.disks)
+                } label: {
+                    Label {
+                        Text("\(images) disk images are mounted")
+                    } icon: {
+                        Image(systemName: "externaldrive.badge.plus")
+                    }
+                }
+                .buttonStyle(.link)
+                .accessibilityIdentifier("overview.diskImages")
             }
         }
     }

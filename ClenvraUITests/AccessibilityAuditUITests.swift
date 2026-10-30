@@ -54,6 +54,11 @@ final class AccessibilityAuditUITests: XCTestCase {
                 attachment.name = "audit-\(appearance)-\(section)"
                 attachment.lifetime = .keepAlways
                 add(attachment)
+                // The accessibility tree as audited, to find what a reported element is.
+                let tree = XCTAttachment(string: window.debugDescription)
+                tree.name = "audit-tree-\(appearance)-\(section)"
+                tree.lifetime = .keepAlways
+                add(tree)
             }
         }
     }
@@ -70,6 +75,7 @@ final class AccessibilityAuditUITests: XCTestCase {
     /// Titles of SwiftUI `ContentUnavailableView` empty states reached by the audit.
     private static let emptyStateTitles: Set<String> = [
         "Select an app", "No Activity Yet", "No apps", "No Results", "Nothing to clean", "Nothing to review",
+        "No Other Disks",
     ]
 
     @MainActor
@@ -96,6 +102,13 @@ final class AccessibilityAuditUITests: XCTestCase {
             return true
 
         case .sufficientElementDescription, .parentChild:
+            // 4a. SwiftUI hosts each item of a grid with a context menu in an unlabelled container exactly the size of
+            //     its one child; the child (a button with a label) is what VoiceOver reads and presses.
+            if element.elementType == .other, element.label.isEmpty, element.children.count == 1,
+                let child = element.children.first, child.frame == frame, !child.label.isEmpty
+            {
+                return true
+            }
             guard element.elementType == .group && element.label.isEmpty else { return false }
             // 3. Full-height, unlabeled groups are the column containers AppKit creates for NavigationSplitView
             //    and HSplitView. They are not focusable content; their children carry the labels.

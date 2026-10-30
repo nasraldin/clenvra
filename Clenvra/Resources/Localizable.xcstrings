@@ -40,6 +40,16 @@
         }
       }
     },
+    "%@ could not be ejected. A file on it may be open.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر إخراج %@. قد يكون ملف عليه مفتوحًا."
+          }
+        }
+      }
+    },
     "%@ free of %@": {
       "localizations": {
         "ar": {
@@ -200,6 +210,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld disk images are mounted": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld صور أقراص مركّبة"
           }
         }
       }
@@ -2442,6 +2462,16 @@
         }
       }
     },
+    "Capacity": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعة"
+          }
+        }
+      }
+    },
     "Cargo has no built-in command to clear its registry cache. Shown for information.": {
       "localizations": {
         "ar": {
@@ -3077,6 +3107,16 @@
         }
       }
     },
+    "Could not eject": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الإخراج"
+          }
+        }
+      }
+    },
     "Could not read this location": {
       "localizations": {
         "ar": {
@@ -3297,6 +3337,36 @@
         }
       }
     },
+    "Disk Image": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة قرص"
+          }
+        }
+      }
+    },
+    "Disk Image File": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملف صورة القرص"
+          }
+        }
+      }
+    },
+    "Disk Images": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صور الأقراص"
+          }
+        }
+      }
+    },
     "Disk images and installer packages in Downloads. Check you no longer need them.": {
       "localizations": {
         "ar": {
@@ -3450,6 +3520,26 @@
         }
       }
     },
+    "Drive": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص"
+          }
+        }
+      }
+    },
+    "Drives": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأقراص"
+          }
+        }
+      }
+    },
     "Duplicates": {
       "localizations": {
         "ar": {
@@ -3476,6 +3566,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "ذاكرة التخزين المؤقت للمحررات. يُحتفظ بالإعدادات والإضافات ومساحات العمل."
+          }
+        }
+      }
+    },
+    "Eject": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إخراج"
+          }
+        }
+      }
+    },
+    "Eject All Disk Images": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إخراج كل صور الأقراص"
+          }
+        }
+      }
+    },
+    "Eject every mounted disk image. Drives and network shares stay connected.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُخرج كل صور الأقراص المركّبة. تبقى الأقراص ومشاركات الشبكة متصلة."
           }
         }
       }
@@ -3666,6 +3786,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الامتدادات"
+          }
+        }
+      }
+    },
+    "External Drive": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص خارجي"
           }
         }
       }
@@ -3990,6 +4120,16 @@
         }
       }
     },
+    "Format": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التنسيق"
+          }
+        }
+      }
+    },
     "Found through the app's group or its exact name. Selected only when no other app may use it.": {
       "localizations": {
         "ar": {
@@ -4006,6 +4146,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عُثر عليه من خلال معرّف التطبيق أو سجلات النظام."
+          }
+        }
+      }
+    },
+    "Free": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متاح"
           }
         }
       }
@@ -4620,6 +4770,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تثبيت…"
+          }
+        }
+      }
+    },
+    "Internal Drive": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص داخلي"
           }
         }
       }
@@ -5574,6 +5734,16 @@
         }
       }
     },
+    "Mounted Disks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأقراص المركّبة"
+          }
+        }
+      }
+    },
     "Move %@ to the Trash": {
       "localizations": {
         "ar": {
@@ -5848,6 +6018,26 @@
         }
       }
     },
+    "Network": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشبكة"
+          }
+        }
+      }
+    },
+    "Network Share": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشاركة شبكة"
+          }
+        }
+      }
+    },
     "Next scan": {
       "localizations": {
         "ar": {
@@ -5874,6 +6064,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا نشاط بعد"
+          }
+        }
+      }
+    },
+    "No Other Disks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد أقراص أخرى"
           }
         }
       }
@@ -6490,6 +6690,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يمكن إعادة تفعيل إلا عناصر بدء التشغيل التي أعدتها من سلة المهملات."
+          }
+        }
+      }
+    },
+    "Only the startup disk is mounted. Disk images and other drives you connect appear here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قرص بدء التشغيل وحده مركّب. تظهر هنا صور الأقراص والأقراص الأخرى التي توصلها."
           }
         }
       }
@@ -7254,6 +7464,16 @@
         }
       }
     },
+    "Read the mounted disks again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقرأ الأقراص المركّبة مجددًا (⌘R)"
+          }
+        }
+      }
+    },
     "Read the permissions again (⌘R)": {
       "localizations": {
         "ar": {
@@ -7280,6 +7500,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "قراءة عناصر بدء التشغيل مرة أخرى (⌘R)"
+          }
+        }
+      }
+    },
+    "Read-only": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للقراءة فقط"
           }
         }
       }
@@ -8270,6 +8500,16 @@
         }
       }
     },
+    "Select a disk to see its details.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر قرصًا لعرض تفاصيله."
+          }
+        }
+      }
+    },
     "Select a file to see its size, date and location.": {
       "localizations": {
         "ar": {
@@ -8540,6 +8780,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إظهار التفاصيل"
+          }
+        }
+      }
+    },
+    "Show Disk Image in Finder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار صورة القرص في Finder"
           }
         }
       }
@@ -9947,6 +10197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مدة التشغيل"
+          }
+        }
+      }
+    },
+    "Used": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المستخدم"
           }
         }
       }

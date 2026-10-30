@@ -51,4 +51,18 @@ final class UIDiagnosticsProbeUITests: XCTestCase {
         sleep(3)
         XCTFail("recording: developer")
     }
+
+    /// Moving from Developer (two tabs) to Clutter (four) must not leave the switcher overlapping the page's buttons.
+    @MainActor
+    func testDeveloperToClutterToolbar() {
+        let app = startApp()
+        open(section: "developer", in: app)
+        sleep(2)
+        app.outlines.cells.containing(.any, identifier: "sidebar.largeFiles").firstMatch.click()
+        sleep(3)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        shot.name = "developer-to-clutter"
+        shot.lifetime = .keepAlways
+        add(shot)
+    }
 }

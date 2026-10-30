@@ -4,7 +4,7 @@ import XCTest
 /// The sidebar pages in display order, as their `sidebar.<id>` / `section.<id>` identifiers.
 let allSections = [
     "overview", "cleanup", "developer", "developerTools", "largeFiles", "downloads", "duplicates", "similarPhotos",
-    "storage",
+    "storage", "disks",
     "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "permissions", "snapshots",
     "activity",
 ]
