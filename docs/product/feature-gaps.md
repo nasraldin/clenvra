@@ -1,86 +1,94 @@
 # Feature gaps against competitors (2026-10-30)
 
-What other Mac cleaners offer that Clenvra does not, and what to do about each. Read with
+What other Mac cleaners offer that Clenvra does not, checked three ways, and what to do about each. Read with
 [`verified-feature-matrix.md`](verified-feature-matrix.md) (our plan) and
 [`../research/competitor-analysis.md`](../research/competitor-analysis.md) (first research, 2026-10-27).
 
+## How this was checked
+
+| Mark | Meaning |
+|---|---|
+| **Vendor** | The competitor's own page says it has the feature (read 2026-10-30) |
+| **Inspected** | Seen in the competitor's installed app: strings and class names in its binaries, read only, nothing launched or changed |
+| **Measured** | Measured on the work Mac (macOS 27, 926 GB disk, 96 % full, 37 GB free), read only |
+| **Tested** | We ran the API or command ourselves and looked at the result |
+
+Vendor pages: CleanMyMac 5.7.3 (MacPaw knowledge base: concepts, system junk list, maintenance tasks, the Menu, app
+permissions), CCleaner for Mac (product page and edition table), App Cleaner & Uninstaller 10.0.1 (Nektony),
+Pearcleaner 5.4.3 (README; development on hold), DaisyDisk 4.34.2. Installed and inspected: CleanMyMac 5 (App Store
+edition), CCleaner, AppCleaner 3.7.
+
 ## Summary
 
-- **Our own plan is complete.** Every feature in the verified matrix ships, except CL-11 (clear recent-items
-  lists). The matrix also promised per-volume Trash (CL-5), but only the home Trash is cleaned today.
-- **Competitors offer about 20 things we lack.** 11 fit our principles and are worth building; 3 are optional; the
-  rest stay rejected (misleading, need a private API or network accounts, or delete without review).
-- **Recommended for 1.1, in order:** Trash on every drive · leftovers of apps already in the Trash · broken
-  preference files · disk health · Trash-size reminder · app permissions review · install updates · blurry and
-  poorly lit photos · System Data explained · Homebrew and installer packages · deleted users' folders.
+1. **Our own plan is nearly complete**, with one gap that matters a lot: simulator runtimes are listed but cannot be
+   removed. On the work Mac that is **44.5 GB**, more than the free space left.
+2. **Worth building next, by measured value:** remove simulator runtimes · app permissions review · blurry and dark
+   photos · "System Data" explained · Trash on every drive · leftovers of apps already in the Trash.
+3. **Downgraded after checking:** disk health (Apple's internal SSD only ever reports "Verified"), broken preference
+   files (none of 597 on the work Mac; CleanMyMac needs an ignore list to avoid false alarms), Homebrew manager and
+   installer packages (little to gain, and most packages here belong to company-managed tools).
 
-## Sources
-
-Read 2026-10-30, all official pages:
-
-| Product | Version | Source |
-|---|---|---|
-| CleanMyMac | 5.7.3 (29 Oct 2026) | cleanmymac.com; MacPaw knowledge base: concepts and usage, system junk list, maintenance tasks, the Menu, app permissions |
-| CCleaner for Mac | 2.x | ccleaner.com/ccleaner-mac (feature and edition table) |
-| App Cleaner & Uninstaller (Nektony) | 10.0.1 (20 Sep 2026) | nektony.com/mac-app-cleaner |
-| Pearcleaner | 5.4.3, development on hold | github.com/alienator88/Pearcleaner README |
-| DaisyDisk | 4.34.2 (10 Jul 2026) | daisydiskapp.com |
-
-Features were not run; they are taken from the vendors' own descriptions (evidence level **P**).
-
-## Gaps worth building
+## Ranked list
 
 Effort: S (a day or less), M (a few days), L (a week or more). Every item keeps our rules: review before delete,
-Trash first, nothing selected automatically unless it is regenerated data, public APIs only, no background process.
+Trash first, public APIs and Apple's own command-line tools only, no background process.
 
-| # | Gap | Who has it | Why it matters | How (public API) | Risk | Effort | When |
+| # | Gap | Who has it (evidence) | Measured on the work Mac | How we would build it (evidence) | Risk | Effort | Decision |
 |---|---|---|---|---|---|---|---|
-| 1 | **Trash on every drive** (external and other volumes) | CleanMyMac, (our CL-5) | Deleted files on external drives keep using space; people do not know it is there | Each mounted volume's `.Trashes/<uid>`; same Trash rule per volume | M (irreversible) | S | 1.1 |
-| 2 | **Leftovers of apps already in the Trash** | Pearcleaner (Sentinel), AppCleaner (SmartDelete) | Most people delete apps by dragging them to the Trash; their files stay | On opening Leftovers, read app bundles in the Trash and run the same ownership evidence; no background monitor | H (same as leftovers) | S | 1.1 |
-| 3 | **Broken preference files** | CleanMyMac | A damaged `.plist` can stop an app from opening | `PropertyListSerialization` fails on files in `~/Library/Preferences`; Review, never preselected | M | S | 1.1 |
-| 4 | **Disk health** (SMART status) on Health and Overview | CleanMyMac (Menu) | Early warning before a drive fails | `diskutil info -plist` (`SMARTStatus`); temperatures are left out (need the private SMC) | L | S | 1.1 |
-| 5 | **Trash-size reminder** | CleanMyMac (Menu) | The Trash quietly grows to many GB | Existing scheduled scan and notification; threshold in Settings | L | S | 1.1 |
-| 6 | **App permissions review** (camera, microphone, screen recording, files, Full Disk Access…) | CleanMyMac, Nektony, Pearcleaner | Privacy: see which apps can use what, revoke what is not needed | Read the TCC databases (needs Full Disk Access; the format is undocumented, so read-only and defensive); revoke with `tccutil reset <service> <bundle id>` (documented tool) or open the right Privacy pane | M | M | 1.1 |
-| 7 | **Install updates**, not only find them | CleanMyMac, Nektony | Today we say an update exists and stop | Homebrew: `brew upgrade --cask <token>` shown before it runs; App Store: open the app's page; other apps: open the app so its own updater runs. Nothing is downloaded by us | M | M | 1.1 |
-| 8 | **Blurry and poorly lit photos** in Similar Photos | CCleaner (Analyze Photos) | Bad shots are the easiest photos to let go | Vision `VNCalculateImageAestheticsScoresRequest` (macOS 15+: quality score and "utility" images such as screenshots of receipts); blur from image sharpness | M | M | 1.1 |
-| 9 | **"System Data" explained** | DaisyDisk | The biggest question people have about storage | Space Map entry that sums snapshots, purgeable space, swap and VM files, and `~/Library` by kind; restricted folders sized through the System Helper | L | M | 1.1 |
-| 10 | **Homebrew manager**: unused formulae, `brew autoremove`, `brew cleanup` | Pearcleaner | Big on developer Macs, invisible otherwise | Homebrew CLI with the command shown first, like Developer Tools | M | M | 1.2 |
-| 11 | **Installer packages** (`.pkg` receipts): list, size, files; remove a package's files | Pearcleaner | Tools installed by `.pkg` leave no app to uninstall | `pkgutil --pkgs`, `--files`, `--pkg-info`; removal through the System Helper, Review only, protected-path checks | H | L | 1.2 |
-| 12 | **Deleted users' home folders** (`/Users/Deleted Users/*.dmg`) | CleanMyMac | Can be many GB on shared or old Macs | List with size and date; remove through the System Helper; Review only | M | S | 1.2 |
-| 13 | **Clear recent-items lists** (our CL-11) | CCleaner | Privacy, small | `NSDocumentController.clearRecentDocuments` for our app; for others only where a public setting exists. Decide whether a guided manual flow is better (open the right setting) | L | S | 1.2 |
+| 1 | **Remove simulator runtimes** (our DEV-2 promised it; only listing ships) | Our own plan (DEV-2). CleanMyMac's "Xcode junk" covers build data and indexes only (Vendor); none of the checked apps says it removes runtimes | **3 runtimes, 44.5 GB** (iOS 27.0 18.0 GB, iOS 27.1 17.7 GB, iOS 18.6 8.8 GB) | `xcrun simctl runtime delete <id>`, shown before it runs, Review (needed to test on that iOS version; Xcode can download it again) (Tested: `simctl runtime list -j` already parsed) | M | S | **Build now** |
+| 2 | **App permissions review** (camera, microphone, screen recording, Full Disk Access, accessibility…) with revoke | CleanMyMac, Nektony, Pearcleaner (Vendor); CleanMyMac reads `TCC.db` with `SELECT * FROM access` and revokes with `/usr/bin/tccutil` (**Inspected**) | 43 apps with Full Disk Access, 11 with Accessibility, 8 with Screen Recording; camera: Brave, Teams, Zoom, Remote Desktop and others | macOS 27: Apple's `tccutil list -s <service>` lists apps per permission (**Tested**); macOS 26 has only `tccutil reset` (**Tested** in the VM), so there we read `TCC.db` read-only like CleanMyMac (needs Full Disk Access; undocumented format, parsed defensively). Revoke: `tccutil reset <service> <bundle id>` | M | M | **Build** |
+| 3 | **Blurry and dark photos** in Similar Photos | CCleaner Analyze Photos (Vendor); CCleaner computes its own `blurryScore` and `darkScore` with Core Image and exposure data (**Inspected**) | Not measured: personal photos were not read | Vision `VNCalculateImageAestheticsScoresRequest` (**Tested** on Apple wallpapers: originals +0.65 to +0.79; blurred copies −0.16 to −0.20; darkened copies −0.19 to −0.42). Review only, never preselected | M | M | **Build** |
+| 4 | **"System Data" explained** | DaisyDisk (Vendor) | 6.1 GB swap in use; 44.5 GB of simulator runtimes on their own volumes; no local snapshots | Space Map entry summing swap (`vm.swapusage`), local snapshots (`tmutil`), simulator and other disk images, purgeable space, `~/Library` by kind (**Tested**: each command returns these figures) | L | M | **Build** |
+| 5 | **Trash on every drive** (our CL-5 promised it) | CleanMyMac scans `.Trashes` (**Inspected**) | 0: no external drive connected | Each mounted volume's `.Trashes/<uid>` with the existing Trash rule | M (irreversible) | S | **Build** (cheap; matters on Macs with external drives) |
+| 6 | **Leftovers of apps already in the Trash** | Pearcleaner Sentinel, AppCleaner SmartDelete (Vendor) | 0 apps in the Trash today | When Leftovers opens, read app bundles in the Trash and run the existing ownership evidence; no background monitor | H (as Leftovers) | S | **Build** (cheap; common way people delete apps) |
+| 7 | **Trash-size reminder** | CleanMyMac Menu (Vendor) | Trash is empty today | Existing scheduled scan and notification, threshold in Settings | L | S | Later |
+| 8 | **Install updates**, not only find them | CleanMyMac, Nektony (Vendor) | 0 outdated casks, 1 outdated formula (local Homebrew data, not refreshed) | Homebrew: `brew upgrade --cask <token>` shown first; App Store: open the app's page; others: open the app so its updater runs | M | M | Later |
+| 9 | **Installer packages** (`.pkg` receipts) | Pearcleaner (Vendor); CleanMyMac reads receipts (**Inspected**) | 62 non-Apple receipts, mostly company-managed (Microsoft DLP, ManageEngine, Pulse Secure) and Adobe updaters | `pkgutil --pkgs/--files/--pkg-info` to show; removal through the System Helper only | H | L | Later, show-only first |
+| 10 | **Deleted users' home folders** | CleanMyMac (Vendor, **Inspected**: "Deleted Users") | None on the work Mac | List `/Users/Deleted Users/*.dmg`; remove through the System Helper | M | S | Later |
+| 11 | **Clear recent-items lists** (our CL-11) | CCleaner (Vendor) | 692 KB; privacy only | Open the right setting, or clear our own list; no private API | L | S | Later |
+| 12 | **Homebrew manager** (`autoremove`, `cleanup`) | Pearcleaner (Vendor) | `brew autoremove --dry-run`: nothing; cache 43 MB | Homebrew CLI, command shown first | M | M | Later (little to gain) |
+| 13 | **Broken preference files** | CleanMyMac (Vendor); it keeps a "BrokenPreferencesKnowledgeBase" ignore list (**Inspected**) | **0 of 597** fail `plutil -lint` | `PropertyListSerialization`; would need an ignore list too | M | S | Drop for now |
+| 14 | **Disk health** | CleanMyMac Menu (Vendor; no SMART strings found, **Inspected**) | Internal Apple SSD: `SMARTStatus` is only "Verified"; no wear figure | `diskutil info -plist` (**Tested**). Wear and temperature need private interfaces | L | S | Drop (no useful signal on Apple Silicon) |
+
+**Found while measuring, not in any competitor list:** eight disk images were left mounted (six copies of
+"Clenvra 1.0.0", two of "Kiro CLI"). They use no extra disk space beyond their `.dmg` files, which Installers already
+covers, so this is at most an "Eject" button. Not planned.
 
 ## Optional (only if asked for)
 
 | Gap | Who has it | Note |
 |---|---|---|
-| Default apps for file types | Nektony | `NSWorkspace.setDefaultApplication(at:toOpen:)` (public). Useful, but not cleanup |
-| "Uninstall with Clenvra" in Finder's menu | Pearcleaner | Finder Sync or a Services menu item; adds an extension to maintain |
-| URL scheme / command line for automation | Pearcleaner | `clenvra://` to open a page; never to delete without review |
+| Default apps for file types | Nektony (Vendor) | `NSWorkspace.setDefaultApplication(at:toOpen:)`. Useful, but not cleanup |
+| "Uninstall with Clenvra" in Finder's menu | Pearcleaner (Vendor) | Finder Sync or a Services item; one more extension to maintain |
+| URL scheme for automation | Pearcleaner (Vendor) | `clenvra://` to open a page; never to delete without review |
 
-## Rejected (unchanged or newly confirmed)
+## Rejected
 
 | Feature | Who has it | Why not |
 |---|---|---|
-| Malware scanning, real-time protection | CleanMyMac (Moonlock) | Needs a maintained engine; false assurance. Security checks cover what we can verify honestly |
-| Free up RAM | CleanMyMac | Misleading; macOS manages memory. We show memory pressure and heavy apps instead |
-| Maintenance scripts: flush DNS, reindex Spotlight, repair permissions, periodic scripts, speed up Mail, free purgeable space | CleanMyMac | Little or no benefit on modern macOS; some cause regressions; purgeable space is freed by macOS when needed |
-| Remove language files, strip universal binaries | CleanMyMac, Pearcleaner | Breaks code signatures and app updates |
-| Document versions (`/.DocumentRevisions-V100`) | CleanMyMac | System database of your document history; deleting it loses versions of files you still use |
-| Cloud drive cleanup, email cleanup | CleanMyMac | Third-party accounts and OAuth; not on-device cleanup |
+| Malware scanning, real-time protection | CleanMyMac (Moonlock) | Needs a maintained engine; false assurance. Security checks cover what we can verify |
+| Free up RAM | CleanMyMac | Misleading; macOS manages memory |
+| Maintenance scripts: flush DNS, reindex Spotlight, repair permissions, periodic scripts, speed up Mail, free purgeable space | CleanMyMac | Little or no benefit on modern macOS; purgeable space is freed by macOS when needed |
+| Remove language files, strip universal binaries | CleanMyMac (**Inspected**: `lipo`, `.lproj` code), Pearcleaner | Breaks code signatures and app updates |
+| Document versions (`/.DocumentRevisions-V100`) | CleanMyMac (Vendor) | The history of documents you still use |
+| Cloud drive cleanup, email cleanup | CleanMyMac | Third-party accounts; not on-device cleanup |
 | Chrome tab manager extension | CleanMyMac | A browser extension, not a Mac app feature |
-| Network traffic monitor and blocking | Nektony | Firewall apps (LuLu) do this properly; out of scope |
-| CPU, disk and battery temperatures | CleanMyMac | Only through the private SMC interface |
-| Automatic browser wiping and automatic Trash emptying on a schedule | CCleaner | Deletes without review. Scheduled scans only notify |
-| Connected devices, Steam games | CleanMyMac, Pearcleaner | Not related to cleanup |
+| Network traffic monitor and blocking | Nektony | Firewall apps do this properly |
+| CPU, disk and battery temperatures | CleanMyMac | Only through private interfaces |
+| Automatic browser wiping, automatic Trash emptying | CCleaner (Pro) | Deletes without review |
+| Connected devices, Steam games | CleanMyMac, Pearcleaner | Not cleanup |
 
 ## What we have that they do not
 
-Keep these visible in the product and the README:
-
-1. Honest "frees about" sizes that account for clones and hard links (only DaisyDisk does this too).
-2. Evidence for every file ("why we think this belongs to X") and a safety status per item.
-3. File identity re-checked at the moment of deletion; Trash first; Put Back from Activity.
-4. Developer workstation focus: Xcode, simulators, package managers, containers, AI models, each cleaned with the
-   tool's own command.
+1. Honest "frees about" sizes that account for clones and hard links (DaisyDisk also does this).
+2. Evidence for every file and a safety status per item.
+3. File identity re-checked at deletion; Trash first; Put Back from Activity.
+4. Developer workstation focus, each tool cleaned with its own command.
 5. Arabic and right-to-left layout.
-6. No background process, no telemetry, no account; the System Helper is optional and removable.
+6. No background process, no telemetry, no account; the System Helper is optional.
+
+## Limits of this check
+
+- Measured on one Mac (the work Mac). The home Mac may differ, for example external drives or more photos.
+- Competitor implementations were inferred from strings and class names, not traced through code.
+- Photo scoring was tested on Apple's wallpapers and degraded copies, not on real photo libraries.
