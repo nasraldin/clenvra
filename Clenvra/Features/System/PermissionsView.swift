@@ -157,13 +157,6 @@ struct PermissionsView: View {
             }
             .width(min: 100, ideal: 130)
 
-            TableColumn(Text("For")) { row in
-                if let grant = row.grant {
-                    Text(grant.scope == .user ? "This user" : "All users")
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .width(min: 90, ideal: 120)
         } rows: {
             ForEach(visibleGroups, id: \.service) { entry in
                 DisclosureTableRow(
@@ -337,13 +330,20 @@ private struct PermissionNameCell: View {
 
     var body: some View {
         if let grant = row.grant, let client {
-            Label {
-                Text(verbatim: client.name)
-                    .lineLimit(1)
-            } icon: {
+            // Icon and text side by side, and who the grant is for under the name: an empty cell on the group rows
+            // would be an unlabelled element.
+            HStack(spacing: 6) {
                 Image(nsImage: client.icon)
                     .resizable()
                     .frame(width: 16, height: 16)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(verbatim: client.name)
+                        .lineLimit(1)
+                    Text(grant.scope == .user ? "This user" : "All users")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
             }
             .help(Text(verbatim: grant.client))
         } else {

@@ -43,6 +43,17 @@ public enum PermissionService {
         service.hasPrefix(prefix) ? String(service.dropFirst(prefix.count)) : service
     }
 
+    /// Services System Settings shows by name. Others in the database (such as `Liverpool`) are internal to macOS and
+    /// are not listed.
+    private static let known: Set<String> = [
+        "Camera", "Microphone", "ScreenCapture", "SystemPolicyAllFiles", "Accessibility", "ListenEvent", "PostEvent",
+        "AddressBook", "Calendar", "Reminders", "Photos", "AppleEvents", "SystemPolicyDesktopFolder",
+        "SystemPolicyDocumentsFolder", "SystemPolicyDownloadsFolder",
+    ]
+
+    /// Whether the person can recognize the service and change it in System Settings.
+    public static func isKnown(_ service: String) -> Bool { known.contains(shortName(service)) }
+
     /// The name System Settings uses for the service; unknown services show their short name.
     public static func title(_ service: String) -> LocalizedStringResource {
         switch shortName(service) {

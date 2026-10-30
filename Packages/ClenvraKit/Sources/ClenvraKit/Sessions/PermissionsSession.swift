@@ -57,7 +57,7 @@ public final class PermissionsSession {
             phase = .needsAccess
             return
         }
-        grants = read.grants.filter(\.isAllowed).sorted {
+        grants = read.grants.filter { $0.isAllowed && PermissionService.isKnown($0.service) }.sorted {
             ($0.service, $0.client, $0.scope.rawValue) < ($1.service, $1.client, $1.scope.rawValue)
         }
         phase = .ready

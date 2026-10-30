@@ -53,6 +53,22 @@ struct PermissionsSessionTests {
         #expect(session.unreadableScopes.isEmpty)
     }
 
+    /// macOS keeps internal services in the same table (for example `kTCCServiceLiverpool`); they have no name in
+    /// System Settings and nothing the person can do about them, so they are not listed.
+    @Test("services without a name in System Settings are not listed")
+    func unknownServicesAreHidden() async throws {
+        try TCCFixture.write(
+            [
+                .init(service: "kTCCServiceLiverpool", client: "com.apple.Maps", clientType: 0, authValue: 2),
+                .init(service: "kTCCServiceCamera", client: "us.zoom.xos", clientType: 0, authValue: 2),
+            ], to: userPath)
+        let session = session()
+
+        await session.load()
+
+        #expect(session.grants.map(\.service) == ["kTCCServiceCamera"])
+    }
+
     @Test("when neither database can be read, the page asks for Full Disk Access instead of showing an empty list")
     func bothUnreadableNeedsAccess() async {
         let session = session()
