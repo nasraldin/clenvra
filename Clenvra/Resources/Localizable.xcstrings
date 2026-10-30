@@ -2490,12 +2490,32 @@
         }
       }
     },
+    "Choose the folder or disk to scan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر المجلد أو القرص المراد فحصه"
+          }
+        }
+      }
+    },
     "Choose the folders to search and the smallest file size": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "اختيار المجلدات التي يُبحث فيها وأصغر حجم للملف"
+          }
+        }
+      }
+    },
+    "Choose which apps to list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر التطبيقات التي تُعرض"
           }
         }
       }
@@ -2663,12 +2683,32 @@
         }
       }
     },
+    "Close every group (Option-click a group does the same)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إغلاق كل المجموعات (النقر مع Option على مجموعة يفعل الشيء نفسه)"
+          }
+        }
+      }
+    },
     "Closes the tabs you had open and loses the restore list.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "يغلق علامات التبويب التي كانت مفتوحة ويفقد قائمة الاستعادة."
+          }
+        }
+      }
+    },
+    "Clutter": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات المتراكمة"
           }
         }
       }
@@ -2685,6 +2725,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "تنزيلات Colima"
+          }
+        }
+      }
+    },
+    "Collapse All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طي الكل"
+          }
+        }
+      }
+    },
+    "Collapse Sidebar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصغير الشريط الجانبي"
           }
         }
       }
@@ -3338,6 +3398,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "الاستثناءات"
+          }
+        }
+      }
+    },
+    "Expand All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توسيع الكل"
+          }
+        }
+      }
+    },
+    "Expand Sidebar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توسيع الشريط الجانبي"
           }
         }
       }
@@ -4486,6 +4566,16 @@
         }
       }
     },
+    "Junk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملفات غير الضرورية"
+          }
+        }
+      }
+    },
     "Keep": {
       "localizations": {
         "ar": {
@@ -4602,6 +4692,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المعرّف"
+          }
+        }
+      }
+    },
+    "Large & Old": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكبيرة والقديمة"
           }
         }
       }
@@ -6156,6 +6256,16 @@
         }
       }
     },
+    "Open Network Settings…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات الشبكة…"
+          }
+        }
+      }
+    },
     "Open Privacy & Security": {
       "localizations": {
         "ar": {
@@ -6222,6 +6332,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح سلة المهملات"
+          }
+        }
+      }
+    },
+    "Open every group": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح كل المجموعات"
           }
         }
       }
@@ -7356,12 +7476,32 @@
         }
       }
     },
+    "Scan Location": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موقع الفحص"
+          }
+        }
+      }
+    },
     "Scan Now": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "افحص الآن"
+          }
+        }
+      }
+    },
+    "Scan again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افحص مرة أخرى (⌘R)"
           }
         }
       }
@@ -7936,12 +8076,32 @@
         }
       }
     },
+    "Show names with icons": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار الأسماء مع الأيقونات"
+          }
+        }
+      }
+    },
     "Show only": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "للعرض فقط"
+          }
+        }
+      }
+    },
+    "Show only icons in the sidebar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار الأيقونات فقط في الشريط الجانبي"
           }
         }
       }
@@ -7962,6 +8122,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "عرض سلة المهملات في Finder حيث يمكنك إفراغها"
+          }
+        }
+      }
+    },
+    "Show the activity of one section": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار نشاط قسم واحد"
+          }
+        }
+      }
+    },
+    "Show the sidebar with names": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار الشريط الجانبي مع الأسماء"
           }
         }
       }
@@ -8292,6 +8472,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يسري الإيقاف والتشغيل على جلسة تسجيل الدخول هذه فقط. أما الإزالة فتوقفه وتنقل ملفه إلى سلة المهملات."
+          }
+        }
+      }
+    },
+    "Stop the scan (Esc)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف الفحص (Esc)"
           }
         }
       }
@@ -8773,6 +8963,16 @@
         }
       }
     },
+    "Then choose Firewall.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثم اختر جدار الحماية."
+          }
+        }
+      }
+    },
     "Thermal State": {
       "localizations": {
         "ar": {
@@ -8919,6 +9119,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوقت"
+          }
+        }
+      }
+    },
+    "Toolbar buttons show only their icon. Point to a button to see its name.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُظهر أزرار شريط الأدوات أيقوناتها فقط. أشر إلى زر لترى اسمه."
+          }
+        }
+      }
+    },
+    "Toolbar:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شريط الأدوات:"
+          }
+        }
+      }
+    },
+    "Tools": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأدوات"
           }
         }
       }

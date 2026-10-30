@@ -1,0 +1,71 @@
+{
+  "Choose the folder or disk to scan": {
+    "ar": "اختر المجلد أو القرص المراد فحصه"
+  },
+  "Choose which apps to list": {
+    "ar": "اختر التطبيقات التي تُعرض"
+  },
+  "Close every group (Option-click a group does the same)": {
+    "ar": "إغلاق كل المجموعات (النقر مع Option على مجموعة يفعل الشيء نفسه)"
+  },
+  "Clutter": {
+    "ar": "الملفات المتراكمة"
+  },
+  "Collapse All": {
+    "ar": "طي الكل"
+  },
+  "Collapse Sidebar": {
+    "ar": "تصغير الشريط الجانبي"
+  },
+  "Expand All": {
+    "ar": "توسيع الكل"
+  },
+  "Expand Sidebar": {
+    "ar": "توسيع الشريط الجانبي"
+  },
+  "Junk": {
+    "ar": "الملفات غير الضرورية"
+  },
+  "Large & Old": {
+    "ar": "الكبيرة والقديمة"
+  },
+  "Open every group": {
+    "ar": "فتح كل المجموعات"
+  },
+  "Scan Location": {
+    "ar": "موقع الفحص"
+  },
+  "Show names with icons": {
+    "ar": "إظهار الأسماء مع الأيقونات"
+  },
+  "Show only icons in the sidebar": {
+    "ar": "إظهار الأيقونات فقط في الشريط الجانبي"
+  },
+  "Show the activity of one section": {
+    "ar": "إظهار نشاط قسم واحد"
+  },
+  "Show the sidebar with names": {
+    "ar": "إظهار الشريط الجانبي مع الأسماء"
+  },
+  "Toolbar buttons show only their icon. Point to a button to see its name.": {
+    "ar": "تُظهر أزرار شريط الأدوات أيقوناتها فقط. أشر إلى زر لترى اسمه."
+  },
+  "Toolbar:": {
+    "ar": "شريط الأدوات:"
+  },
+  "Tools": {
+    "ar": "الأدوات"
+  },
+  "Scan again (⌘R)": {
+    "ar": "افحص مرة أخرى (⌘R)"
+  },
+  "Stop the scan (Esc)": {
+    "ar": "إيقاف الفحص (Esc)"
+  },
+  "Open Network Settings…": {
+    "ar": "فتح إعدادات الشبكة…"
+  },
+  "Then choose Firewall.": {
+    "ar": "ثم اختر جدار الحماية."
+  }
+}
