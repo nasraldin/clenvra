@@ -17,8 +17,9 @@ enum Appearance: String, CaseIterable {
 /// Appearance is forced with `-ClenvraUITestAppearance`, which the debug app applies as its preferred color
 /// scheme. (`-AppleInterfaceStyle` in the argument domain does not work: AppKit keeps the system appearance.)
 @MainActor
-func launchApp(language: String, appearance: Appearance = .light) -> XCUIApplication {
+func launchApp(language: String, appearance: Appearance = .light, arguments: [String] = []) -> XCUIApplication {
     let app = XCUIApplication()
+    app.launchArguments += arguments
     app.launchArguments += [
         "-AppleLanguages", "(\(language))", "-AppleLocale", language, "-ApplePersistenceIgnoreState", "YES",
         "-ClenvraUITestMainDisplay", "YES",
@@ -33,9 +34,27 @@ func launchApp(language: String, appearance: Appearance = .light) -> XCUIApplica
     return app
 }
 
+/// Pages that share one sidebar row: the row, and the page's position in the switcher at the top of the page.
+let switcherPages: [String: (row: String, index: Int)] = [
+    "developer": ("developer", 0), "developerTools": ("developer", 1),
+    "largeFiles": ("largeFiles", 0), "downloads": ("largeFiles", 1), "duplicates": ("largeFiles", 2),
+    "similarPhotos": ("largeFiles", 3),
+]
+
 @MainActor
 func open(section: String, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
-    app.outlines.cells.containing(.any, identifier: "sidebar.\(section)").firstMatch.click()
+    let place = switcherPages[section]
+    app.outlines.cells.containing(.any, identifier: "sidebar.\(place?.row ?? section)").firstMatch.click()
+    if let place {
+        let switcher = app.descendants(matching: .any).matching(identifier: "page.switcher").firstMatch
+        XCTAssertTrue(switcher.waitForExistence(timeout: 5), "No page switcher for \(section)", file: file, line: line)
+        let segments = switcher.descendants(matching: .radioButton)
+        let segment =
+            segments.count > place.index
+            ? segments.element(boundBy: place.index)
+            : switcher.descendants(matching: .button).element(boundBy: place.index)
+        segment.click()
+    }
     XCTAssertTrue(
         app.descendants(matching: .any)["section.\(section)"].waitForExistence(timeout: 5),
         "Section \(section) did not appear", file: file, line: line)

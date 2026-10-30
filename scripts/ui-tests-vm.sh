@@ -40,9 +40,15 @@ echo "▸ Copying the project into the VM"
 # Build inside the VM's own disk: shared folders are slow and the host's build folder is not for this macOS.
 tart exec "$VM" /bin/zsh -c "rm -rf ~/clenvra && rsync -a --exclude .build --exclude .git '$GUEST_REPO/' ~/clenvra/"
 
+# Optional test data inside the VM (never on this Mac), e.g. CLENVRA_VM_SETUP='mkdir -p ~/Library/Developer/Xcode/DerivedData/Demo'
+if [[ -n "${CLENVRA_VM_SETUP:-}" ]]; then
+  echo "▸ VM setup: $CLENVRA_VM_SETUP"
+  tart exec "$VM" /bin/zsh -c "$CLENVRA_VM_SETUP"
+fi
+
 echo "▸ UI tests: $FILTER"
 set +e
-tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
+tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} ${CLENVRA_PROBE:+TEST_RUNNER_CLENVRA_PROBE=1} ${CLENVRA_AUDIT_SECTIONS:+TEST_RUNNER_CLENVRA_AUDIT_SECTIONS=$CLENVRA_AUDIT_SECTIONS} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
   -destination 'platform=macOS,arch=arm64' -derivedDataPath ~/dd -resultBundlePath ~/Results.xcresult \
   -only-testing:$FILTER -quiet \
   CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="

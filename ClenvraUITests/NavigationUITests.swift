@@ -19,7 +19,7 @@ final class NavigationUITests: XCTestCase {
 
         if language == "ar" {
             XCTAssertTrue(app.staticTexts["التخزين"].exists)
-            XCTAssertTrue(app.staticTexts["ملفات المطوّرين غير الضرورية"].exists)
+            XCTAssertTrue(app.staticTexts["أدوات المطوّر"].exists)
         }
         assertAppearance(appearance, of: app)
 
