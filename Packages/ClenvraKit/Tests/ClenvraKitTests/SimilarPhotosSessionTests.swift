@@ -300,4 +300,80 @@ struct SimilarPhotosSessionTests {
         #expect(summary.problems.map(\.path) == [path("Pictures/board.png")])
         #expect(summary.movedToTrashCount == 2)
     }
+
+    // MARK: - Blurry or dark photos
+
+    /// A photo rated by image analysis, for results injected with `apply(_:roots:)`.
+    private func rated(_ relative: String, score: Float, reclaimable: Int64 = 1_000) throws -> SimilarPhoto {
+        let resolved = try SafeWalk.resolve(path(relative))
+        return SimilarPhoto(
+            path: path(relative), snapshot: resolved.snapshot, size: reclaimable, reclaimable: reclaimable,
+            modificationDate: Date(timeIntervalSince1970: 1_600_000_000), pixelWidth: 400, pixelHeight: 300,
+            quality: PhotoQuality(score: score, isUtility: false))
+    }
+
+    @Test("a scan rates every compared photo and lists only low-rated ones, worst first")
+    func scanRatesPhotos() async {
+        let session = await scanned()
+
+        #expect(session.groups.flatMap(\.photos).allSatisfy { $0.quality != nil })
+        #expect(session.lowQualityPhotos.allSatisfy { $0.quality?.isLow == true })
+        let scores = session.lowQualityPhotos.compactMap { $0.quality?.score }
+        #expect(scores == scores.sorted())
+        #expect(!session.lowQualityPhotos.contains { session.isMarked($0.path) })
+    }
+
+    @Test("a blurry or dark photo in no group can be marked on its own and moved to the Trash")
+    func lowQualityPhotoCanBeMarkedAlone() async throws {
+        let session = await scanned()
+        let frames = try rated("Pictures/frames.png", score: -0.4)
+        session.apply(
+            SimilarPhotoScanResult(groups: session.groups, lowQuality: [frames], skipped: [:], isComplete: true),
+            roots: session.scannedRoots)
+
+        #expect(session.lowQualityPhotos == [frames])
+        #expect(session.marked.isEmpty)
+        #expect(session.canMark(frames.path))
+        #expect(session.setMarked(true, path: frames.path))
+        #expect(session.markedCount == 1)
+        #expect(session.markedBytes == frames.reclaimable)
+
+        session.unmarkAll()
+        session.markAllButSuggested()
+        #expect(!session.isMarked(frames.path))
+
+        session.unmarkAll()
+        session.setMarked(true, path: frames.path)
+        let summary = await session.moveMarkedToTrash()
+
+        #expect(summary.movedToTrashCount == 1)
+        #expect(summary.problems.isEmpty)
+        #expect(!exists("Pictures/frames.png"))
+        #expect(session.lowQualityPhotos.isEmpty)
+        #expect(session.marked.isEmpty)
+        #expect(session.groups.count == 2)
+    }
+
+    @Test("a blurry photo that is also in a group keeps the group's keep-one rule")
+    func groupRuleStillWins() async throws {
+        let session = await scanned()
+        let board = try #require(group(session, containing: "Pictures/board.png"))
+        let low = board.photos.map { photo in
+            SimilarPhoto(
+                path: photo.path, snapshot: photo.snapshot, size: photo.size, reclaimable: photo.reclaimable,
+                modificationDate: photo.modificationDate, pixelWidth: photo.pixelWidth,
+                pixelHeight: photo.pixelHeight, quality: PhotoQuality(score: -0.5, isUtility: false))
+        }
+        session.apply(
+            SimilarPhotoScanResult(groups: session.groups, lowQuality: low, skipped: [:], isComplete: true),
+            roots: session.scannedRoots)
+
+        #expect(session.setMarked(true, path: path("Pictures/board.png")))
+        #expect(!session.canMark(path("Documents/board.jpg")))
+        #expect(!session.setMarked(true, path: path("Documents/board.jpg")))
+        // Listed twice, counted once.
+        #expect(session.markedCount == 1)
+        #expect(session.markedBytes == board.photos.first { $0.path == path("Pictures/board.png") }?.reclaimable)
+        expectEveryGroupKeepsAnImage(session)
+    }
 }

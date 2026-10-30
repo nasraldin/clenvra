@@ -22,7 +22,7 @@ struct SimilarPhotosView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !session.groups.isEmpty { statusBar }
+                if hasResults { statusBar }
             }
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.markedCount, bytes: session.markedBytes) {
@@ -33,7 +33,7 @@ struct SimilarPhotosView: View {
             .sheet(item: $shownSummary) { shown in
                 CleanupResultSheet(summary: shown.summary, isPreview: false)
             }
-            .quickLookPreview($previewURL, in: session.groups.flatMap { $0.photos.map { URL(filePath: $0.path) } })
+            .quickLookPreview($previewURL, in: previewURLs)
             .task { await session.loadDefaultRoots() }
     }
 
@@ -45,7 +45,7 @@ struct SimilarPhotosView: View {
         } else {
             SimilarPhotoGroupsList(
                 session: session, focusedPath: $focusedPath, previewURL: $previewURL,
-                isExpanded: { id in expansion.binding(id) { session.groups.map(\.id) } }
+                isExpanded: { id in expansion.binding(id) { sectionIDs } }
             )
             .accessibilityIdentifier("review.results")
         }
@@ -54,7 +54,7 @@ struct SimilarPhotosView: View {
     private var showsState: Bool {
         switch session.phase {
         case .idle, .scanning: true
-        case .ready: session.groups.isEmpty
+        case .ready: !hasResults
         case .removing: false
         }
     }
@@ -105,8 +105,8 @@ struct SimilarPhotosView: View {
                 isDisabled: session.phase == .removing || session.roots.isEmpty,
                 scan: { Task { await session.scan() } }, stop: { session.cancelScan() })
 
-            ExpandAllButton(allExpanded: expansion.allBinding(session.groups.map(\.id)))
-                .disabled(session.groups.isEmpty)
+            ExpandAllButton(allExpanded: expansion.allBinding(sectionIDs))
+                .disabled(!hasResults)
 
             Menu {
                 Button {
@@ -114,6 +114,7 @@ struct SimilarPhotosView: View {
                 } label: {
                     Text("Mark All but the Best in Every Group")
                 }
+                .disabled(session.groups.isEmpty)
                 Divider()
                 Button {
                     session.unmarkAll()
@@ -123,7 +124,7 @@ struct SimilarPhotosView: View {
             } label: {
                 ToolbarLabel(title: "Choose Photos", symbol: "checklist")
             }
-            .disabled(session.phase != .ready || session.groups.isEmpty)
+            .disabled(session.phase != .ready || !hasResults)
 
             Button {
                 isShowingOptions.toggle()
@@ -148,6 +149,22 @@ struct SimilarPhotosView: View {
             ) {
                 isConfirming = true
             }
+        }
+    }
+
+    /// Whether there is anything to review: similar groups or blurry or dark photos.
+    private var hasResults: Bool { !session.groups.isEmpty || !session.lowQualityPhotos.isEmpty }
+
+    /// Expansion ids of every section shown, the blurry or dark photos first.
+    private var sectionIDs: [String] {
+        (session.lowQualityPhotos.isEmpty ? [] : [SimilarPhotoGroupsList.lowQualityID]) + session.groups.map(\.id)
+    }
+
+    /// Every photo shown, once, in page order, for Quick Look.
+    private var previewURLs: [URL] {
+        var seen = Set<String>()
+        return (session.lowQualityPhotos + session.groups.flatMap(\.photos)).compactMap { photo in
+            seen.insert(photo.path).inserted ? URL(filePath: photo.path) : nil
         }
     }
 

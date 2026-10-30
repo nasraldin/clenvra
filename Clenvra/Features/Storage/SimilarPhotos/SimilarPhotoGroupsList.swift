@@ -11,6 +11,9 @@ struct SimilarPhotoGroupsList: View {
     /// Whether a group is open; the page owns the state so its toolbar can open or close them all.
     let isExpanded: (String) -> Binding<Bool>
 
+    /// Expansion id of the "Blurry or Dark Photos" section.
+    static let lowQualityID = "lowQuality"
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
@@ -27,6 +30,13 @@ struct SimilarPhotoGroupsList: View {
                 SimilarPhotosSkippedList(skipped: session.skipped)
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
+                if !session.lowQualityPhotos.isEmpty {
+                    LowQualityPhotosSection(
+                        session: session, focusedPath: $focusedPath, previewURL: $previewURL,
+                        isExpanded: isExpanded(SimilarPhotoGroupsList.lowQualityID))
+                    Divider()
+                        .padding(.horizontal, 16)
+                }
                 ForEach(session.groups) { group in
                     SimilarPhotoGroupSection(
                         group: group, session: session, focusedPath: $focusedPath, previewURL: $previewURL,
@@ -143,6 +153,74 @@ private struct SimilarPhotoGroupSection: View {
     }
 }
 
+/// Photos macOS image analysis rates as blurry, dark or otherwise failed. Nothing here is marked for you; a photo that
+/// is also in a group keeps that group's rule.
+private struct LowQualityPhotosSection: View {
+    let session: SimilarPhotosSession
+    @Binding var focusedPath: String?
+    @Binding var previewURL: URL?
+    @Binding var isExpanded: Bool
+
+    private static let thumbnailSide: CGFloat = 132
+
+    private var totalBytes: Int64 { session.lowQualityPhotos.reduce(0) { $0 + $1.size } }
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            VStack(alignment: .leading, spacing: 10) {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.adaptive(minimum: Self.thumbnailSide, maximum: Self.thumbnailSide), spacing: 14)
+                    ],
+                    alignment: .leading, spacing: 14
+                ) {
+                    ForEach(session.lowQualityPhotos, id: \.path) { photo in
+                        SimilarPhotoCell(
+                            photo: photo, isSuggestedKeeper: false, session: session, side: Self.thumbnailSide,
+                            focusedPath: $focusedPath, previewURL: $previewURL, isInGroupSection: false)
+                    }
+                }
+                Text("Rated by macOS image analysis. Check each photo before moving it to the Trash.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 10)
+        } label: {
+            header
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .accessibilityIdentifier("similarPhotos.lowQuality")
+    }
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Blurry or Dark Photos")
+                    .font(.headline)
+                Text(
+                    "\(session.lowQualityPhotos.count) photos · \(totalBytes.formatted(.byteCount(style: .file)))"
+                )
+                .font(.callout)
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text("Frees about \(session.markedBytesInLowQuality.formatted(.byteCount(style: .file)))")
+                .font(.callout)
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+            Button {
+                for photo in session.lowQualityPhotos { session.setMarked(false, path: photo.path) }
+            } label: {
+                Text("Keep All")
+            }
+            .disabled(!session.lowQualityPhotos.contains { session.isMarked($0.path) })
+        }
+        .controlSize(.small)
+    }
+}
+
 private struct SimilarPhotoCell: View {
     let photo: SimilarPhoto
     let isSuggestedKeeper: Bool
@@ -150,6 +228,8 @@ private struct SimilarPhotoCell: View {
     let side: CGFloat
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
+    /// `false` in the "Blurry or Dark Photos" section, which has no keep-one actions of its own.
+    var isInGroupSection = true
 
     private var name: String { (photo.path as NSString).lastPathComponent }
     private var dimensions: String { "\(photo.pixelWidth.formatted()) × \(photo.pixelHeight.formatted())" }
@@ -265,10 +345,12 @@ private struct SimilarPhotoCell: View {
         } label: {
             Text("Quick Look")
         }
-        Button {
-            session.keepOnly(photo.path)
-        } label: {
-            Text("Keep Only This Photo")
+        if isInGroupSection {
+            Button {
+                session.keepOnly(photo.path)
+            } label: {
+                Text("Keep Only This Photo")
+            }
         }
         Divider()
         Button {
