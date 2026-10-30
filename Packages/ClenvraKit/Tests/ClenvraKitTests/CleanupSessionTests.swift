@@ -188,4 +188,67 @@ struct CleanupSessionTests {
 
         #expect(session.groups.map(\.category) == [.installers])
     }
+
+    private func session(extraRules: @escaping @Sendable () -> [CleanupRule]) -> CleanupSession {
+        let policy = ProtectionPolicy(home: home)
+        let ownerState: @Sendable (String) -> OwnerState = { _ in .notRunning }
+        return CleanupSession(
+            rules: rules, section: .cleanup, home: home, policy: policy, ownerState: ownerState,
+            deleter: DeletionExecutor(
+                gate: DeletionGate(policy: policy, ownerState: ownerState),
+                log: ActivityLog(directory: fixture.url("log")),
+                trash: ScratchTrash(directory: path(".Trash"))),
+            extraRules: extraRules)
+    }
+
+    @Test("extra rules are read at every scan: a drive's Trash is listed under Trash, and removed when it goes")
+    func scanUsesExtraRules() async throws {
+        try fixture.file("Drive/.Trashes/501/Old Project/file", bytes: 2_000)
+        try fixture.directory("Other/.Trashes/501")
+        let roots = Mutex([path("Drive")])
+        let session = session(extraRules: { RuleCatalog.volumeTrash(volumeRoots: roots.withLock { $0 }, uid: 501) })
+
+        await session.scan()
+
+        let trash = try #require(session.groups.first { $0.category == .trash })
+        #expect(trash.candidates.map(\.path) == [path("Drive/.Trashes/501/Old Project")])
+        #expect(!session.selection.contains(path("Drive/.Trashes/501/Old Project")))
+        session.toggle(path("Drive/.Trashes/501/Old Project"))
+        #expect(session.selectionIncludesPermanentRemoval)
+
+        roots.withLock { $0 = [path("Other")] }
+        await session.scan()
+
+        let after = session.groups.first { $0.category == .trash }
+        #expect(after?.candidates.isEmpty ?? true)
+        #expect(session.selection.isEmpty)
+    }
+
+    @Test("a drive ejected before the scan leaves no rows and no error")
+    func vanishedVolumeIsHarmless() async {
+        let session = session(extraRules: {
+            RuleCatalog.volumeTrash(volumeRoots: ["/Volumes/Clenvra-Missing-\(UUID().uuidString)"], uid: 501)
+        })
+
+        await session.scan()
+
+        #expect(session.phase == .ready)
+        #expect(session.groups.map(\.category) == [.appCaches, .installers])
+    }
+
+    @Test("a drive ejected between scan and clean fails safely as not found")
+    func ejectedBeforeCleanIsNotFound() async throws {
+        try fixture.file("Drive/.Trashes/501/Old/file", bytes: 10)
+        let drive = path("Drive")
+        let session = session(extraRules: { RuleCatalog.volumeTrash(volumeRoots: [drive], uid: 501) })
+        await session.scan()
+        session.toggle(path("Drive/.Trashes/501/Old"))
+        try FileManager.default.removeItem(atPath: drive)
+
+        let summary = await session.clean()
+
+        #expect(summary.removedPermanentlyCount == 0)
+        #expect(
+            summary.problems.contains { $0.path == path("Drive/.Trashes/501/Old") && $0.reason == .skipped(.notFound) })
+    }
 }

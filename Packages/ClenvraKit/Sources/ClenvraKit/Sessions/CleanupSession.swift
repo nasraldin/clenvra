@@ -80,8 +80,12 @@ public final class CleanupSession {
     }
 
     private var rules: [CleanupRule]
-    private var actionsByRule: [String: CleanupAction]
-    private var elevatedRules: Set<String>
+    /// Rules that depend on the moment (the Trash of each mounted drive), read again at every scan.
+    private let extraRules: @Sendable () -> [CleanupRule]
+    /// The extra rules of the last scan, so their items keep their action until the next scan.
+    private var currentExtraRules: [CleanupRule] = []
+    private var actionsByRule: [String: CleanupAction] = [:]
+    private var elevatedRules: Set<String> = []
     private let privileged: (any PrivilegedOperations)?
     private let ownerBundlePath: @Sendable (String) -> String?
     private let section: ActivityRecord.Section
@@ -98,11 +102,11 @@ public final class CleanupSession {
         rules: [CleanupRule], section: ActivityRecord.Section, home: String, policy: ProtectionPolicy,
         ownerState: @escaping @Sendable (String) -> OwnerState, deleter: DeletionExecutor,
         executor: FSExecutor = .shared, privileged: (any PrivilegedOperations)? = nil,
-        ownerBundlePath: @escaping @Sendable (String) -> String? = { _ in nil }
+        ownerBundlePath: @escaping @Sendable (String) -> String? = { _ in nil },
+        extraRules: @escaping @Sendable () -> [CleanupRule] = { [] }
     ) {
         self.rules = rules
-        actionsByRule = Dictionary(rules.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
-        elevatedRules = Set(rules.filter { $0.elevation == .helper }.map(\.id))
+        self.extraRules = extraRules
         self.privileged = privileged
         self.ownerBundlePath = ownerBundlePath
         self.section = section
@@ -111,23 +115,33 @@ public final class CleanupSession {
         self.ownerState = ownerState
         self.deleter = deleter
         self.executor = executor
+        indexRules()
     }
 
     /// Replaces the rules (for example after the user edits custom rules in Settings); the next scan uses them.
     public func setRules(_ newRules: [CleanupRule]) {
         rules = newRules
-        actionsByRule = Dictionary(newRules.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
-        elevatedRules = Set(newRules.filter { $0.elevation == .helper }.map(\.id))
+        indexRules()
+    }
+
+    private func indexRules() {
+        let all = rules + currentExtraRules
+        actionsByRule = Dictionary(all.map { ($0.id, $0.action) }, uniquingKeysWith: { first, _ in first })
+        elevatedRules = Set(all.filter { $0.elevation == .helper }.map(\.id))
     }
 
     // MARK: - Scanning
 
     public func scan() async {
-        let total = rules.count
+        phase = .scanning(completed: 0, total: rules.count)
+        currentExtraRules = await Self.evaluate(extraRules)
+        indexRules()
+        let scanned = rules + currentExtraRules
+        let total = scanned.count
         phase = .scanning(completed: 0, total: total)
         var results: [RuleScanResult] = []
         await withTaskGroup(of: RuleScanResult.self) { group in
-            for rule in rules {
+            for rule in scanned {
                 group.addTask { @concurrent [home, policy, ownerState, executor] in
                     await RuleScanner.scan(
                         rule, home: home, policy: policy, ownerState: ownerState, executor: executor)
@@ -143,6 +157,12 @@ public final class CleanupSession {
         apply(results)
         lastScanned = Date()
         phase = .ready
+    }
+
+    /// Reads the extra rules off the main actor: listing mounted drives touches the file system.
+    @concurrent
+    nonisolated private static func evaluate(_ extraRules: @Sendable () -> [CleanupRule]) async -> [CleanupRule] {
+        extraRules()
     }
 
     private func apply(_ results: [RuleScanResult]) {
