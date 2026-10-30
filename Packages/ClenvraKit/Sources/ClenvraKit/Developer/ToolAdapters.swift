@@ -319,15 +319,20 @@ struct SimulatorAdapter: ToolAdapter {
             let cleanup = deletableIdentifier(runtime).map {
                 ToolCleanupAction(executable: xcrun, arguments: ["simctl", "runtime", "delete", $0], risk: .review)
             }
+            // Separate assignments rather than `? :`: the String Catalog does not extract an interpolated literal
+            // from a conditional expression.
+            let note: LocalizedStringResource
+            if cleanup == nil {
+                note = "Remove unused runtimes in Xcode › Settings › Components."
+            } else {
+                note =
+                    "Needed only to run apps on \(label). Xcode can download it again. Simulators using it are shut down first."
+            }
             return ToolStorage(
                 id: "simulators.runtime.\(key)",
                 tool: name.isEmpty ? LocalizedStringResource("Simulator runtime") : "\(name) Simulator runtime",
                 category: .simulators, location: runtime["path"] as? String,
-                size: LenientJSON.int64(runtime["sizeBytes"]), cleanup: cleanup,
-                note: cleanup == nil
-                    ? "Remove unused runtimes in Xcode › Settings › Components."
-                    : "Needed only to run apps on \(label). Xcode can download it again. Simulators using it are shut down first."
-            )
+                size: LenientJSON.int64(runtime["sizeBytes"]), cleanup: cleanup, note: note)
         }
     }
 

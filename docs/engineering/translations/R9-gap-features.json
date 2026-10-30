@@ -1,0 +1,185 @@
+{
+  "%@ still has access to %@. Change it in System Settings.": {
+    "ar": "لا يزال %1$@ يملك الوصول إلى %2$@. غيّر ذلك في إعدادات النظام."
+  },
+  "%@ will lose access to %@. macOS asks again the next time it needs it.": {
+    "ar": "سيفقد %1$@ الوصول إلى %2$@. سيطلب macOS الإذن مجددًا عندما يحتاجه التطبيق."
+  },
+  "%lld apps": {
+    "ar": "%lld تطبيقات"
+  },
+  "%lld photos · %@": {
+    "ar": "%1$lld صور · %2$@"
+  },
+  "%lld snapshots": {
+    "ar": "%lld لقطات"
+  },
+  "Accessibility": {
+    "ar": "إمكانية الوصول"
+  },
+  "All users": {
+    "ar": "كل المستخدمين"
+  },
+  "Allow Full Disk Access": {
+    "ar": "اسمح بالوصول الكامل إلى القرص"
+  },
+  "Automation": {
+    "ar": "الأتمتة"
+  },
+  "Blurry or Dark Photos": {
+    "ar": "الصور الضبابية أو المظلمة"
+  },
+  "Bundle ID": {
+    "ar": "معرّف الحزمة"
+  },
+  "Calendars": {
+    "ar": "التقويمات"
+  },
+  "Camera": {
+    "ar": "الكاميرا"
+  },
+  "Contacts": {
+    "ar": "جهات الاتصال"
+  },
+  "Control Input": {
+    "ar": "التحكم في الإدخال"
+  },
+  "Could not revoke this permission": {
+    "ar": "تعذّر سحب هذا الإذن"
+  },
+  "Desktop Folder": {
+    "ar": "مجلد سطح المكتب"
+  },
+  "Documents Folder": {
+    "ar": "مجلد المستندات"
+  },
+  "Downloads Folder": {
+    "ar": "مجلد التنزيلات"
+  },
+  "For": {
+    "ar": "لـ"
+  },
+  "Full Disk Access": {
+    "ar": "الوصول الكامل إلى القرص"
+  },
+  "Input Monitoring": {
+    "ar": "مراقبة الإدخال"
+  },
+  "Local snapshots": {
+    "ar": "اللقطات المحلية"
+  },
+  "Memory macOS moved to disk; it shrinks after a restart.": {
+    "ar": "ذاكرة نقلها macOS إلى القرص؛ تصغر بعد إعادة التشغيل."
+  },
+  "Microphone": {
+    "ar": "الميكروفون"
+  },
+  "No Permissions": {
+    "ar": "لا توجد أذونات"
+  },
+  "No app has access to your camera, microphone, screen or other protected data.": {
+    "ar": "لا يملك أي تطبيق وصولًا إلى الكاميرا أو الميكروفون أو الشاشة أو البيانات المحمية الأخرى."
+  },
+  "None": {
+    "ar": "لا شيء"
+  },
+  "Open Developer Tools": {
+    "ar": "فتح أدوات المطوّر"
+  },
+  "Open Privacy Settings": {
+    "ar": "فتح إعدادات الخصوصية"
+  },
+  "Open Snapshots": {
+    "ar": "فتح اللقطات"
+  },
+  "Permissions": {
+    "ar": "الأذونات"
+  },
+  "Photos": {
+    "ar": "الصور"
+  },
+  "Program": {
+    "ar": "البرنامج"
+  },
+  "Programs listed by path are changed in System Settings.": {
+    "ar": "تُغيَّر أذونات البرامج المدرجة بمسارها في إعدادات النظام."
+  },
+  "Purgeable": {
+    "ar": "قابل للإزالة"
+  },
+  "Rated by macOS image analysis. Check each photo before moving it to the Trash.": {
+    "ar": "قيّمها تحليل الصور في macOS. راجع كل صورة قبل نقلها إلى سلة المهملات."
+  },
+  "Read the permissions again (⌘R)": {
+    "ar": "اقرأ الأذونات مجددًا (⌘R)"
+  },
+  "Reading permissions…": {
+    "ar": "جارٍ قراءة الأذونات…"
+  },
+  "Reminders": {
+    "ar": "التذكيرات"
+  },
+  "Revoke": {
+    "ar": "سحب"
+  },
+  "Revoke removes this permission. macOS asks again the next time the app needs it.": {
+    "ar": "يزيل السحب هذا الإذن. سيطلبه macOS مجددًا عندما يحتاجه التطبيق."
+  },
+  "Revoke this permission?": {
+    "ar": "هل تريد سحب هذا الإذن؟"
+  },
+  "Revoke…": {
+    "ar": "سحب…"
+  },
+  "Screen & System Audio Recording": {
+    "ar": "تسجيل الشاشة وصوت النظام"
+  },
+  "Search Permissions": {
+    "ar": "البحث في الأذونات"
+  },
+  "Select an app to see the permission and change it.": {
+    "ar": "اختر تطبيقًا لعرض الإذن وتغييره."
+  },
+  "Simulator runtimes": {
+    "ar": "بيئات تشغيل المحاكي"
+  },
+  "Since": {
+    "ar": "منذ"
+  },
+  "Some permissions could not be read, so they are not listed.": {
+    "ar": "تعذّرت قراءة بعض الأذونات، لذا لم تُدرج."
+  },
+  "Space macOS frees by itself when needed.": {
+    "ar": "مساحة يحرّرها macOS بنفسه عند الحاجة."
+  },
+  "Swap": {
+    "ar": "ملفات التبديل"
+  },
+  "This user": {
+    "ar": "هذا المستخدم"
+  },
+  "Time Machine and macOS updates keep these copies of your disk for a while.": {
+    "ar": "يحتفظ Time Machine وتحديثات macOS بهذه النسخ من قرصك لبعض الوقت."
+  },
+  "What's in System Data": {
+    "ar": "ما الذي في بيانات النظام"
+  },
+  "Xcode needs these only to run apps in a simulator.": {
+    "ar": "يحتاجها Xcode فقط لتشغيل التطبيقات في المحاكي."
+  },
+  "macOS counts these as System Data. Some of it frees itself; the rest Clenvra can help with.": {
+    "ar": "يحسب macOS هذه ضمن بيانات النظام. بعضها يتحرّر تلقائيًا، ويمكن لـ Clenvra المساعدة في الباقي."
+  },
+  "macOS keeps the list of app permissions private. Allow Full Disk Access for Clenvra, then refresh.": {
+    "ar": "يحتفظ macOS بقائمة أذونات التطبيقات خاصة. اسمح لـ Clenvra بالوصول الكامل إلى القرص، ثم حدّث."
+  },
+  "this runtime": {
+    "ar": "بيئة التشغيل هذه"
+  },
+  "“%@” is in the Trash": {
+    "ar": "”%@“ في سلة المهملات"
+  },
+  "Needed only to run apps on %@. Xcode can download it again. Simulators using it are shut down first.": {
+    "ar": "لازمة فقط لتشغيل التطبيقات على %@. يمكن لـ Xcode تنزيلها مجددًا. تُوقف المحاكيات التي تستخدمها أولًا."
+  }
+}

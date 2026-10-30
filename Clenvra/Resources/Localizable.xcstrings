@@ -82,6 +82,38 @@
         }
       }
     },
+    "%@ still has access to %@. Change it in System Settings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يزال %1$@ يملك الوصول إلى %2$@. غيّر ذلك في إعدادات النظام."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ still has access to %2$@. Change it in System Settings."
+          }
+        }
+      }
+    },
+    "%@ will lose access to %@. macOS asks again the next time it needs it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيفقد %1$@ الوصول إلى %2$@. سيطلب macOS الإذن مجددًا عندما يحتاجه التطبيق."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ will lose access to %2$@. macOS asks again the next time it needs it."
+          }
+        }
+      }
+    },
     "%@ · older than %lld days": {
       "localizations": {
         "ar": {
@@ -94,6 +126,16 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$@ · older than %2$lld days"
+          }
+        }
+      }
+    },
+    "%lld apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld تطبيقات"
           }
         }
       }
@@ -864,6 +906,22 @@
         }
       }
     },
+    "%lld photos · %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld صور · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld photos · %2$@"
+          }
+        }
+      }
+    },
     "%lld safe items that apps recreate when needed.": {
       "localizations": {
         "ar": {
@@ -1268,6 +1326,16 @@
         }
       }
     },
+    "%lld snapshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld لقطات"
+          }
+        }
+      }
+    },
     "%lld startup items belong to apps that were removed.": {
       "localizations": {
         "ar": {
@@ -1580,6 +1648,16 @@
         }
       }
     },
+    "Accessibility": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إمكانية الوصول"
+          }
+        }
+      }
+    },
     "Activity": {
       "localizations": {
         "ar": {
@@ -1666,6 +1744,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "كل الأقسام"
+          }
+        }
+      }
+    },
+    "All users": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل المستخدمين"
+          }
+        }
+      }
+    },
+    "Allow Full Disk Access": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسمح بالوصول الكامل إلى القرص"
           }
         }
       }
@@ -2091,6 +2189,16 @@
         }
       }
     },
+    "Automation": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأتمتة"
+          }
+        }
+      }
+    },
     "Available Memory": {
       "localizations": {
         "ar": {
@@ -2171,6 +2279,16 @@
         }
       }
     },
+    "Blurry or Dark Photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور الضبابية أو المظلمة"
+          }
+        }
+      }
+    },
     "Broken signature": {
       "localizations": {
         "ar": {
@@ -2223,6 +2341,16 @@
     },
     "Bun": {
       "shouldTranslate": false
+    },
+    "Bundle ID": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معرّف الحزمة"
+          }
+        }
+      }
     },
     "CPU": {
       "localizations": {
@@ -2280,6 +2408,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "ذاكرة التخزين المؤقت والسجلات والملفات غير الضرورية"
+          }
+        }
+      }
+    },
+    "Calendars": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التقويمات"
+          }
+        }
+      }
+    },
+    "Camera": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكاميرا"
           }
         }
       }
@@ -2789,6 +2937,16 @@
         }
       }
     },
+    "Contacts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جهات الاتصال"
+          }
+        }
+      }
+    },
     "Container registered to": {
       "localizations": {
         "ar": {
@@ -2825,6 +2983,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "متابعة"
+          }
+        }
+      }
+    },
+    "Control Input": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحكم في الإدخال"
           }
         }
       }
@@ -2915,6 +3083,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذرت قراءة هذا الموقع"
+          }
+        }
+      }
+    },
+    "Could not revoke this permission": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر سحب هذا الإذن"
           }
         }
       }
@@ -3035,6 +3213,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "التبعيات ومخرجات البناء داخل مشاريعك. أعد التثبيت أو البناء لاستعادتها."
+          }
+        }
+      }
+    },
+    "Desktop Folder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد سطح المكتب"
           }
         }
       }
@@ -3162,6 +3350,16 @@
         }
       }
     },
+    "Documents Folder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد المستندات"
+          }
+        }
+      }
+    },
     "Done": {
       "localizations": {
         "ar": {
@@ -3228,6 +3426,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "التنزيلات"
+          }
+        }
+      }
+    },
+    "Downloads Folder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجلد التنزيلات"
           }
         }
       }
@@ -3722,6 +3930,16 @@
         }
       }
     },
+    "For": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لـ"
+          }
+        }
+      }
+    },
     "For all users": {
       "localizations": {
         "ar": {
@@ -3868,6 +4086,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "من"
+          }
+        }
+      }
+    },
+    "Full Disk Access": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصول الكامل إلى القرص"
           }
         }
       }
@@ -4292,6 +4520,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مُضمَّن"
+          }
+        }
+      }
+    },
+    "Input Monitoring": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراقبة الإدخال"
           }
         }
       }
@@ -4936,6 +5174,16 @@
         }
       }
     },
+    "Local snapshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللقطات المحلية"
+          }
+        }
+      }
+    },
     "Location": {
       "localizations": {
         "ar": {
@@ -5236,6 +5484,16 @@
         }
       }
     },
+    "Memory macOS moved to disk; it shrinks after a restart.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذاكرة نقلها macOS إلى القرص؛ تصغر بعد إعادة التشغيل."
+          }
+        }
+      }
+    },
     "Memory pressure: %@": {
       "localizations": {
         "ar": {
@@ -5262,6 +5520,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "شريط القائمة:"
+          }
+        }
+      }
+    },
+    "Microphone": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الميكروفون"
           }
         }
       }
@@ -5550,6 +5818,16 @@
         }
       }
     },
+    "Needed only to run apps on %@. Xcode can download it again. Simulators using it are shut down first.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لازمة فقط لتشغيل التطبيقات على %@. يمكن لـ Xcode تنزيلها مجددًا. تُوقف المحاكيات التي تستخدمها أولًا."
+          }
+        }
+      }
+    },
     "Needs Attention": {
       "localizations": {
         "ar": {
@@ -5600,6 +5878,16 @@
         }
       }
     },
+    "No Permissions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد أذونات"
+          }
+        }
+      }
+    },
     "No Results": {
       "localizations": {
         "ar": {
@@ -5616,6 +5904,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يوجد تحديد"
+          }
+        }
+      }
+    },
+    "No app has access to your camera, microphone, screen or other protected data.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يملك أي تطبيق وصولًا إلى الكاميرا أو الميكروفون أو الشاشة أو البيانات المحمية الأخرى."
           }
         }
       }
@@ -5826,6 +6124,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا توجد تحديثات"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء"
           }
         }
       }
@@ -6246,6 +6554,16 @@
         }
       }
     },
+    "Open Developer Tools": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح أدوات المطوّر"
+          }
+        }
+      }
+    },
     "Open Login Items Settings": {
       "localizations": {
         "ar": {
@@ -6296,12 +6614,32 @@
         }
       }
     },
+    "Open Privacy Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح إعدادات الخصوصية"
+          }
+        }
+      }
+    },
     "Open Privacy Settings…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "فتح إعدادات الخصوصية…"
+          }
+        }
+      }
+    },
+    "Open Snapshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح اللقطات"
           }
         }
       }
@@ -6509,12 +6847,32 @@
         }
       }
     },
+    "Permissions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأذونات"
+          }
+        }
+      }
+    },
     "Personal data": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "بيانات شخصية"
+          }
+        }
+      }
+    },
+    "Photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور"
           }
         }
       }
@@ -6676,12 +7034,32 @@
         }
       }
     },
+    "Program": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البرنامج"
+          }
+        }
+      }
+    },
     "Program missing": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "البرنامج مفقود"
+          }
+        }
+      }
+    },
+    "Programs listed by path are changed in System Settings.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُغيَّر أذونات البرامج المدرجة بمسارها في إعدادات النظام."
           }
         }
       }
@@ -6722,6 +7100,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يحمي ملفات ومجلدات النظام من أي تعديل غير مصرح به."
+          }
+        }
+      }
+    },
+    "Purgeable": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قابل للإزالة"
           }
         }
       }
@@ -6856,6 +7244,26 @@
         }
       }
     },
+    "Rated by macOS image analysis. Check each photo before moving it to the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيّمها تحليل الصور في macOS. راجع كل صورة قبل نقلها إلى سلة المهملات."
+          }
+        }
+      }
+    },
+    "Read the permissions again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقرأ الأذونات مجددًا (⌘R)"
+          }
+        }
+      }
+    },
     "Read the security settings again (⌘R)": {
       "localizations": {
         "ar": {
@@ -6872,6 +7280,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "قراءة عناصر بدء التشغيل مرة أخرى (⌘R)"
+          }
+        }
+      }
+    },
+    "Reading permissions…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ قراءة الأذونات…"
           }
         }
       }
@@ -6912,6 +7330,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تحديث"
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التذكيرات"
           }
         }
       }
@@ -7336,6 +7764,46 @@
         }
       }
     },
+    "Revoke": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سحب"
+          }
+        }
+      }
+    },
+    "Revoke removes this permission. macOS asks again the next time the app needs it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يزيل السحب هذا الإذن. سيطلبه macOS مجددًا عندما يحتاجه التطبيق."
+          }
+        }
+      }
+    },
+    "Revoke this permission?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد سحب هذا الإذن؟"
+          }
+        }
+      }
+    },
+    "Revoke…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سحب…"
+          }
+        }
+      }
+    },
     "Run": {
       "localizations": {
         "ar": {
@@ -7572,6 +8040,16 @@
         }
       }
     },
+    "Screen & System Audio Recording": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الشاشة وصوت النظام"
+          }
+        }
+      }
+    },
     "Screen Recordings": {
       "localizations": {
         "ar": {
@@ -7618,6 +8096,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خيارات البحث"
+          }
+        }
+      }
+    },
+    "Search Permissions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في الأذونات"
           }
         }
       }
@@ -7818,6 +8306,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر تطبيقًا"
+          }
+        }
+      }
+    },
+    "Select an app to see the permission and change it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر تطبيقًا لعرض الإذن وتغييره."
           }
         }
       }
@@ -8196,12 +8694,32 @@
         }
       }
     },
+    "Simulator runtimes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيئات تشغيل المحاكي"
+          }
+        }
+      }
+    },
     "Simulators": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "المحاكيات"
+          }
+        }
+      }
+    },
+    "Since": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منذ"
           }
         }
       }
@@ -8286,6 +8804,16 @@
         }
       }
     },
+    "Some permissions could not be read, so they are not listed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت قراءة بعض الأذونات، لذا لم تُدرج."
+          }
+        }
+      }
+    },
     "Sort by": {
       "localizations": {
         "ar": {
@@ -8312,6 +8840,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خريطة المساحة"
+          }
+        }
+      }
+    },
+    "Space macOS frees by itself when needed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساحة يحرّرها macOS بنفسه عند الحاجة."
           }
         }
       }
@@ -8532,6 +9070,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "دائري"
+          }
+        }
+      }
+    },
+    "Swap": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات التبديل"
           }
         }
       }
@@ -9113,12 +9661,32 @@
         }
       }
     },
+    "This user": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المستخدم"
+          }
+        }
+      }
+    },
     "Time": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الوقت"
+          }
+        }
+      }
+    },
+    "Time Machine and macOS updates keep these copies of your disk for a while.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتفظ Time Machine وتحديثات macOS بهذه النسخ من قرصك لبعض الوقت."
           }
         }
       }
@@ -9519,6 +10087,16 @@
         }
       }
     },
+    "What's in System Data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما الذي في بيانات النظام"
+          }
+        }
+      }
+    },
     "When needed": {
       "localizations": {
         "ar": {
@@ -9625,6 +10203,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Xcode"
+          }
+        }
+      }
+    },
+    "Xcode needs these only to run apps in a simulator.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتاجها Xcode فقط لتشغيل التطبيقات في المحاكي."
           }
         }
       }
@@ -9815,6 +10403,16 @@
         }
       }
     },
+    "macOS counts these as System Data. Some of it frees itself; the rest Clenvra can help with.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحسب macOS هذه ضمن بيانات النظام. بعضها يتحرّر تلقائيًا، ويمكن لـ Clenvra المساعدة في الباقي."
+          }
+        }
+      }
+    },
     "macOS did not allow access to some %@ data.": {
       "localizations": {
         "ar": {
@@ -9881,6 +10479,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يسمح macOS بإزالة هذا."
+          }
+        }
+      }
+    },
+    "macOS keeps the list of app permissions private. Allow Full Disk Access for Clenvra, then refresh.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتفظ macOS بقائمة أذونات التطبيقات خاصة. اسمح لـ Clenvra بالوصول الكامل إلى القرص، ثم حدّث."
           }
         }
       }
@@ -9961,6 +10569,16 @@
     "pnpm": {
       "shouldTranslate": false
     },
+    "this runtime": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيئة التشغيل هذه"
+          }
+        }
+      }
+    },
     "to": {
       "localizations": {
         "ar": {
@@ -9973,6 +10591,16 @@
     },
     "uv": {
       "shouldTranslate": false
+    },
+    "“%@” is in the Trash": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "”%@“ في سلة المهملات"
+          }
+        }
+      }
     },
     "⁨%@⁩ is not selected automatically. Check whether you still need it.": {
       "localizations": {
