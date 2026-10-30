@@ -15,17 +15,23 @@ struct MainWindow: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: sidebarSelection) {
-                ForEach(AppSection.Group.allCases, id: \.self) { group in
-                    if let title = group.title, !isCompact {
-                        Section {
-                            rows(in: group)
-                        } header: {
-                            Text(title)
-                        }
-                    } else {
-                        Section {
-                            rows(in: group)
+            Group {
+                if isCompact {
+                    CompactSidebar(selection: sidebarSelection)
+                } else {
+                    List(selection: sidebarSelection) {
+                        ForEach(AppSection.Group.allCases, id: \.self) { group in
+                            if let title = group.title {
+                                Section {
+                                    rows(in: group)
+                                } header: {
+                                    Text(title)
+                                }
+                            } else {
+                                Section {
+                                    rows(in: group)
+                                }
+                            }
                         }
                     }
                 }
@@ -63,6 +69,16 @@ struct MainWindow: View {
                         }
                     }
                 }
+                // After the page's own items, so search is the last icon at the right on every page.
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        if let prompt = searchRouter.pagePrompt {
+                            ToolbarSearch(text: $searchRouter.pageText, prompt: prompt)
+                                // A fresh, closed search on each page.
+                                .id(selection)
+                        }
+                    }
+                }
             }
         }
         .toolbar {
@@ -92,8 +108,8 @@ struct MainWindow: View {
         }
     }
 
-    /// Wide enough for the window buttons above it.
-    private static let compactWidth: CGFloat = 80
+    /// Wide enough for the close, minimize and zoom buttons above it, with a margin on each side.
+    private static let compactWidth: CGFloat = 100
     private static let sidebarWidth: CGFloat = 220
     /// The widest list's minimum (about 540) plus a details panel's (240).
     private static let pageMinimumWidth: CGFloat = 780
@@ -127,16 +143,9 @@ struct MainWindow: View {
 
     private func rows(in group: AppSection.Group) -> some View {
         ForEach(AppSection.allCases.filter { $0.group == group && $0.sidebarEntry == $0 }) { section in
-            Label {
-                Text(section.sidebarTitle)
-            } icon: {
-                Image(systemName: section.sidebarSymbol)
-            }
-            .labelStyle(SidebarLabelStyle(isCompact: isCompact))
-            .help(Text(section.sidebarTitle))
-            .accessibilityLabel(Text(section.sidebarTitle))
-            .tag(section)
-            .accessibilityIdentifier("sidebar.\(section.rawValue)")
+            SidebarRow(section: section)
+                .tag(section)
+                .accessibilityIdentifier("sidebar.\(section.rawValue)")
         }
     }
 
@@ -223,18 +232,103 @@ struct MainWindow: View {
 }
 
 /// Icon and name, or the icon alone, centred, when the sidebar is a strip of icons.
-private struct SidebarLabelStyle: LabelStyle {
-    let isCompact: Bool
+/// A row of the sidebar with names: a slightly larger icon and a light highlight under the pointer. No tooltip:
+/// the name is already shown.
+private struct SidebarRow: View {
+    let section: AppSection
+    @State private var isHovered = false
 
-    func makeBody(configuration: Configuration) -> some View {
-        if isCompact {
-            configuration.icon
-                .imageScale(.large)
-                .frame(maxWidth: .infinity)
-                // One element for the row, so it keeps its name and identifier without the title.
-                .accessibilityElement(children: .ignore)
-        } else {
-            Label(configuration)
+    var body: some View {
+        Label {
+            Text(section.sidebarTitle)
+        } icon: {
+            Image(systemName: section.sidebarSymbol)
+                .font(.system(size: 15))
+                .frame(width: 22)
         }
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(.rect)
+        .onHover { isHovered = $0 }
+        .listRowBackground(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? Color.primary.opacity(0.07) : .clear)
+                .padding(.horizontal, 10)
+        )
+        .accessibilityLabel(Text(section.sidebarTitle))
+    }
+}
+
+/// The sidebar as a strip of icons: a rounded accent tile for the page shown, a light one under the pointer, and
+/// the page name as a tooltip. Up and down arrows move between pages as in the list.
+private struct CompactSidebar: View {
+    @Binding var selection: AppSection?
+    @State private var hovered: AppSection?
+    @FocusState private var isFocused: Bool
+
+    private var entries: [[AppSection]] {
+        AppSection.Group.allCases.map { group in
+            AppSection.allCases.filter { $0.group == group && $0.sidebarEntry == $0 }
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 4) {
+                ForEach(Array(entries.enumerated()), id: \.offset) { index, group in
+                    if index > 0 {
+                        Divider()
+                            .frame(width: 32)
+                            .padding(.vertical, 6)
+                    }
+                    ForEach(group) { section in
+                        tile(section)
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollIndicators(.never)
+        .focusable()
+        .focused($isFocused)
+        .focusEffectDisabled()
+        .onKeyPress(.upArrow) { move(by: -1) }
+        .onKeyPress(.downArrow) { move(by: 1) }
+    }
+
+    private func tile(_ section: AppSection) -> some View {
+        let isSelected = selection == section
+        return Button {
+            selection = section
+        } label: {
+            Image(systemName: section.sidebarSymbol)
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
+                .frame(width: 44, height: 38)
+                .background(
+                    RoundedRectangle(cornerRadius: 11)
+                        .fill(
+                            isSelected
+                                ? Color.accentColor
+                                : hovered == section ? Color.primary.opacity(0.08) : .clear)
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 11))
+        }
+        .buttonStyle(.plain)
+        .onHover { hovered = $0 ? section : (hovered == section ? nil : hovered) }
+        .help(Text(section.sidebarTitle))
+        .accessibilityLabel(Text(section.sidebarTitle))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityIdentifier("sidebar.\(section.rawValue)")
+    }
+
+    private func move(by step: Int) -> KeyPress.Result {
+        let all = entries.flatMap { $0 }
+        guard let current = selection.flatMap(all.firstIndex(of:)) else { return .ignored }
+        let next = current + step
+        guard all.indices.contains(next) else { return .handled }
+        selection = all[next]
+        return .handled
     }
 }

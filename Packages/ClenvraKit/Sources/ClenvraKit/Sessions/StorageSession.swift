@@ -43,21 +43,13 @@ public final class StorageSession {
     public private(set) var hasLoadedClutter = false
     /// Canonical screenshots folder, once Downloads & Screenshots has been loaded.
     public private(set) var screenshotsPath: String?
-    /// What Move to Trash removes. On the Space Map these are the checked rows.
+    /// What Move to Trash removes: on the Space Map, the selected rows and the checked ones are the same set.
     public private(set) var selection: Set<String> = []
-    /// The Space Map table's highlighted rows (Quick Look, context menu, open). Independent of the checks in
-    /// `selection`: changing one never changes the other.
-    public private(set) var rowSelection: Set<String> = []
     public private(set) var lastSummary: CleanupSummary?
 
     /// The visible list; changing it clears the selection so only what the user sees can be deleted.
     public var list = StorageList.browser {
-        didSet {
-            if list != oldValue {
-                selection = []
-                rowSelection = []
-            }
-        }
+        didSet { if list != oldValue { selection = [] } }
     }
     /// Which source of the clutter list is visible (the Downloads tab or the Other tab; `nil` shows both). Changing
     /// it clears the selection, so a file chosen on one tab is never moved to the Trash from the other.
@@ -135,7 +127,6 @@ public final class StorageSession {
         isStale = false
         children = []
         selection = []
-        rowSelection = []
         currentPath = newTarget.root
         phase = .idle
     }
@@ -250,7 +241,6 @@ public final class StorageSession {
         guard snapshot?.directories[path] != nil, path != currentPath else { return }
         currentPath = path
         selection = []
-        rowSelection = []
         await loadChildren()
     }
 
@@ -287,7 +277,6 @@ public final class StorageSession {
         }
         children = Self.sorted(items)
         pruneSelection()
-        setRowSelection(rowSelection)
     }
 
     private func fileItem(_ entry: FileEntry, in folder: String, ruleRoot: String) -> StorageItem {
@@ -478,16 +467,6 @@ public final class StorageSession {
         } else {
             setSelection(selection.union([path]))
         }
-    }
-
-    /// Highlights Space Map rows; only rows of the folder shown are kept (protected ones too, for Quick Look).
-    public func setRowSelection(_ paths: Set<String>) {
-        guard !paths.isEmpty else {
-            if !rowSelection.isEmpty { rowSelection = [] }
-            return
-        }
-        let shown = Set(children.map(\.path))
-        rowSelection = paths.filter(shown.contains)
     }
 
     public var selectedCount: Int { selection.count }

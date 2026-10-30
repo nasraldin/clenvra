@@ -452,33 +452,25 @@ struct StorageSessionTests {
         #expect(session.selection.isEmpty)
     }
 
-    @Test("Space Map checks (what Move to Trash uses) and the table's row selection never change each other")
-    func browserChecksAreIndependentOfRowSelection() async {
+    @Test("Space Map checkboxes add to and remove from the same selection that clicking rows makes")
+    func browserChecksShareTheRowSelection() async {
         let session = session()
         await session.scan()
         await session.open(path("Projects"))
 
-        session.setRowSelection([path("Projects/big"), path("Projects/.env")])
-        #expect(session.rowSelection == [path("Projects/big"), path("Projects/.env")])
-        #expect(session.selection.isEmpty)
-
+        // Clicking rows selects them, as before.
+        session.setSelection([path("Projects/big")])
+        // A checkbox adds one more without dropping the others; a protected item cannot be checked.
         session.toggleChecked(path("Projects/notes.txt"))
         session.toggleChecked(path("Projects/.env"))
+        #expect(session.selection == [path("Projects/big"), path("Projects/notes.txt")])
+
+        session.toggleChecked(path("Projects/big"))
         #expect(session.selection == [path("Projects/notes.txt")])
-        #expect(session.rowSelection == [path("Projects/big"), path("Projects/.env")])
 
-        session.setRowSelection([])
-        #expect(session.selection == [path("Projects/notes.txt")])
-
-        session.toggleChecked(path("Projects/notes.txt"))
-        #expect(session.selection.isEmpty)
-
-        // Rows outside the folder shown are never selected; opening another folder clears both.
-        session.setRowSelection([path("Projects/small"), path("Downloads/photos.zip")])
-        #expect(session.rowSelection == [path("Projects/small")])
-        session.toggleChecked(path("Projects/small"))
+        // Opening another folder clears it.
         await session.open(path("Projects/big"))
-        #expect(session.rowSelection.isEmpty && session.selection.isEmpty)
+        #expect(session.selection.isEmpty)
     }
 
     @Test("after moving items to the Trash, the disks are read again so free space is current (F2)")

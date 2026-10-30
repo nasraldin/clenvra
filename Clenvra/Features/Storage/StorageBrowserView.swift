@@ -123,8 +123,8 @@ struct StorageBrowserView: View {
 
     private var table: some View {
         let largest = max(session.children.first?.allocatedSize ?? 1, 1)
-        return Table(rows, selection: rowSelectionBinding) {
-            // Checks choose what Move to Trash removes; clicking a row only highlights it.
+        return Table(rows, selection: selectionBinding) {
+            // The checkbox and the row selection are one set: clicking rows works as before, a box adds or removes one.
             TableColumn(Text(verbatim: "")) { item in
                 Toggle(isOn: checkedBinding(item)) {
                     Text("Include \(item.name)")
@@ -180,7 +180,7 @@ struct StorageBrowserView: View {
             Task { await session.open(path) }
         }
         .onKeyPress(.space) {
-            guard let path = session.rowSelection.first else { return .ignored }
+            guard let path = session.selection.first else { return .ignored }
             previewURL = URL(filePath: path)
             return .handled
         }
@@ -190,8 +190,8 @@ struct StorageBrowserView: View {
         .scrollEdgeEffectHidden(true, for: .bottom)
     }
 
-    private var rowSelectionBinding: Binding<Set<String>> {
-        Binding(get: { session.rowSelection }, set: { session.setRowSelection($0) })
+    private var selectionBinding: Binding<Set<String>> {
+        Binding(get: { session.selection }, set: { session.setSelection($0) })
     }
 
     private func checkedBinding(_ item: StorageItem) -> Binding<Bool> {

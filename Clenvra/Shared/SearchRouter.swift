@@ -11,6 +11,10 @@ final class SearchRouter {
     private(set) var generation = 0
     /// The page the last result opens; the window selects it.
     private(set) var requestedSection: AppSection?
+    /// The search of the page on screen. The window shows one search button for every page, always at the right
+    /// end of the toolbar; the page keeps its own text in step with this.
+    var pageText = ""
+    var pagePrompt: LocalizedStringResource?
 
     func open(_ section: AppSection, query: String?) {
         handoff.open(destination: section.rawValue, query: query)
@@ -44,15 +48,19 @@ private struct PageSearch: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            // An icon at the trailing end of the toolbar that opens a field. (`searchToolbarBehavior(.minimize)`,
-            // which does this on iOS, is unavailable on macOS; the system field there only folds when space is short.)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    ToolbarSearch(text: $text, prompt: prompt)
-                }
+            // The field itself is in the window's toolbar (`ToolbarSearch`), so it is in the same place on every page.
+            .onAppear {
+                router?.pagePrompt = prompt
+                router?.pageText = text
+                takeQuery()
             }
-            .onAppear(perform: takeQuery)
             .onChange(of: router?.generation) { takeQuery() }
+            .onChange(of: router?.pageText) { _, new in
+                if let new, new != text { text = new }
+            }
+            .onChange(of: text) { _, new in
+                if router?.pageText != new { router?.pageText = new }
+            }
     }
 
     private func takeQuery() {
@@ -65,7 +73,7 @@ private struct PageSearch: ViewModifier {
 
 /// The search icon; clicking it (or ⌘F) opens a search field in its place. The field closes again when it is empty
 /// and loses focus, or on Esc. One toolbar item throughout, so the toolbar is never rebuilt.
-private struct ToolbarSearch: View {
+struct ToolbarSearch: View {
     @Binding var text: String
     let prompt: LocalizedStringResource
     @State private var isOpen = false

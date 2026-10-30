@@ -45,7 +45,13 @@ let switcherPages: [String: (row: String, index: Int)] = [
 @MainActor
 func open(section: String, in app: XCUIApplication, file: StaticString = #filePath, line: UInt = #line) {
     let place = switcherPages[section]
-    app.outlines.cells.containing(.any, identifier: "sidebar.\(place?.row ?? section)").firstMatch.click()
+    let row = app.outlines.cells.containing(.any, identifier: "sidebar.\(place?.row ?? section)").firstMatch
+    // With the sidebar as a strip of icons, each page is a button instead of a list row.
+    if row.exists {
+        row.click()
+    } else {
+        app.buttons["sidebar.\(place?.row ?? section)"].firstMatch.click()
+    }
     if let place {
         let switcher = app.descendants(matching: .any).matching(identifier: "page.switcher").firstMatch
         XCTAssertTrue(switcher.waitForExistence(timeout: 5), "No page switcher for \(section)", file: file, line: line)
