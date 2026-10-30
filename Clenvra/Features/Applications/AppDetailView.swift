@@ -421,9 +421,11 @@ struct EvidenceText: View {
     var body: some View {
         HStack(spacing: 4) {
             Text(title)
-            Text(verbatim: value)
-                .monospaced()
-                .environment(\.layoutDirection, .leftToRight)
+            if let value {
+                Text(verbatim: value)
+                    .monospaced()
+                    .environment(\.layoutDirection, .leftToRight)
+            }
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -441,15 +443,19 @@ struct EvidenceText: View {
         case .receipt: "Installed by package"
         case .exactName: "Folder named like the app:"
         case .nameMatch: "Name contains the app's name:"
+        case .appInTrash(let name): "“\(name)” is in the Trash"
         }
     }
 
-    private var value: String {
+    /// The identifier or name shown after the title; `nil` when the title already names it.
+    private var value: String? {
         switch evidence {
         case .exactBundleIdentifierPath(let value), .containerMetadata(let value),
             .associatedBundleIdentifier(let value), .programInsideBundle(let value), .applicationGroup(let value),
             .receipt(let value), .exactName(let value), .nameMatch(let value):
             value
+        case .appInTrash:
+            nil
         }
     }
 }

@@ -59,6 +59,27 @@ public enum AppInventory {
         app(at: bundlePath, locations: .standard(homebrewCaskroom: homebrewCaskroom))
     }
 
+    /// `.app` bundles directly inside each Trash folder (depth 1, symlinks never followed), so their data can be
+    /// recognized as leftovers. Bundles without a readable Info.plist or a bundle identifier are skipped.
+    public static func appsInTrash(trashRoots: [String]) -> [InstalledApp] {
+        var apps: [InstalledApp] = []
+        var seen: Set<String> = []
+        for root in trashRoots {
+            let rootPath = canonicalPath(root)
+            guard let directory = try? OpenDirectory(path: rootPath), let entries = try? directory.entries() else {
+                continue
+            }
+            for entry in entries
+            where entry.kind == .directory && (entry.name as NSString).pathExtension.lowercased() == "app" {
+                guard let app = app(at: rootPath + "/" + entry.name), app.bundleIdentifier != nil,
+                    seen.insert(app.id).inserted
+                else { continue }
+                apps.append(app)
+            }
+        }
+        return apps.sorted { $0.id < $1.id }
+    }
+
     /// Group container identifiers an app may own under `~/Library/Group Containers`; unsigned apps have none.
     public static func applicationGroups(of bundlePath: String) -> [String] {
         let url = URL(filePath: bundlePath, directoryHint: .isDirectory)

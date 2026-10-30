@@ -123,6 +123,7 @@ public final class AppsSession {
     @ObservationIgnored private var resolveGeneration = 0
     @ObservationIgnored private var homebrewRun = 0
 
+    private let home: String
     private let policy: ProtectionPolicy
     private let deleter: DeletionExecutor
     private let log: ActivityLog
@@ -156,6 +157,7 @@ public final class AppsSession {
         now: @escaping @Sendable () -> Date = { Date() },
         executor: FSExecutor = .shared
     ) {
+        self.home = home
         self.policy = policy
         self.deleter = deleter
         self.log = log
@@ -590,10 +592,14 @@ public final class AppsSession {
 
     // MARK: - Leftovers of removed apps
 
-    /// Finds conservative leftovers of apps that are no longer installed. Needs a loaded inventory.
+    /// Finds conservative leftovers of apps that are no longer installed, including those of apps already in the
+    /// Trash. Needs a loaded inventory.
     public func scanLeftovers() async {
         isScanningLeftovers = true
-        let found = await resolver.leftovers(installedApps: apps, inventoryIsComplete: phase == .ready, now: now())
+        let trashRoots = [home + "/.Trash"]
+        let trashed = (try? await executor.run { AppInventory.appsInTrash(trashRoots: trashRoots) }) ?? []
+        let found = await resolver.leftovers(
+            installedApps: apps, trashedApps: trashed, inventoryIsComplete: phase == .ready, now: now())
         leftovers = found
         leftoverSelection.formIntersection(found.map(\.path))
         isScanningLeftovers = false

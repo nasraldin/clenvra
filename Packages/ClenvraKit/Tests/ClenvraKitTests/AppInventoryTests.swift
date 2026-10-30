@@ -311,6 +311,47 @@ struct AppInventoryTests {
         #expect(AppInventory.lastUsedDate(of: path("A/Missing.app")) == nil)
     }
 
+    // MARK: - appsInTrash
+
+    @Test("apps in the Trash are read from their Info.plist")
+    func appsInTrashReadsBundles() throws {
+        var foo = AppBundleFixture()
+        foo.identifier = "com.example.foo"
+        try foo.create(at: path("Trash/Foo.app"))
+        try makeDirectory("Trash/Notes")
+
+        let apps = AppInventory.appsInTrash(trashRoots: [path("Trash"), path("Missing")])
+
+        #expect(apps.map(\.bundleIdentifier) == ["com.example.foo"])
+        #expect(apps.map(\.name) == ["Foo"])
+    }
+
+    @Test("an app in the Trash without a bundle identifier or Info.plist is skipped")
+    func appWithoutBundleIDIsIgnored() throws {
+        var noIdentifier = AppBundleFixture()
+        noIdentifier.identifier = nil
+        try noIdentifier.create(at: path("Trash/NoID.app"))
+        var noPlist = AppBundleFixture()
+        noPlist.writeInfoPlist = false
+        try noPlist.create(at: path("Trash/NoPlist.app"))
+        try makeDirectory("Trash/Broken.app/Contents")
+        try Data("not a plist".utf8).write(to: URL(filePath: path("Trash/Broken.app/Contents/Info.plist")))
+
+        #expect(AppInventory.appsInTrash(trashRoots: [path("Trash")]).isEmpty)
+    }
+
+    @Test("only apps directly inside the Trash are returned, and symlinks are not followed")
+    func appsInTrashDepthOne() throws {
+        var bar = AppBundleFixture()
+        bar.identifier = "com.example.bar"
+        try bar.create(at: path("Trash/folder/Bar.app"))
+        try bar.create(at: path("Elsewhere/Bar.app"))
+        try makeDirectory("Trash")
+        try symlink("Trash/Link.app", to: path("Elsewhere/Bar.app"))
+
+        #expect(AppInventory.appsInTrash(trashRoots: [path("Trash")]).isEmpty)
+    }
+
     // MARK: - Read-only integration with the real system
 
     @Test("the real /System/Applications contains a protected Calculator")

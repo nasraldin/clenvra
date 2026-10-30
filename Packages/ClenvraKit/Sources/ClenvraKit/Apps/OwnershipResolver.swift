@@ -322,11 +322,20 @@ public struct OwnershipResolver: Sendable {
     /// Library items named after bundle identifiers that no installed app (or its components) shares lineage with,
     /// untouched for at least 30 days. They are offered for review only and never pre-selected. Without a complete,
     /// non-empty inventory nothing is reported, because "no owner" must be proven.
+    ///
+    /// An orphan whose identifier shares lineage with an app in `trashedApps` is Likely, carries `.appInTrash`
+    /// evidence and is listed whatever its age: the user has just thrown the app away. An identifier an installed
+    /// app shares lineage with is never listed, even when a trashed app matches it too.
     @concurrent public func leftovers(
-        installedApps: [InstalledApp], inventoryIsComplete: Bool = true, now: Date = Date()
+        installedApps: [InstalledApp], trashedApps: [InstalledApp] = [], inventoryIsComplete: Bool = true,
+        now: Date = Date()
     ) async -> [OwnedItem] {
         guard inventoryIsComplete, !installedApps.isEmpty else { return [] }
         let installed = installedApps.flatMap(Self.identifiers(of:))
+        let trashed: [(identifier: String, name: String)] = trashedApps.flatMap { app in
+            Self.identifiers(of: app).filter { Self.looksLikeBundleIdentifier($0) && !Self.isNeverFlagged($0) }
+                .map { (identifier: $0, name: app.name) }
+        }
         let home = home
         let policy = policy
         let matches =
@@ -335,15 +344,27 @@ public struct OwnershipResolver: Sendable {
                     Self.looksLikeBundleIdentifier(identifier) && !Self.isNeverFlagged(identifier)
                         && !installed.contains { Self.sharesLineage($0, identifier) }
                 }
+                /// A Possible orphan, raised to Likely when an app in the Trash explains it.
+                func orphan(_ match: Match?, identifier: String) -> Match? {
+                    guard var match else { return nil }
+                    let names = trashed.filter { Self.sharesLineage($0.identifier, identifier) }.map(\.name)
+                    for name in names where !match.evidence.contains(.appInTrash(name)) {
+                        match.evidence.append(.appInTrash(name))
+                    }
+                    if !names.isEmpty { match.confidence = .likely }
+                    return match
+                }
                 let library = home + "/Library"
                 var found: [Match] = []
                 for folder in Self.identifierFolders {
                     let root = library + "/" + folder.relative
                     for entry in Self.list(root) {
                         guard let identifier = Self.stem(of: entry.name, suffix: folder.suffix), isOrphan(identifier),
-                            let match = Self.match(
-                                entry, in: root, kind: folder.kind, confidence: .possible,
-                                evidence: [.exactBundleIdentifierPath(identifier)], sharedWith: [])
+                            let match = orphan(
+                                Self.match(
+                                    entry, in: root, kind: folder.kind, confidence: .possible,
+                                    evidence: [.exactBundleIdentifierPath(identifier)], sharedWith: []),
+                                identifier: identifier)
                         else { continue }
                         found.append(match)
                     }
@@ -352,9 +373,11 @@ public struct OwnershipResolver: Sendable {
                 for entry in Self.list(containers) where entry.kind == .directory {
                     guard let identifier = Self.containerIdentifier(at: containers + "/" + entry.name),
                         isOrphan(identifier),
-                        let match = Self.match(
-                            entry, in: containers, kind: .container, confidence: .possible,
-                            evidence: [.containerMetadata(identifier)], sharedWith: [])
+                        let match = orphan(
+                            Self.match(
+                                entry, in: containers, kind: .container, confidence: .possible,
+                                evidence: [.containerMetadata(identifier)], sharedWith: []),
+                            identifier: identifier)
                     else { continue }
                     found.append(match)
                 }
@@ -362,7 +385,8 @@ public struct OwnershipResolver: Sendable {
             }) ?? []
         let cutoff = now.addingTimeInterval(-Self.minimumLeftoverAge)
         return await finish(matches) { _ in false }.filter { item in
-            (item.modificationDate ?? now) <= cutoff
+            item.evidence.contains { if case .appInTrash = $0 { true } else { false } }
+                || (item.modificationDate ?? now) <= cutoff
         }
     }
 

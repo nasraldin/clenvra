@@ -443,6 +443,21 @@ struct AppsSessionTests {
         #expect(session.leftovers.map(\.path) == [fixture.path("Library/Logs/com.gone.other")])
     }
 
+    @Test("leftovers of an app in the home Trash are found even when new, and not pre-selected")
+    func trashedAppLeftovers() async throws {
+        _ = try fixture.app("com.example.writer", name: "Writer")
+        try AppBundleFixture(identifier: "com.example.foo").create(at: fixture.path(".Trash/Foo.app"))
+        try fixture.file("Library/Caches/com.example.foo/blob")
+        let session = session()
+        await session.load()
+
+        await session.scanLeftovers()
+
+        #expect(session.leftovers.map(\.path) == [fixture.path("Library/Caches/com.example.foo")])
+        #expect(session.leftovers.first?.evidence.contains(.appInTrash("Foo")) == true)
+        #expect(session.leftoverSelection.isEmpty)
+    }
+
     @Test("dropping a bundle selects that app")
     func dropSelects() async throws {
         let app = try fixture.app("com.example.writer", name: "Writer")
