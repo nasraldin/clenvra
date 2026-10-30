@@ -13,6 +13,7 @@ struct SimilarPhotosView: View {
     @State private var shownSummary: StorageShownSummary?
     @State private var previewURL: URL?
     @State private var focusedPath: String?
+    @State private var searchText = ""
 
     /// Groups the person closed, remembered across launches (F4).
     private let expansion = ExpandedGroups("similarPhotos")
@@ -21,6 +22,7 @@ struct SimilarPhotosView: View {
         VStack(spacing: 0) { content }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar { toolbar }
+            .pageSearch(text: $searchText, prompt: "Search by File Name", section: .similarPhotos)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if hasResults { statusBar }
             }
@@ -45,7 +47,7 @@ struct SimilarPhotosView: View {
         } else {
             SimilarPhotoGroupsList(
                 session: session, focusedPath: $focusedPath, previewURL: $previewURL,
-                isExpanded: { id in expansion.binding(id) { sectionIDs } }
+                isExpanded: { id in expansion.binding(id) { sectionIDs } }, query: AppSearch.normalized(searchText)
             )
             .accessibilityIdentifier("review.results")
         }

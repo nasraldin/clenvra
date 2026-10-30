@@ -6,10 +6,22 @@ struct DeveloperToolsView: View {
     /// Nil until the login-shell PATH is known (tools from Homebrew, nvm, volta… live there).
     let session: ToolStorageSession?
 
+    @State private var searchText = ""
+
     var body: some View {
+        Group { page }
+            .pageSearch(text: $searchText, prompt: "Search Tools", section: .developerTools)
+    }
+
+    @ViewBuilder private var page: some View {
         if let session {
+            let query = AppSearch.normalized(searchText)
             List {
-                ToolStorageSection(session: session)
+                ToolStorageSection(session: session, query: query)
+            }
+            .pageState(isShown: !query.isEmpty && !session.rows.isEmpty && !session.rows.contains { $0.matches(query) })
+            {
+                ContentUnavailableView.search(text: query)
             }
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.developerTools.title))
@@ -59,6 +71,8 @@ struct DeveloperToolsView: View {
 /// Developer tools' own storage, each cleaned by the tool's own command (shown before it runs).
 struct ToolStorageSection: View {
     let session: ToolStorageSession
+    /// Shows only the tools whose name matches; empty shows them all.
+    var query = ""
 
     @State private var confirming: ToolStorage?
     @State private var showingOutput = false
@@ -71,7 +85,7 @@ struct ToolStorageSection: View {
                     Text("Checking developer tools…").foregroundStyle(.secondary)
                 }
             }
-            ForEach(session.rows) { row in
+            ForEach(session.rows.filter { $0.matches(query) }) { row in
                 ToolRow(row: row, isRunning: session.phase == .running(rowID: row.id)) {
                     confirming = row
                 }
@@ -97,6 +111,13 @@ struct ToolStorageSection: View {
 
     private var isBusy: Bool {
         if case .running = session.phase { true } else { false }
+    }
+}
+
+extension ToolStorage {
+    /// Whether the tool's name matches the (already trimmed) search text; empty matches every tool.
+    fileprivate func matches(_ query: String) -> Bool {
+        query.isEmpty || String(localized: tool).localizedStandardContains(query)
     }
 }
 

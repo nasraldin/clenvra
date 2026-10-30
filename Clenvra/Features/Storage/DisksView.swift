@@ -11,6 +11,7 @@ struct DisksView: View {
     @State private var selected: MountedDisksSession.Disk.ID?
     @State private var showsInspector = false
     @State private var notEjected: [String] = []
+    @State private var searchText = ""
 
     var body: some View {
         // The empty state replaces the grid rather than covering it: a covered grid of buttons confuses the
@@ -31,12 +32,14 @@ struct DisksView: View {
                 } else {
                     ProgressView()
                 }
+            } else if !query.isEmpty, filtered(allDisks).isEmpty {
+                ContentUnavailableView.search(text: query)
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-                        section("Disk Images", session.images)
-                        section("Drives", session.drives)
-                        section("Network", session.network)
+                        section("Disk Images", filtered(session.images))
+                        section("Drives", filtered(session.drives))
+                        section("Network", filtered(session.network))
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -46,6 +49,7 @@ struct DisksView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityIdentifier("review.results")
         .toolbar { toolbar }
+        .pageSearch(text: $searchText, prompt: "Search Disks", section: .disks)
         .detailsPanel(isPresented: $showsInspector, width: 300) {
             DiskInspector(disk: allDisks.first { $0.id == selected }) { eject($0) }
         }
@@ -71,6 +75,12 @@ struct DisksView: View {
     }
 
     private var allDisks: [MountedDisksSession.Disk] { session.images + session.drives + session.network }
+
+    private var query: String { AppSearch.normalized(searchText) }
+
+    private func filtered(_ disks: [MountedDisksSession.Disk]) -> [MountedDisksSession.Disk] {
+        query.isEmpty ? disks : disks.filter { $0.volume.name.localizedStandardContains(query) }
+    }
 
     @ViewBuilder
     private func section(_ title: LocalizedStringResource, _ disks: [MountedDisksSession.Disk]) -> some View {

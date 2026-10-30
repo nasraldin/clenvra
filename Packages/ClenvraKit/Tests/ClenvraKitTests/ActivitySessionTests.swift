@@ -131,6 +131,12 @@ struct ActivitySessionTests {
         #expect(session.visibleOperations.map(\.id) == [cleanupOp])
         #expect(session.visibleOperations[0].items.count == 1)
 
+        session.searchText = "  CACHES \n"
+        #expect(session.visibleOperations.map(\.id) == [cleanupOp])
+
+        session.searchText = "   "
+        #expect(session.visibleOperations.count == 2)
+
         session.searchText = "/no such path"
         #expect(session.visibleOperations.isEmpty)
 

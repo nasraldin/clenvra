@@ -9,7 +9,8 @@ struct LeftoversView: View {
 
     @State private var highlighted: Set<OwnedItem.ID> = []
     @State private var sortOrder = [KeyPathComparator(\OwnedItem.reclaimableSize, order: .reverse)]
-    @State private var query = ""
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
     @State private var showsInspector = false
     @State private var isConfirming = false
     @State private var shownSummary: ShownLeftoverSummary?
@@ -29,7 +30,7 @@ struct LeftoversView: View {
             .detailsPanel(isPresented: $showsInspector, width: 280) {
                 inspector
             }
-            .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
+            .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: .leftovers)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.leftoverSelection.count, bytes: session.leftoverSelectedBytes) {
                     isConfirming = false
@@ -257,7 +258,7 @@ struct LeftoversView: View {
             query.isEmpty
             ? session.leftovers
             : session.leftovers.filter {
-                $0.name.localizedCaseInsensitiveContains(query) || $0.path.localizedCaseInsensitiveContains(query)
+                $0.name.localizedStandardContains(query) || $0.path.localizedStandardContains(query)
             }
         return matching.sorted(using: sortOrder)
     }

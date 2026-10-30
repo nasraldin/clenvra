@@ -164,7 +164,7 @@ struct DuplicateGroupsList: View {
 
     private func matches(in group: DuplicatesSession.Group) -> [DuplicateFile] {
         guard !query.isEmpty else { return group.files }
-        return group.files.filter { $0.path.localizedCaseInsensitiveContains(query) }
+        return group.files.filter { $0.path.localizedStandardContains(query) }
     }
 
     private func files(for ids: Set<DuplicateRow.ID>) -> [DuplicateFile] {

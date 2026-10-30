@@ -9,7 +9,8 @@ struct LargeFilesView: View {
 
     @State private var previewURL: URL?
     @State private var sortOrder = [KeyPathComparator(\StorageItem.allocatedSize, order: .reverse)]
-    @State private var query = ""
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
     @State private var showsInspector = false
 
     private static let minimums: [Int64] = [50_000_000, 100_000_000, 1_000_000_000]
@@ -78,7 +79,7 @@ struct LargeFilesView: View {
                 }
             }
         }
-        .searchable(text: $query, placement: .toolbar, prompt: Text("Search by Name or Location"))
+        .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: .largeFiles)
         .detailsPanel(isPresented: $showsInspector, width: 280) {
             StorageItemInspector(items: session.largeFiles.filter { session.selection.contains($0.path) })
         }
@@ -94,7 +95,7 @@ struct LargeFilesView: View {
             query.isEmpty
             ? session.largeFiles
             : session.largeFiles.filter {
-                $0.name.localizedCaseInsensitiveContains(query) || $0.path.localizedCaseInsensitiveContains(query)
+                $0.name.localizedStandardContains(query) || $0.path.localizedStandardContains(query)
             }
         return matching.sorted(using: sortOrder)
     }

@@ -10,6 +10,8 @@ struct MainWindow: View {
     @SceneStorage("sidebar.compact") private var isCompact = false
     /// The page last shown in each group of sibling pages, so its sidebar row reopens it.
     @SceneStorage("sidebar.lastPages") private var lastPages = ""
+    /// Opens a page from a search result with the query to show there.
+    @State private var searchRouter = SearchRouter()
 
     var body: some View {
         NavigationSplitView {
@@ -77,6 +79,10 @@ struct MainWindow: View {
                 .help(Text(isCompact ? "Show the sidebar with names" : "Show only icons in the sidebar"))
                 .accessibilityIdentifier("sidebar.toggle")
             }
+        }
+        .environment(searchRouter)
+        .onChange(of: searchRouter.generation) {
+            if let section = searchRouter.requestedSection { selection = section }
         }
         .onChange(of: selection) { _, page in
             guard let page, page.siblings.count > 1 else { return }

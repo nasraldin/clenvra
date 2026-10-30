@@ -13,7 +13,8 @@ struct PermissionsView: View {
     @State private var clients: [String: PermissionClient] = [:]
     @State private var revoking: PermissionGrant?
     @State private var failed: PermissionGrant?
-    @State private var query = ""
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
 
     var body: some View {
         table
@@ -29,7 +30,7 @@ struct PermissionsView: View {
                     grant: highlightedGrants.count == 1 ? highlightedGrants.first : nil, session: session,
                     client: highlightedGrants.first.map(client), revoke: { revoking = $0 })
             }
-            .searchable(text: $query, placement: .toolbar, prompt: Text("Search Permissions"))
+            .pageSearch(text: $searchText, prompt: "Search Permissions", section: .permissions)
             // Reading the privacy database changes nothing, like the Startup Items page.
             .task { if session.phase == .idle { await session.load() } }
             .task(id: session.grants) { resolveClients() }
@@ -251,7 +252,7 @@ struct PermissionsView: View {
     private func matches(_ grant: PermissionGrant) -> Bool {
         guard !query.isEmpty else { return true }
         return [grant.client, client(for: grant).name, String(localized: PermissionService.title(grant.service))]
-            .contains { $0.localizedCaseInsensitiveContains(query) }
+            .contains { $0.localizedStandardContains(query) }
     }
 
     private func client(for grant: PermissionGrant) -> PermissionClient {

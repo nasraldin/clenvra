@@ -9,7 +9,8 @@ struct PluginsView: View {
 
     @State private var highlighted: Set<PluginRow.ID> = []
     @State private var sortOrder = [KeyPathComparator(\PluginRow.name)]
-    @State private var query = ""
+    @State private var searchText = ""
+    private var query: String { AppSearch.normalized(searchText) }
     @State private var showsInspector = false
     @State private var isConfirming = false
     @State private var shownSummary: ShownPluginSummary?
@@ -31,7 +32,7 @@ struct PluginsView: View {
             .detailsPanel(isPresented: $showsInspector, width: 290) {
                 inspector
             }
-            .searchable(text: $query, placement: .toolbar, prompt: Text("Search Extensions"))
+            .pageSearch(text: $searchText, prompt: "Search Extensions", section: .extensions)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
                     isConfirming = false
@@ -306,9 +307,9 @@ struct PluginsView: View {
     private func matches(in group: PluginsSession.Group) -> [PluginItem] {
         guard !query.isEmpty else { return group.items }
         return group.items.filter {
-            $0.name.localizedCaseInsensitiveContains(query)
-                || ($0.containingApp?.localizedCaseInsensitiveContains(query) ?? false)
-                || ($0.bundleIdentifier?.localizedCaseInsensitiveContains(query) ?? false)
+            $0.name.localizedStandardContains(query)
+                || ($0.containingApp?.localizedStandardContains(query) ?? false)
+                || ($0.bundleIdentifier?.localizedStandardContains(query) ?? false)
         }
     }
 

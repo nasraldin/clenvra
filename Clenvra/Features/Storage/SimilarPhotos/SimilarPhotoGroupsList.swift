@@ -10,11 +10,30 @@ struct SimilarPhotoGroupsList: View {
     @Binding var previewURL: URL?
     /// Whether a group is open; the page owns the state so its toolbar can open or close them all.
     let isExpanded: (String) -> Binding<Bool>
+    /// Shows only the groups with a photo whose file name matches (already trimmed); empty shows everything. A
+    /// matching group is shown whole, so the photo kept is always in view.
+    var query = ""
 
     /// Expansion id of the "Blurry or Dark Photos" section.
     static let lowQualityID = "lowQuality"
 
+    static func matches(_ photos: [SimilarPhoto], _ query: String) -> Bool {
+        query.isEmpty
+            || photos.contains { ($0.path as NSString).lastPathComponent.localizedStandardContains(query) }
+    }
+
+    private var visibleGroups: [SimilarPhotoGroup] {
+        session.groups.filter { Self.matches($0.photos, query) }
+    }
+
     var body: some View {
+        list
+            .pageState(isShown: visibleGroups.isEmpty && !Self.matches(session.lowQualityPhotos, query)) {
+                ContentUnavailableView.search(text: query)
+            }
+    }
+
+    private var list: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 if !session.lastScanWasComplete {
@@ -30,14 +49,14 @@ struct SimilarPhotoGroupsList: View {
                 SimilarPhotosSkippedList(skipped: session.skipped)
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
-                if !session.lowQualityPhotos.isEmpty {
+                if !session.lowQualityPhotos.isEmpty, Self.matches(session.lowQualityPhotos, query) {
                     LowQualityPhotosSection(
                         session: session, focusedPath: $focusedPath, previewURL: $previewURL,
                         isExpanded: isExpanded(SimilarPhotoGroupsList.lowQualityID))
                     Divider()
                         .padding(.horizontal, 16)
                 }
-                ForEach(session.groups) { group in
+                ForEach(visibleGroups) { group in
                     SimilarPhotoGroupSection(
                         group: group, session: session, focusedPath: $focusedPath, previewURL: $previewURL,
                         isExpanded: isExpanded(group.id))
