@@ -184,6 +184,9 @@
 - [ ] **Step 1:** Merge Tasks 1–6 into `main` one by one; after each, `scripts/check.sh` (format, all package tests, Release build).
 - [ ] **Step 2:** `scripts/sync-strings.sh`; Arabic for every new key in `docs/engineering/translations/R9-gap-features.json`; `python3 -I scripts/apply-translations.py …`; `0 keys still need Arabic`.
 - [ ] **Step 3:** Full UI suite in the VM (`scripts/ui-tests-vm.sh`): navigation (en/ar × light/dark, including the new Permissions page) and the accessibility audit pass.
-- [ ] **Step 4:** On this Mac, read-only: open Developer Tools and see three runtime rows with "Delete…" (do not confirm); open Permissions and see Camera/Screen Recording/Full Disk Access groups; open Space Map › What's in System Data and see swap and 24.8 GB of runtimes. Removing a runtime or revoking a permission only with the owner's go-ahead.
+- [ ] **Step 4:** Owner's rule: **no real data is removed or changed on the owner's Mac.** Destructive paths are proven only with test data:
+  - Package tests: temporary folders, temporary SQLite databases and `FakeCommandRunner` (no real `tccutil`, no real `simctl … delete`).
+  - End to end in the disposable VM (`CLENVRA_VM_SETUP` seeds the data): a fake `Foo.app` in `~/.Trash` with `~/Library/Application Support/com.example.foo` (Leftovers lists and removes it), a writable disk image attached with files in its `.Trashes/<uid>` (Cleanup empties it), low-quality test photos generated into `~/Pictures` (listed and moved to the Trash). Permissions and runtime removal are checked in the VM with whatever the VM has; on the owner's Mac only `--dry-run`.
+  - On the owner's Mac: nothing beyond building; the owner tests the final release build.
 - [ ] **Step 5:** Docs: `docs/product/feature-gaps.md` (runtime size corrected to 24.8 GB = `sizeBytes`, rows 1–6 marked shipped), `verified-feature-matrix.md` (DEV-2 delete, CL-5 per-volume, new privacy row), `docs/STATUS.md`.
 - [ ] **Step 6:** Commit, push, CI green.
