@@ -5,7 +5,8 @@ import XCTest
 let allSections = [
     "overview", "cleanup", "developer", "developerTools", "largeFiles", "downloads", "duplicates", "similarPhotos",
     "storage",
-    "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "snapshots", "activity",
+    "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "permissions", "snapshots",
+    "activity",
 ]
 
 enum Appearance: String, CaseIterable {

@@ -177,6 +177,8 @@ struct MainWindow: View {
             system(.processes)
         case .security:
             system(.security)
+        case .permissions:
+            PermissionsView(session: environment.permissionsSession)
         case .snapshots:
             system(.snapshots)
         case .activity:

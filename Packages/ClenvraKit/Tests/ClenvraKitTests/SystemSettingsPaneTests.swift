@@ -22,6 +22,25 @@ struct SystemSettingsPaneTests {
         #expect(Self.installedPanes.contains(String(id)), "\(id) is not a System Settings pane on this Mac")
     }
 
+    @Test("permission links open the Privacy & Security pane at the service's section")
+    func privacyAnchorsUsePrivacyPane() throws {
+        #expect(
+            SystemSettingsPane.privacy(anchor: "Privacy_Camera").absoluteString
+                == "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Camera")
+        #expect(
+            SystemSettingsPane.privacy().absoluteString
+                == "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension")
+        #expect(
+            PermissionService.settingsURL("kTCCServiceSomethingNew") == SystemSettingsPane.privacy())
+        #expect(
+            PermissionService.settingsURL("kTCCServiceMicrophone")
+                == SystemSettingsPane.privacy(anchor: "Privacy_Microphone"))
+        let id = try #require(
+            SystemSettingsPane.privacy(anchor: "Privacy_Camera").absoluteString.split(separator: ":").last?
+                .split(separator: "?").first)
+        #expect(Self.installedPanes.contains(String(id)))
+    }
+
     @Test("security checks link to their panes")
     func checks() {
         #expect(
