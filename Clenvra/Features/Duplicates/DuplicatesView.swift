@@ -20,6 +20,7 @@ struct DuplicatesView: View {
     var body: some View {
         VStack(spacing: 0) { content }
             .accessibilityElement(children: .contain)
+            .pageSearch(text: $query, prompt: "Search by Name or Location", section: .duplicates)
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !session.groups.isEmpty {
@@ -31,7 +32,6 @@ struct DuplicatesView: View {
             .detailsPanel(isPresented: $showsInspector, width: 280) {
                 DuplicateInspector(session: session, highlighted: highlighted)
             }
-            .pageSearch(text: $query, prompt: "Search by Name or Location", section: .duplicates)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.markedCount, bytes: session.markedBytes) {
                     isConfirming = false

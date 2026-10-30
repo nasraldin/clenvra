@@ -2491,6 +2491,16 @@
         }
       }
     },
+    "Background": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في الخلفية"
+          }
+        }
+      }
+    },
     "Backups made when you remove several apps appear here.": {
       "localizations": {
         "ar": {
@@ -6870,16 +6880,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُجرّب"
-          }
-        }
-      }
-    },
-    "Not an App": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ليس تطبيقًا"
           }
         }
       }

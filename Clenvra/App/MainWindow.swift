@@ -69,16 +69,6 @@ struct MainWindow: View {
                         }
                     }
                 }
-                // After the page's own items, so search is the last icon at the right on every page.
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        if let prompt = searchRouter.pagePrompt {
-                            ToolbarSearch(text: $searchRouter.pageText, prompt: prompt)
-                                // A fresh, closed search on each page.
-                                .id(selection)
-                        }
-                    }
-                }
             }
         }
         .toolbar {

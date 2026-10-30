@@ -19,11 +19,11 @@ struct ActivityView: View {
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .pageSearch(text: $session.searchText, prompt: "Search by Path", section: .activity)
             .toolbar { toolbar }
             .detailsPanel(isPresented: $showsInspector, width: 290) {
                 inspector
             }
-            .pageSearch(text: $session.searchText, prompt: "Search by Path", section: .activity)
             .alert(
                 "Could Not Put Back",
                 isPresented: Binding(

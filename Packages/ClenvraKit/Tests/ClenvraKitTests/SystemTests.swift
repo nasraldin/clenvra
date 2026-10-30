@@ -123,6 +123,21 @@ struct ProcessSamplerTests {
         #expect(ProcessSampler.findAppBundlePath(in: "/bin/zsh") == nil)
     }
 
+    @Test("a process is an app only when it is an app's own program; macOS parts are system; the rest background")
+    func processKind() {
+        #expect(ProcessSampler.kind(of: "/Applications/Safari.app/Contents/MacOS/Safari") == .app)
+        #expect(ProcessSampler.kind(of: "/Users/me/dd/Build/Products/Debug/Clenvra.app/Contents/MacOS/Clenvra") == .app)
+        #expect(ProcessSampler.kind(of: "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal") == .app)
+        #expect(
+            ProcessSampler.kind(of: "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild") == .background)
+        #expect(ProcessSampler.kind(of: "/usr/libexec/testmanagerd") == .system)
+        #expect(
+            ProcessSampler.kind(of: "/System/Library/Frameworks/VideoToolbox.framework/XPCServices/X.xpc/X")
+                == .system)
+        #expect(ProcessSampler.kind(of: "/opt/homebrew/bin/tart-guest-agent") == .background)
+        #expect(ProcessSampler.kind(of: "") == .background)
+    }
+
     @Test("process metrics arithmetic ranks top processes by CPU and by memory")
     func processMetricsArithmetic() {
         let t1: UInt64 = 1_000_000_000  // 1s in ns

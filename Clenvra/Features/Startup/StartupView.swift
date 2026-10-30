@@ -28,6 +28,7 @@ struct StartupView: View {
                     ContentUnavailableView.search(text: query)
                 }
             }
+            .pageSearch(text: $searchText, prompt: "Search Startup Items", section: .startup)
             .toolbar { toolbar }
             .detailsPanel(isPresented: $showsInspector, width: 300) {
                 StartupInspector(
@@ -36,7 +37,6 @@ struct StartupView: View {
                     report: { message = $0 }
                 )
             }
-            .pageSearch(text: $searchText, prompt: "Search Startup Items", section: .startup)
             // Listing what is installed is instant and changes nothing, like Finder showing a folder.
             .task(id: installedApps.count) { await session.load(installedApps: installedApps) }
             .confirmationDialog(

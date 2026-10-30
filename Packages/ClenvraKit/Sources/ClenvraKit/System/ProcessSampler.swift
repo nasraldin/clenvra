@@ -124,6 +124,22 @@ public final class ProcessSampler: Sendable {
         return Self.computeMetrics(previous: firstMap, current: second, limit: limit)
     }
 
+    /// What a process is, from its program's path: an app's own program, a part of macOS, or anything else
+    /// (command-line tools, helpers, agents).
+    public enum Kind: Sendable, Equatable {
+        case app, system, background
+    }
+
+    public static func kind(of executablePath: String) -> Kind {
+        let folder = (executablePath as NSString).deletingLastPathComponent
+        if folder.hasSuffix(".app/Contents/MacOS") { return .app }
+        let systemFolders = ["/System/", "/usr/", "/bin/", "/sbin/", "/Library/Apple/"]
+        if systemFolders.contains(where: executablePath.hasPrefix), !executablePath.hasPrefix("/usr/local/") {
+            return .system
+        }
+        return .background
+    }
+
     /// Pure extraction of the outermost enclosing application bundle path from an executable path.
     public static func findAppBundlePath(in executablePath: String) -> String? {
         guard executablePath.contains(".app") else { return nil }

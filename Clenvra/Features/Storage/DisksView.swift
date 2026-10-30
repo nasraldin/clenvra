@@ -48,8 +48,8 @@ struct DisksView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityIdentifier("review.results")
-        .toolbar { toolbar }
         .pageSearch(text: $searchText, prompt: "Search Disks", section: .disks)
+        .toolbar { toolbar }
         .detailsPanel(isPresented: $showsInspector, width: 300) {
             DiskInspector(disk: allDisks.first { $0.id == selected }) { eject($0) }
         }

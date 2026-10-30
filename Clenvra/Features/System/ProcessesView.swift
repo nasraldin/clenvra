@@ -6,6 +6,8 @@ struct SystemProcessesView: View {
     let session: SystemSession
     /// Shows only the processes whose name matches (already trimmed); empty shows them all.
     let query: String
+    /// The page's search text; the search icon is added here, before this page's own toolbar, so it comes last.
+    let searchText: Binding<String>
 
     enum ProcessSortOrder: String, CaseIterable, Identifiable {
         case cpu
@@ -99,6 +101,7 @@ struct SystemProcessesView: View {
                 NoSelectionInspector(description: "Select a process to see its details.")
             }
         }
+        .pageSearch(text: searchText, prompt: "Search Processes", section: .processes)
         .toolbar {
             ToolbarItem {
                 Button {
@@ -181,7 +184,7 @@ struct SystemProcessesView: View {
             .width(ideal: 100)
 
             TableColumn("Kind") { proc in
-                Text(proc.isQuittableApp ? "App" : "Not an App")
+                Text(Self.kindTitle(ProcessSampler.kind(of: proc.executablePath)))
                     .foregroundStyle(.secondary)
             }
             .width(ideal: 100)
@@ -241,6 +244,16 @@ final class ProcessIconCache {
 }
 
 /// Details of one process, read again every few seconds while shown.
+extension SystemProcessesView {
+    static func kindTitle(_ kind: ProcessSampler.Kind) -> LocalizedStringResource {
+        switch kind {
+        case .app: "App"
+        case .system: "System"
+        case .background: "Background"
+        }
+    }
+}
+
 private struct ProcessInspector: View {
     let pid: pid_t
     /// The latest sample from the CPU or Memory list, when the process is in one.
@@ -320,7 +333,7 @@ private struct ProcessInspector: View {
                         Text("Unknown")
                     }
                 }
-                row("Kind") { Text(quittable ? "App" : "Not an App") }
+                row("Kind") { Text(SystemProcessesView.kindTitle(ProcessSampler.kind(of: info.executablePath ?? ""))) }
             }
             Section {
                 if let live {

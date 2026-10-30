@@ -27,15 +27,6 @@ struct SystemView: View {
 
     @State private var searchText = ""
 
-    private var searchPrompt: LocalizedStringResource {
-        switch page {
-        case .health: "Search Health"
-        case .processes: "Search Processes"
-        case .security: "Search Security Checks"
-        case .snapshots: "Search Snapshots"
-        }
-    }
-
     var body: some View {
         let query = AppSearch.normalized(searchText)
         VStack(spacing: 0) {
@@ -43,19 +34,19 @@ struct SystemView: View {
                 switch page {
                 case .health:
                     SystemHealthView(session: session, query: query)
+                        .pageSearch(text: $searchText, prompt: "Search Health", section: .system)
                 case .processes:
-                    SystemProcessesView(session: session, query: query)
+                    SystemProcessesView(session: session, query: query, searchText: $searchText)
                 case .security:
-                    SystemSecurityView(session: session, query: query)
+                    SystemSecurityView(session: session, query: query, searchText: $searchText)
                 case .snapshots:
-                    SnapshotsView(session: snapshots, query: query)
+                    SnapshotsView(session: snapshots, query: query, searchText: $searchText)
                 }
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(pageSection.title))
         }
-        .pageSearch(text: $searchText, prompt: searchPrompt, section: pageSection)
         .onAppear {
             session.start()
             if session.securityChecks.isEmpty {
@@ -334,6 +325,7 @@ private struct SystemSecurityView: View {
     let session: SystemSession
     /// Shows only the checks whose title matches (already trimmed); empty shows them all.
     let query: String
+    let searchText: Binding<String>
 
     private var checks: [SecurityCheck] {
         guard !query.isEmpty else { return session.securityChecks }
@@ -359,6 +351,7 @@ private struct SystemSecurityView: View {
         .pageState(isShown: checks.isEmpty && !session.securityChecks.isEmpty) {
             ContentUnavailableView.search(text: query)
         }
+        .pageSearch(text: searchText, prompt: "Search Security Checks", section: .security)
         .toolbar {
             ToolbarItem {
                 Button {
@@ -485,6 +478,7 @@ private struct SnapshotsView: View {
     let session: SnapshotsSession
     /// Shows only the snapshots whose name or date matches (already trimmed); empty shows them all.
     let query: String
+    let searchText: Binding<String>
     @State private var confirming: String?
     @State private var message: LocalizedStringResource?
 
@@ -538,6 +532,7 @@ private struct SnapshotsView: View {
         }
         .formStyle(.grouped)
         .task { await session.load() }
+        .pageSearch(text: searchText, prompt: "Search Snapshots", section: .snapshots)
         .toolbar {
             ToolbarItem {
                 Button {

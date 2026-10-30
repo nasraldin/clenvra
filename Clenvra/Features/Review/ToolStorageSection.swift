@@ -11,8 +11,7 @@ struct DeveloperToolsView: View {
     @State private var showingBatchResult = false
 
     var body: some View {
-        Group { page }
-            .pageSearch(text: $searchText, prompt: "Search Tools", section: .developerTools)
+        page
     }
 
     @ViewBuilder private var page: some View {
@@ -49,6 +48,7 @@ struct DeveloperToolsView: View {
                     .accessibilityIdentifier("review.scan")
                 }
             }
+            .pageSearch(text: $searchText, prompt: "Search Tools", section: .developerTools)
             .toolbar {
                 ToolbarItem {
                     Button {

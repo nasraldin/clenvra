@@ -24,7 +24,6 @@ struct OverviewView: View {
                         for: query, in: OverviewSearchIndex.entries(environment: environment, volumes: volumes)),
                     open: open)
             }
-            .pageSearch(text: $searchText, prompt: "Search Clenvra", section: .overview)
     }
 
     /// Opens the page a search result belongs to, with the result's text in that page's search field.
@@ -51,6 +50,7 @@ struct OverviewView: View {
             // Fills the page at any width (with or without the sidebar); the tile grid adds columns as it grows.
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .pageSearch(text: $searchText, prompt: "Search Clenvra", section: .overview)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {

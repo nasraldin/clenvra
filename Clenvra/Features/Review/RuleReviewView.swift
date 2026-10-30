@@ -45,11 +45,11 @@ struct RuleReviewView<MoreActions: View>: View {
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !session.groups.isEmpty || isScanning { statusBar }
             }
+            .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: section)
             .toolbar { toolbar }
             .detailsPanel(isPresented: $showsInspector, width: 280) {
                 ReviewInspector(candidates: highlightedCandidates, session: session)
             }
-            .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: section)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(
                     count: session.selectedCount, bytes: session.selectedBytes,

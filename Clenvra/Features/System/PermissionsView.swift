@@ -24,13 +24,13 @@ struct PermissionsView: View {
                     partialNote
                 }
             }
+            .pageSearch(text: $searchText, prompt: "Search Permissions", section: .permissions)
             .toolbar { toolbar }
             .detailsPanel(isPresented: $showsInspector, width: 300) {
                 PermissionInspector(
                     grant: highlightedGrants.count == 1 ? highlightedGrants.first : nil, session: session,
                     client: highlightedGrants.first.map(client), revoke: { revoking = $0 })
             }
-            .pageSearch(text: $searchText, prompt: "Search Permissions", section: .permissions)
             // Reading the privacy database changes nothing, like the Startup Items page.
             .task { if session.phase == .idle { await session.load() } }
             .task(id: session.grants) { resolveClients() }

@@ -28,11 +28,11 @@ struct PluginsView: View {
                         working: session.phase == .removing ? "Moving to the Trash…" : nil, scanned: scanned)
                 }
             }
+            .pageSearch(text: $searchText, prompt: "Search Extensions", section: .extensions)
             .toolbar { toolbar }
             .detailsPanel(isPresented: $showsInspector, width: 290) {
                 inspector
             }
-            .pageSearch(text: $searchText, prompt: "Search Extensions", section: .extensions)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.selectedCount, bytes: session.selectedBytes) {
                     isConfirming = false

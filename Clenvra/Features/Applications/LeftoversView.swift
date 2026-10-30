@@ -26,11 +26,11 @@ struct LeftoversView: View {
                         working: session.isWorking ? "Moving to the Trash…" : nil, scanned: scanned)
                 }
             }
+            .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: .leftovers)
             .toolbar { toolbar }
             .detailsPanel(isPresented: $showsInspector, width: 280) {
                 inspector
             }
-            .pageSearch(text: $searchText, prompt: "Search by Name or Location", section: .leftovers)
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.leftoverSelection.count, bytes: session.leftoverSelectedBytes) {
                     isConfirming = false

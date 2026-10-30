@@ -21,8 +21,8 @@ struct SimilarPhotosView: View {
     var body: some View {
         VStack(spacing: 0) { content }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toolbar { toolbar }
             .pageSearch(text: $searchText, prompt: "Search by File Name", section: .similarPhotos)
+            .toolbar { toolbar }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if hasResults { statusBar }
             }
