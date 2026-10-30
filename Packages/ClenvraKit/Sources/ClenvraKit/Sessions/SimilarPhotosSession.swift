@@ -7,7 +7,8 @@ public import Observation
 /// Similar is not identical, so nothing is marked by a scan: the user opts in per image, per group (`keepOnly`) or
 /// for all groups (`markAllButSuggested`). The keep-one rule lives here, not in the UI: no call can leave every image
 /// of a group marked, and the deletion plan re-checks it per group (and that a kept image is still on disk)
-/// immediately before moving anything to the Trash.
+/// immediately before moving anything to the Trash. Photos rated blurry or dark (`lowQualityPhotos`) are listed too;
+/// one in no group can be marked on its own, one in a group keeps that group's rule, and none is marked for you.
 @MainActor
 @Observable
 public final class SimilarPhotosSession {
@@ -30,6 +31,9 @@ public final class SimilarPhotosSession {
     public private(set) var scannedRoots: [String] = []
     /// Groups, largest reclaimable space first; each shrinks as images are moved to the Trash.
     public private(set) var groups: [SimilarPhotoGroup] = []
+    /// Photos rated blurry or dark, lowest score first. Never marked for you; one that is also in a group follows
+    /// that group's keep-one rule.
+    public private(set) var lowQualityPhotos: [SimilarPhoto] = []
     /// Paths marked to be moved to the Trash. Never contains every image of a group.
     public internal(set) var marked: Set<String> = []
     /// `false` when the last scan was cancelled, so there are no results.
@@ -86,6 +90,7 @@ public final class SimilarPhotosSession {
         let generation = scanGeneration
         phase = .scanning(SimilarPhotoScanProgress(phase: .listing, filesSeen: 0, imagesFound: 0, imagesAnalyzed: 0))
         groups = []
+        lowQualityPhotos = []
         marked = []
 
         let (updates, continuation) = AsyncStream.makeStream(
@@ -118,10 +123,16 @@ public final class SimilarPhotosSession {
         let outcome = await task.value
         guard generation == scanGeneration else { return }
         scanTask = nil
-        scannedRoots = outcome.roots
-        lastScanWasComplete = outcome.result.isComplete
-        skipped = outcome.result.skipped
-        groups = outcome.result.groups
+        apply(outcome.result, roots: outcome.roots)
+    }
+
+    /// Shows a scan's results from canonical `roots`, with nothing marked.
+    func apply(_ result: SimilarPhotoScanResult, roots: [String]) {
+        scannedRoots = roots
+        lastScanWasComplete = result.isComplete
+        skipped = result.skipped
+        groups = result.groups
+        lowQualityPhotos = result.lowQuality
         marked = []
         phase = .ready
     }
@@ -138,18 +149,31 @@ public final class SimilarPhotosSession {
     /// Number of images marked for the Trash.
     public var markedCount: Int { marked.count }
 
-    /// Estimated bytes freed by the marked images (clone- and hard-link-aware).
+    /// Estimated bytes freed by the marked images (clone- and hard-link-aware). A photo that is both in a group and
+    /// rated low counts once.
     public var markedBytes: Int64 {
-        groups.reduce(0) { $0 + markedBytes(in: $1) }
+        groups.reduce(0) { $0 + markedBytes(in: $1) } + markedLowQualityBytes
     }
 
     public func markedBytes(in group: SimilarPhotoGroup) -> Int64 {
         group.photos.reduce(0) { $0 + (marked.contains($1.path) ? $1.reclaimable : 0) }
     }
 
-    /// Whether `path` can be marked now without leaving its group with no kept image.
+    /// Estimated bytes freed by the marked blurry or dark photos, including those that are also in a group.
+    public var markedBytesInLowQuality: Int64 {
+        lowQualityPhotos.reduce(0) { $0 + (marked.contains($1.path) ? $1.reclaimable : 0) }
+    }
+
+    /// Marked low-rated photos that are in no group (those in a group are counted with it).
+    private var markedLowQualityBytes: Int64 {
+        looseLowQualityPhotos.reduce(0) { $0 + (marked.contains($1.path) ? $1.reclaimable : 0) }
+    }
+
+    /// Whether `path` can be marked now: a photo in a group only while another image of its group stays kept; a
+    /// blurry or dark photo in no group always.
     public func canMark(_ path: String) -> Bool {
-        guard phase == .ready, let group = group(containing: path) else { return false }
+        guard phase == .ready else { return false }
+        guard let group = group(containing: path) else { return isLowQuality(path) }
         if marked.contains(path) { return true }
         return group.photos.contains { $0.path != path && !marked.contains($0.path) }
     }
@@ -157,7 +181,7 @@ public final class SimilarPhotosSession {
     /// Marks or unmarks one image. Returns `false` (and changes nothing) when marking would remove every image.
     @discardableResult
     public func setMarked(_ isMarked: Bool, path: String) -> Bool {
-        guard phase == .ready, group(containing: path) != nil else { return false }
+        guard phase == .ready, group(containing: path) != nil || isLowQuality(path) else { return false }
         if isMarked {
             guard canMark(path) else { return false }
             marked.insert(path)
@@ -177,7 +201,8 @@ public final class SimilarPhotosSession {
         return true
     }
 
-    /// The user's explicit opt-in: in every group, marks every image except the suggested keeper.
+    /// The user's explicit opt-in: in every group, marks every image except the suggested keeper. Blurry or dark
+    /// photos in no group are left as they are: they are never marked for you.
     public func markAllButSuggested() {
         guard phase == .ready else { return }
         for group in groups {
@@ -195,7 +220,7 @@ public final class SimilarPhotosSession {
 
     /// Removes marks for images not shown, and unmarks the suggested keeper of any group with every image marked.
     private func enforceKeepRule() {
-        let shown = Set(groups.flatMap { $0.photos.map(\.path) })
+        let shown = Set(groups.flatMap { $0.photos.map(\.path) } + lowQualityPhotos.map(\.path))
         marked.formIntersection(shown)
         for group in groups where group.photos.allSatisfy({ marked.contains($0.path) }) {
             marked.remove(group.suggestedKeeper)
@@ -206,28 +231,46 @@ public final class SimilarPhotosSession {
         groups.first { $0.photos.contains { $0.path == path } }
     }
 
+    private func isLowQuality(_ path: String) -> Bool {
+        lowQualityPhotos.contains { $0.path == path }
+    }
+
+    /// Blurry or dark photos that are in no group, so no keep-one rule applies to them.
+    private var looseLowQualityPhotos: [SimilarPhoto] {
+        let grouped = Set(groups.flatMap { $0.photos.map(\.path) })
+        return lowQualityPhotos.filter { !grouped.contains($0.path) }
+    }
+
     // MARK: - Removing
 
     /// One group's part of a removal: the images to move and the images that must still be there afterwards.
     struct PlannedGroup: Sendable {
         let items: [DeletionItem]
-        let kept: [SimilarPhoto]
+        /// Images of the group that stay, one of which must still be on disk as reviewed; `nil` for blurry or dark
+        /// photos in no group, which have no keep-one rule.
+        let kept: [SimilarPhoto]?
     }
 
     /// Builds the removal, re-checking the keep-one rule per group: a group whose images would all go is left out.
+    /// Marked blurry or dark photos in no group follow as one last part.
     func deletionPlan() -> [PlannedGroup] {
-        groups.compactMap { group in
+        var plan: [PlannedGroup] = groups.compactMap { group in
             let removing = group.photos.filter { marked.contains($0.path) }
             let kept = group.photos.filter { !marked.contains($0.path) }
             guard !removing.isEmpty, !kept.isEmpty else { return nil }
-            let items = removing.compactMap { photo -> DeletionItem? in
-                guard let root = root(containing: photo.path) else { return nil }
-                return DeletionItem(
-                    path: photo.path, ruleRoot: root, expected: photo.snapshot, ownerBundleID: nil,
-                    freedBytes: photo.reclaimable, section: .storage)
-            }
+            let items = removing.compactMap(deletionItem)
             return items.isEmpty ? nil : PlannedGroup(items: items, kept: kept)
         }
+        let loose = looseLowQualityPhotos.filter { marked.contains($0.path) }.compactMap(deletionItem)
+        if !loose.isEmpty { plan.append(PlannedGroup(items: loose, kept: nil)) }
+        return plan
+    }
+
+    private func deletionItem(_ photo: SimilarPhoto) -> DeletionItem? {
+        guard let root = root(containing: photo.path) else { return nil }
+        return DeletionItem(
+            path: photo.path, ruleRoot: root, expected: photo.snapshot, ownerBundleID: nil,
+            freedBytes: photo.reclaimable, section: .storage)
     }
 
     /// Moves the marked images to the Trash, then drops them (and groups left with one image) from the results.
@@ -240,7 +283,7 @@ public final class SimilarPhotosSession {
         // Keep-one on disk: a group is only touched while one of its kept images is still exactly as reviewed.
         let keptChecks = plan.map(\.kept)
         let keptPresent =
-            (try? await executor.run { keptChecks.map { $0.contains(where: Self.isUnchanged) } })
+            (try? await executor.run { keptChecks.map { $0?.contains(where: Self.isUnchanged) ?? true } })
             ?? Array(repeating: false, count: plan.count)
         var summary = CleanupSummary()
         var items: [DeletionItem] = []
@@ -268,6 +311,7 @@ public final class SimilarPhotosSession {
             return SimilarPhotoGroup(id: group.id, photos: ordered, suggestedKeeper: keeper)
         }
         .sorted { ($0.reclaimableIfOthersRemoved, $1.id) > ($1.reclaimableIfOthersRemoved, $0.id) }
+        lowQualityPhotos.removeAll { gone.contains($0.path) }
         enforceKeepRule()
         lastSummary = summary
         phase = .ready

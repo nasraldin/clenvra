@@ -13,13 +13,15 @@ public struct SimilarPhoto: Sendable, Hashable {
     /// Stored pixel dimensions, before any EXIF rotation.
     public let pixelWidth: Int
     public let pixelHeight: Int
+    /// How image analysis rated the picture; `nil` when it could not be rated.
+    public let quality: PhotoQuality?
 
     /// Resolution used to suggest which copy to keep.
     public var pixelCount: Int { pixelWidth * pixelHeight }
 
     public init(
         path: String, snapshot: FileSnapshot, size: Int64, reclaimable: Int64, modificationDate: Date,
-        pixelWidth: Int, pixelHeight: Int
+        pixelWidth: Int, pixelHeight: Int, quality: PhotoQuality? = nil
     ) {
         self.path = path
         self.snapshot = snapshot
@@ -28,6 +30,7 @@ public struct SimilarPhoto: Sendable, Hashable {
         self.modificationDate = modificationDate
         self.pixelWidth = pixelWidth
         self.pixelHeight = pixelHeight
+        self.quality = quality
     }
 }
 
@@ -123,13 +126,20 @@ public enum SimilarPhotoSkipReason: Sendable, Hashable {
 public struct SimilarPhotoScanResult: Sendable {
     /// Groups, largest reclaimable space first.
     public var groups: [SimilarPhotoGroup]
+    /// Photos rated blurry, dark or otherwise failed (`PhotoQuality.isLow`), lowest score first. A photo may also be
+    /// in a group.
+    public var lowQuality: [SimilarPhoto]
     /// Paths left out, each with its reason.
     public var skipped: [String: SimilarPhotoSkipReason]
-    /// `false` when the scan was cancelled; `groups` then holds no results.
+    /// `false` when the scan was cancelled; `groups` and `lowQuality` then hold no results.
     public var isComplete: Bool
 
-    public init(groups: [SimilarPhotoGroup], skipped: [String: SimilarPhotoSkipReason], isComplete: Bool) {
+    public init(
+        groups: [SimilarPhotoGroup], lowQuality: [SimilarPhoto] = [], skipped: [String: SimilarPhotoSkipReason],
+        isComplete: Bool
+    ) {
         self.groups = groups
+        self.lowQuality = lowQuality
         self.skipped = skipped
         self.isComplete = isComplete
     }

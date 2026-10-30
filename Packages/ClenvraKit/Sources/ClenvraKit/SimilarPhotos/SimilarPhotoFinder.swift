@@ -11,7 +11,8 @@ import Vision
 ///
 /// Pipeline: list regular image files (never following links, crossing volumes or entering a Photos library) →
 /// collapse hard links → read each file through a descriptor opened without following links and checked against its
-/// listing snapshot → decode a small thumbnail → Vision feature print → cluster around seeds. At most
+/// listing snapshot → decode a small thumbnail → Vision feature print and aesthetics score (`PhotoQuality`) →
+/// cluster around seeds, and list the photos rated blurry or dark. At most
 /// `maximumConcurrentAnalyses` images are read and analysed at once; file reads run on the `FSExecutor`. Nothing is
 /// modified.
 public enum SimilarPhotoFinder {
@@ -57,8 +58,8 @@ public enum SimilarPhotoFinder {
         var photos: [(photo: SimilarPhoto, vector: [Float])] = []
         for (candidate, analysis) in zip(listed.candidates, analysed) {
             switch analysis {
-            case .analysed(let vector, let width, let height)?:
-                photos.append((candidate.photo(width: width, height: height), vector))
+            case .analysed(let vector, let width, let height, let quality)?:
+                photos.append((candidate.photo(width: width, height: height, quality: quality), vector))
             case .skipped(let reason)?:
                 skipped[candidate.path] = reason
             case .changed?:
@@ -77,7 +78,16 @@ public enum SimilarPhotoFinder {
             if let group = makeGroup(members.map { photos[$0].photo }) { groups.append(group) }
         }
         groups.sort { ($0.reclaimableIfOthersRemoved, $1.id) > ($1.reclaimableIfOthersRemoved, $0.id) }
-        return SimilarPhotoScanResult(groups: groups, skipped: skipped, isComplete: !Task.isCancelled)
+        return SimilarPhotoScanResult(
+            groups: groups, lowQuality: lowQuality(photos.map(\.photo)), skipped: skipped,
+            isComplete: !Task.isCancelled)
+    }
+
+    /// The photos rated low (`PhotoQuality.isLow`), lowest score first, then by path.
+    static func lowQuality(_ photos: [SimilarPhoto]) -> [SimilarPhoto] {
+        photos.compactMap { photo in photo.quality.flatMap { $0.isLow ? (photo, $0.score) : nil } }
+            .sorted { ($0.1, $0.0.path) < ($1.1, $1.0.path) }
+            .map(\.0)
     }
 
     // MARK: - Pure decisions (unit-tested)
@@ -335,7 +345,7 @@ public enum SimilarPhotoFinder {
     // MARK: - Analysis
 
     private enum Analysis: Sendable {
-        case analysed(vector: [Float], width: Int, height: Int)
+        case analysed(vector: [Float], width: Int, height: Int, quality: PhotoQuality?)
         case skipped(SimilarPhotoSkipReason)
         /// No longer the file that was listed; dropped.
         case changed
@@ -396,7 +406,10 @@ public enum SimilarPhotoFinder {
             do {
                 let print = try await GenerateImageFeaturePrintRequest().perform(on: image)
                 guard let vector = vector(of: print) else { return .skipped(.analysisFailed) }
-                return .analysed(vector: vector, width: width, height: height)
+                // Rated on the same thumbnail; a photo that cannot be rated is still compared.
+                let quality = await PhotoQuality.measure(image)
+                if Task.isCancelled { return .cancelled }
+                return .analysed(vector: vector, width: width, height: height, quality: quality)
             } catch {
                 return Task.isCancelled ? .cancelled : .skipped(.analysisFailed)
             }
@@ -464,12 +477,12 @@ private struct Candidate: Sendable {
 
     var snapshot: FileSnapshot { FileSnapshot(entry) }
 
-    func photo(width: Int, height: Int) -> SimilarPhoto {
+    func photo(width: Int, height: Int, quality: PhotoQuality?) -> SimilarPhoto {
         SimilarPhoto(
             path: path, snapshot: snapshot, size: entry.size.logical,
             // Removing one name of a hard-linked file frees nothing; a clone frees only its private blocks.
             reclaimable: entry.linkCount > 1 ? 0 : entry.size.freedIfDeleted,
-            modificationDate: entry.modificationDate, pixelWidth: width, pixelHeight: height)
+            modificationDate: entry.modificationDate, pixelWidth: width, pixelHeight: height, quality: quality)
     }
 }
 
