@@ -6,7 +6,7 @@ Read this first when you pick the project up on another Mac. It says where the w
 
 ## Where we are
 
-**Version 1.0.0 is a release candidate on `main`, ready for team review.** Every milestone M0–M16 and every owner feedback round (2026-10-28 to 2026-10-31) is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). Verified on 2026-10-31:
+**Version 1.0.0 is a release candidate on `main`, ready for team review.** Every milestone M0–M16 and every owner feedback round (2026-10-28 to 2026-10-31) is built end to end (engine, safety, UI, English and Arabic, tests). Verified on 2026-10-31 and 2026-11-01:
 
 - `scripts/check.sh`: format, 899 package tests, Release build (no warnings).
 - `scripts/ui-tests-vm.sh`: every page in English and Arabic × light and dark, the accessibility audit in light and dark, search on every page, the sidebar and the permissions guide.
@@ -28,7 +28,7 @@ Read this first when you pick the project up on another Mac. It says where the w
 | Settings: exclusions, export/import, permissions guide, custom rules, scheduled scans, update opt-in, menu bar extra | ✅ |
 | Safety cases S1–S28 | ✅ All tested |
 | Signing, notarisation, release script | ✅ `scripts/release.sh` (Developer ID, team `CZU6ZC4LYQ`, notary profile `clenvra-notary`) |
-| CL-11 recent-items lists | ✖ Not implemented on purpose: macOS has no supported way, and deleting `sharedfilelist` files does not reliably clear them (the daemon rewrites them) |
+| CL-11 Recent Items (2026-11-01) | ✅ Apple menu lists through the public shared file list API (what Clear Menu empties); Finder's Recent Folders by restarting Finder around its setting; apps' Open Recent lists to the Trash while the app is closed, then the list service restarted. Finder's **Recents** cannot be cleared with public interfaces (Spotlight keeps the usage dates), so it is left out. `scripts/e2e-recent-items.sh` checks it end to end in a VM |
 
 How the work was done: features were built test-first, partly by delegated agents (Claude subagents, Antigravity `agy`, opencode) in separate worktrees, then reviewed, merged and re-verified here. Automated security reviews of the helper led to six fixes (forged Put Back, Trash symlinks, irreversible mode, admin-only, staged Put Back, gate before `launchctl`).
 
@@ -89,6 +89,7 @@ Six features from `docs/product/feature-gaps.md`, built by six OpenCode agents i
 - **Extensions:** third-party app extensions can be turned off and on (`pluginkit -e`); the details panel explains how to turn off or remove each kind.
 - **Permissions:** Revoke for any app; **Similar Photos:** pre-selected suggestions and a side-by-side comparison; **Processes:** icons and details; **search** on every page and app-wide on Overview.
 - **Sidebar:** the sidebar button brings back a sidebar hidden with View › Hide Sidebar.
+- **Recent Items** (Clean Up, 2026-11-01): Mac tab (Apple menu Recent Applications, Documents and Servers; Finder's Recent Folders) and Apps tab (each app's File › Open Recent list, chosen per app). When Finder windows are open, Finder reopens them after its restart and their folders are listed again; the page says so.
 
 ### Fixed on 2026-10-28 (work Mac verification)
 
@@ -115,7 +116,7 @@ Six features from `docs/product/feature-gaps.md`, built by six OpenCode agents i
 2. **People, not code:** a VoiceOver pass and a native Arabic review of the strings.
 3. **Other Macs:** a run on a managed (MDM) Mac, a Mac without developer tools, and macOS 26 in a VM; a Release-build benchmark (see `testing/benchmarks.md`).
 4. **Publish:** tag `v1.0.0` on `main`, attach the notarised DMG to a GitHub Release (ask the owner first; it is public).
-5. **After 1.0:** verify the vendor Team IDs below, and decide whether CL-11 gets a guided manual flow instead of automation.
+5. **After 1.0:** verify the vendor Team IDs below.
 
 ## Known caveats
 
