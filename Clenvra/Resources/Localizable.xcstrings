@@ -1448,6 +1448,70 @@
         }
       }
     },
+    "%lld lists were kept, because their app is open or the list changed.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُركت %lld قوائم لأن تطبيقاتها مفتوحة أو لأن القوائم تغيّرت."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُركت %lld قائمة لأن تطبيقاتها مفتوحة أو لأن القوائم تغيّرت."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُركت قائمة واحدة لأن تطبيقها مفتوح أو لأن القائمة تغيّرت."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُركت %lld قائمة لأن تطبيقاتها مفتوحة أو لأن القوائم تغيّرت."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُركت قائمتان لأن تطبيقيهما مفتوحان أو لأن القائمتين تغيّرتا."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم تُترك أي قائمة."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld list was kept, because its app is open or the list changed."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lists were kept, because their app is open or the list changed."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld of %lld photos compared": {
       "localizations": {
         "ar": {
@@ -3704,12 +3768,180 @@
         }
       }
     },
+    "Clear": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح"
+          }
+        }
+      }
+    },
+    "Clear %lld lists?": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح %lld قوائم؟"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح %lld قائمة؟"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح قائمة واحدة؟"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح %lld قائمة؟"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح قائمتين؟"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح 0 قوائم؟"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Clear %lld list?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Clear %lld lists?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Clear Selection": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "مسح التحديد"
+          }
+        }
+      }
+    },
+    "Clear the recent documents of %lld apps?": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح المستندات الأخيرة لـ %lld تطبيقات؟"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح المستندات الأخيرة لـ %lld تطبيقًا؟"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح المستندات الأخيرة لتطبيق واحد؟"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح المستندات الأخيرة لـ %lld تطبيق؟"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح المستندات الأخيرة لتطبيقين؟"
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هل تريد مسح المستندات الأخيرة لـ 0 تطبيقات؟"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Clear the recent documents of %lld app?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Clear the recent documents of %lld apps?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Cleared. Finder reopened its windows, so their folders are listed again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم المسح. أعاد Finder فتح نوافذه، لذا ظهرت مجلداتها في القائمة من جديد."
+          }
+        }
+      }
+    },
+    "Cleared. The lists are in the Trash, so you can put them back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم المسح. القوائم في سلة المهملات، لذا يمكنك إعادتها."
+          }
+        }
+      }
+    },
+    "Clear…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح…"
           }
         }
       }
@@ -5274,6 +5506,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابحث عن أكبر الملفات التي لم تفتحها منذ وقت طويل."
+          }
+        }
+      }
+    },
+    "Finder’s Recent Folders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجلدات الأخيرة في Finder"
           }
         }
       }
@@ -7022,6 +7264,16 @@
         }
       }
     },
+    "Mac": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الماك"
+          }
+        }
+      }
+    },
     "Mac App Store": {
       "localizations": {
         "ar": {
@@ -7824,6 +8076,16 @@
         }
       }
     },
+    "No app has a list of recently opened documents.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد تطبيق لديه قائمة بمستندات فُتحت مؤخرًا."
+          }
+        }
+      }
+    },
     "No app has access to your camera, microphone, screen or other protected data.": {
       "localizations": {
         "ar": {
@@ -8200,6 +8462,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا شيء يحتاج إلى انتباهك."
+          }
+        }
+      }
+    },
+    "Nothing recent": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء حديث"
           }
         }
       }
@@ -8696,6 +8968,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح التطبيق واختر التحقق من التحديثات من قائمته."
+          }
+        }
+      }
+    },
+    "Open: quit it to clear": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفتوح: أغلقه لمسح القائمة"
           }
         }
       }
@@ -9400,6 +9682,16 @@
         }
       }
     },
+    "Read the recent items again (⌘R)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قراءة العناصر الأخيرة مرة أخرى (⌘R)"
+          }
+        }
+      }
+    },
     "Read the security settings again (⌘R)": {
       "localizations": {
         "ar": {
@@ -9450,12 +9742,72 @@
         }
       }
     },
+    "Reading recent items…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ قراءة العناصر الأخيرة…"
+          }
+        }
+      }
+    },
     "Reading startup items…": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ قراءة عناصر بدء التشغيل…"
+          }
+        }
+      }
+    },
+    "Recent Applications": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التطبيقات الأخيرة"
+          }
+        }
+      }
+    },
+    "Recent Documents": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المستندات الأخيرة"
+          }
+        }
+      }
+    },
+    "Recent Documents in Apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المستندات الأخيرة في التطبيقات"
+          }
+        }
+      }
+    },
+    "Recent Items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العناصر الأخيرة"
+          }
+        }
+      }
+    },
+    "Recent Servers": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخوادم الأخيرة"
           }
         }
       }
@@ -10210,6 +10562,16 @@
         }
       }
     },
+    "Review and clear the selected lists (⌘⌫)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراجعة القوائم المحددة ومسحها (⌘⌫)"
+          }
+        }
+      }
+    },
     "Review and move the checked copies to the Trash (⌘⌫)": {
       "localizations": {
         "ar": {
@@ -10810,6 +11172,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "البحث في العمليات"
+          }
+        }
+      }
+    },
+    "Search Recent Items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في العناصر الأخيرة"
           }
         }
       }
@@ -11718,6 +12090,16 @@
         }
       }
     },
+    "Some lists could not be cleared. Try again, or use Clear Menu in the Apple menu or Finder’s Go menu.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر مسح بعض القوائم. حاول مرة أخرى، أو استخدم «مسح القائمة» في قائمة Apple أو في قائمة «انتقال» في Finder."
+          }
+        }
+      }
+    },
     "Some permissions could not be read, so they are not listed.": {
       "localizations": {
         "ar": {
@@ -12191,6 +12573,16 @@
         }
       }
     },
+    "The Apple menu’s Recent Items and Finder’s Recent Folders are empty.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العناصر الأخيرة في قائمة Apple والمجلدات الأخيرة في Finder فارغة."
+          }
+        }
+      }
+    },
     "The app and %lld of its items will be moved to the Trash.": {
       "localizations": {
         "ar": {
@@ -12325,6 +12717,46 @@
         }
       }
     },
+    "The documents and apps stay where they are; only the lists are emptied, as with Clear Menu.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبقى المستندات والتطبيقات في أماكنها؛ تُفرَّغ القوائم فقط، كما يفعل «مسح القائمة»."
+          }
+        }
+      }
+    },
+    "The documents and folders stay where they are; only the lists are emptied. To clear Recent Folders, Finder quits and opens again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبقى المستندات والمجلدات في أماكنها؛ تُفرَّغ القوائم فقط. لمسح المجلدات الأخيرة يُغلق Finder ثم يُفتح من جديد."
+          }
+        }
+      }
+    },
+    "The documents and folders stay where they are; only the lists are emptied. To clear Recent Folders, Finder quits and opens again. It reopens its windows, and their folders are listed again: close Finder’s windows first to clear them too.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبقى المستندات والمجلدات في أماكنها؛ تُفرَّغ القوائم فقط. لمسح المجلدات الأخيرة يُغلق Finder ثم يُفتح من جديد، ويعيد فتح نوافذه فتظهر مجلداتها في القائمة مجددًا: أغلق نوافذ Finder أولًا لمسحها أيضًا."
+          }
+        }
+      }
+    },
+    "The documents stay where they are; only the apps’ lists go to the Trash.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبقى المستندات في أماكنها؛ تُنقل قوائم التطبيقات فقط إلى سلة المهملات."
+          }
+        }
+      }
+    },
     "The file could not be written.": {
       "localizations": {
         "ar": {
@@ -12381,6 +12813,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إيقاف العنصر ونقله إلى سلة المهملات."
+          }
+        }
+      }
+    },
+    "The lists are empty now.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القوائم فارغة الآن."
           }
         }
       }

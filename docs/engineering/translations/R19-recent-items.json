@@ -1,0 +1,119 @@
+{
+"Clear": {
+"ar": "مسح"
+},
+"Clear…": {
+"ar": "مسح…"
+},
+"Clear %lld lists?": {
+"en_plural": {
+"one": "Clear %lld list?",
+"other": "Clear %lld lists?"
+},
+"ar_plural": {
+"zero": "هل تريد مسح 0 قوائم؟",
+"one": "هل تريد مسح قائمة واحدة؟",
+"two": "هل تريد مسح قائمتين؟",
+"few": "هل تريد مسح %lld قوائم؟",
+"many": "هل تريد مسح %lld قائمة؟",
+"other": "هل تريد مسح %lld قائمة؟"
+}
+},
+"Clear the recent documents of %lld apps?": {
+"en_plural": {
+"one": "Clear the recent documents of %lld app?",
+"other": "Clear the recent documents of %lld apps?"
+},
+"ar_plural": {
+"zero": "هل تريد مسح المستندات الأخيرة لـ 0 تطبيقات؟",
+"one": "هل تريد مسح المستندات الأخيرة لتطبيق واحد؟",
+"two": "هل تريد مسح المستندات الأخيرة لتطبيقين؟",
+"few": "هل تريد مسح المستندات الأخيرة لـ %lld تطبيقات؟",
+"many": "هل تريد مسح المستندات الأخيرة لـ %lld تطبيقًا؟",
+"other": "هل تريد مسح المستندات الأخيرة لـ %lld تطبيق؟"
+}
+},
+"%lld lists were kept, because their app is open or the list changed.": {
+"en_plural": {
+"one": "%lld list was kept, because its app is open or the list changed.",
+"other": "%lld lists were kept, because their app is open or the list changed."
+},
+"ar_plural": {
+"zero": "لم تُترك أي قائمة.",
+"one": "تُركت قائمة واحدة لأن تطبيقها مفتوح أو لأن القائمة تغيّرت.",
+"two": "تُركت قائمتان لأن تطبيقيهما مفتوحان أو لأن القائمتين تغيّرتا.",
+"few": "تُركت %lld قوائم لأن تطبيقاتها مفتوحة أو لأن القوائم تغيّرت.",
+"many": "تُركت %lld قائمة لأن تطبيقاتها مفتوحة أو لأن القوائم تغيّرت.",
+"other": "تُركت %lld قائمة لأن تطبيقاتها مفتوحة أو لأن القوائم تغيّرت."
+}
+},
+"Cleared. The lists are in the Trash, so you can put them back.": {
+"ar": "تم المسح. القوائم في سلة المهملات، لذا يمكنك إعادتها."
+},
+"Finder’s Recent Folders": {
+"ar": "المجلدات الأخيرة في Finder"
+},
+"Mac": {
+"ar": "الماك"
+},
+"No app has a list of recently opened documents.": {
+"ar": "لا يوجد تطبيق لديه قائمة بمستندات فُتحت مؤخرًا."
+},
+"Nothing recent": {
+"ar": "لا شيء حديث"
+},
+"Open: quit it to clear": {
+"ar": "مفتوح: أغلقه لمسح القائمة"
+},
+"Read the recent items again (⌘R)": {
+"ar": "قراءة العناصر الأخيرة مرة أخرى (⌘R)"
+},
+"Reading recent items…": {
+"ar": "جارٍ قراءة العناصر الأخيرة…"
+},
+"Recent Applications": {
+"ar": "التطبيقات الأخيرة"
+},
+"Recent Documents": {
+"ar": "المستندات الأخيرة"
+},
+"Recent Documents in Apps": {
+"ar": "المستندات الأخيرة في التطبيقات"
+},
+"Recent Items": {
+"ar": "العناصر الأخيرة"
+},
+"Recent Servers": {
+"ar": "الخوادم الأخيرة"
+},
+"Review and clear the selected lists (⌘⌫)": {
+"ar": "مراجعة القوائم المحددة ومسحها (⌘⌫)"
+},
+"Search Recent Items": {
+"ar": "البحث في العناصر الأخيرة"
+},
+"Some lists could not be cleared. Try again, or use Clear Menu in the Apple menu or Finder’s Go menu.": {
+"ar": "تعذّر مسح بعض القوائم. حاول مرة أخرى، أو استخدم «مسح القائمة» في قائمة Apple أو في قائمة «انتقال» في Finder."
+},
+"The Apple menu’s Recent Items and Finder’s Recent Folders are empty.": {
+"ar": "العناصر الأخيرة في قائمة Apple والمجلدات الأخيرة في Finder فارغة."
+},
+"The documents and apps stay where they are; only the lists are emptied, as with Clear Menu.": {
+"ar": "تبقى المستندات والتطبيقات في أماكنها؛ تُفرَّغ القوائم فقط، كما يفعل «مسح القائمة»."
+},
+"The documents stay where they are; only the apps’ lists go to the Trash.": {
+"ar": "تبقى المستندات في أماكنها؛ تُنقل قوائم التطبيقات فقط إلى سلة المهملات."
+},
+"The lists are empty now.": {
+"ar": "القوائم فارغة الآن."
+},
+"Cleared. Finder reopened its windows, so their folders are listed again.": {
+"ar": "تم المسح. أعاد Finder فتح نوافذه، لذا ظهرت مجلداتها في القائمة من جديد."
+},
+"The documents and folders stay where they are; only the lists are emptied. To clear Recent Folders, Finder quits and opens again.": {
+"ar": "تبقى المستندات والمجلدات في أماكنها؛ تُفرَّغ القوائم فقط. لمسح المجلدات الأخيرة يُغلق Finder ثم يُفتح من جديد."
+},
+"The documents and folders stay where they are; only the lists are emptied. To clear Recent Folders, Finder quits and opens again. It reopens its windows, and their folders are listed again: close Finder’s windows first to clear them too.": {
+"ar": "تبقى المستندات والمجلدات في أماكنها؛ تُفرَّغ القوائم فقط. لمسح المجلدات الأخيرة يُغلق Finder ثم يُفتح من جديد، ويعيد فتح نوافذه فتظهر مجلداتها في القائمة مجددًا: أغلق نوافذ Finder أولًا لمسحها أيضًا."
+}
+}

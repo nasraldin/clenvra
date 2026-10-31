@@ -180,6 +180,13 @@ struct MainWindow: View {
             storage(.otherClutter)
         case .duplicates:
             DuplicatesView(session: environment.duplicatesSession)
+        case .recentItems:
+            RecentItemsView(session: environment.recentItemsSession, page: .mac)
+                .id(RecentItemsView.Page.mac)
+        case .appRecentItems:
+            // Its own identity: one table reused for both pages would swap row kinds under SwiftUI and crash it.
+            RecentItemsView(session: environment.recentItemsSession, page: .apps)
+                .id(RecentItemsView.Page.apps)
         case .applications:
             applications(.installed)
         case .leftovers:

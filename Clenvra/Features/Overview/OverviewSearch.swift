@@ -95,6 +95,8 @@ enum OverviewSearchIndex {
         case .largeFiles: ["large", "old", "big files", "clutter"]
         case .downloads: ["downloads", "installers", "dmg", "clutter"]
         case .otherClutter: ["screenshots", "screen recordings", "other", "clutter"]
+        case .recentItems: ["recent", "recent items", "recent folders", "privacy", "clear menu", "history"]
+        case .appRecentItems: ["recent", "open recent", "recent documents", "privacy", "history"]
         case .duplicates: ["duplicate", "copies", "same files"]
         case .similarPhotos: ["photos", "pictures", "images", "blurry"]
         case .storage: ["disk", "space", "storage", "folders", "system data"]

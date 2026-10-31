@@ -12,6 +12,8 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
     case duplicates
     case similarPhotos
     case otherClutter
+    case recentItems
+    case appRecentItems
     case storage
     case disks
     case applications
@@ -47,7 +49,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .overview: .summary
         case .cleanup, .developer, .developerTools, .largeFiles, .downloads, .duplicates, .similarPhotos,
-            .otherClutter:
+            .otherClutter, .recentItems, .appRecentItems:
             .cleanUp
         case .storage, .disks: .storage
         case .applications, .leftovers, .extensions, .startup: .applications
@@ -68,6 +70,8 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "Duplicates"
         case .similarPhotos: "Similar Photos"
         case .otherClutter: "Other"
+        case .recentItems: "Recent Items"
+        case .appRecentItems: "Recent Documents in Apps"
         case .storage: "Space Map"
         case .disks: "Mounted Disks"
         case .applications: "Applications"
@@ -94,6 +98,8 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .duplicates: "plus.square.on.square"
         case .similarPhotos: "photo.on.rectangle.angled"
         case .otherClutter: "tray"
+        case .recentItems: "clock"
+        case .appRecentItems: "doc.text.magnifyingglass"
         case .storage: "chart.pie"
         case .disks: "externaldrive.connected.to.line.below"
         case .applications: "square.grid.2x2"
@@ -116,6 +122,7 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .developer, .developerTools: [.developer, .developerTools]
         case .largeFiles, .downloads, .duplicates, .similarPhotos, .otherClutter:
             [.largeFiles, .downloads, .duplicates, .similarPhotos, .otherClutter]
+        case .recentItems, .appRecentItems: [.recentItems, .appRecentItems]
         default: [self]
         }
     }
@@ -145,6 +152,8 @@ enum AppSection: String, CaseIterable, Identifiable, Hashable {
         case .developer: "Junk"
         case .developerTools: "Tools"
         case .largeFiles: "Large & Old"
+        case .recentItems: "Mac"
+        case .appRecentItems: "Apps"
         default: title
         }
     }

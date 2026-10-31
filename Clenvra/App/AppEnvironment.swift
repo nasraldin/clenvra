@@ -52,6 +52,13 @@ final class AppEnvironment {
     /// Plug-in bundles are not apps, so no owner check applies; the gate still checks identity and protection.
     @ObservationIgnored private(set) lazy var pluginsSession = PluginsSession(
         reader: PluginReader(home: home), deleter: makeDeleter { _ in .notRunning }, apps: .live)
+    /// The Apple menu's and Finder's recent lists, and each app's own; an app's list is refused while the app is open.
+    /// Any app can keep such a list (TextEdit and Preview live in /System), so macOS is asked which are open.
+    @ObservationIgnored private(set) lazy var recentItemsSession = RecentItemsSession(
+        store: LiveRecentListStore(),
+        deleter: makeDeleter { bundleID in
+            NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty ? .notRunning : .running
+        })
     @ObservationIgnored private(set) lazy var activitySession = ActivitySession(
         activityLog: activityLog, reenabler: LaunchAgentReenabler(runner: ProcessCommandRunner()), privileged: helper)
     @ObservationIgnored private(set) lazy var startupSession = StartupSession(
