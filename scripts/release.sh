@@ -2,7 +2,8 @@
 # Builds a Developer ID signed, notarised and stapled DMG of Clenvra in .build/release/.
 # One-time setup: a "Developer ID Application" certificate for team CZU6ZC4LYQ in the keychain, and
 #   xcrun notarytool store-credentials clenvra-notary --apple-id <Apple ID> --team-id CZU6ZC4LYQ
-# Usage: scripts/release.sh [--skip-notarize]
+# Usage: scripts/release.sh [--skip-notarize | --app-only]
+#   --app-only: stop after the signed app (.build/release/export/Clenvra.app), for the helper end-to-end test.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -43,6 +44,11 @@ echo "▸ Verify app signature"
 codesign --verify --deep --strict --verbose=2 "$APP"
 codesign -dv "$APP" 2>&1 | grep -E "Authority=Developer ID Application|TeamIdentifier=$TEAM" >/dev/null \
   || { echo "✘ App is not signed with Developer ID for $TEAM"; exit 1; }
+
+if [[ "${1:-}" == "--app-only" ]]; then
+  echo "✔ Signed app: $APP"
+  exit 0
+fi
 
 echo "▸ Build DMG"
 STAGE="$OUT/dmg"

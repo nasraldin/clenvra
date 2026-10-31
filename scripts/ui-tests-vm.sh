@@ -49,7 +49,7 @@ fi
 
 echo "▸ UI tests: $FILTER"
 set +e
-tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} ${CLENVRA_PROBE:+TEST_RUNNER_CLENVRA_PROBE=1} ${CLENVRA_E2E:+TEST_RUNNER_CLENVRA_E2E=1} ${CLENVRA_AUDIT_SECTIONS:+TEST_RUNNER_CLENVRA_AUDIT_SECTIONS=$CLENVRA_AUDIT_SECTIONS} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
+tart exec "$VM" /bin/zsh -c "rm -rf ~/Results.xcresult && cd ~/clenvra && TEST_RUNNER_CLENVRA_SCREENSHOTS=${CLENVRA_SCREENSHOTS:-0} ${CLENVRA_PROBE:+TEST_RUNNER_CLENVRA_PROBE=1} ${CLENVRA_E2E:+TEST_RUNNER_CLENVRA_E2E=1} ${CLENVRA_HELPER_E2E:+TEST_RUNNER_CLENVRA_HELPER_E2E=1} ${CLENVRA_AUDIT_SECTIONS:+TEST_RUNNER_CLENVRA_AUDIT_SECTIONS=$CLENVRA_AUDIT_SECTIONS} xcodebuild test -workspace Clenvra.xcworkspace -scheme Clenvra \
   -destination 'platform=macOS,arch=arm64' -derivedDataPath ~/dd -resultBundlePath ~/Results.xcresult \
   -only-testing:$FILTER -quiet \
   CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="
