@@ -3747,6 +3747,16 @@
         }
       }
     },
+    "Clenvra could not read this item’s file, so it is not changed. Use Login Items Settings or Show in Finder.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على Clenvra قراءة ملف هذا العنصر، لذا لا يُغيَّر. استخدم إعدادات عناصر تسجيل الدخول أو «إظهار في Finder»."
+          }
+        }
+      }
+    },
     "Clenvra couldn't read this app's version.": {
       "localizations": {
         "ar": {
@@ -3869,6 +3879,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تنزيلات Colima"
+          }
+        }
+      }
+    },
+    "Collapse": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طي"
           }
         }
       }
@@ -5028,6 +5048,16 @@
         }
       }
     },
+    "Expand": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توسيع"
+          }
+        }
+      }
+    },
     "Expand All": {
       "localizations": {
         "ar": {
@@ -6072,6 +6102,16 @@
         }
       }
     },
+    "Install Clenvra’s helper?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد تثبيت مساعد Clenvra؟"
+          }
+        }
+      }
+    },
     "Installed": {
       "localizations": {
         "ar": {
@@ -6118,6 +6158,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ثبّتها أنت أو تطبيقاتك"
+          }
+        }
+      }
+    },
+    "Installed for all users in /Library. Remove it with the app or uninstaller that added it, or use Show in Finder and move it to the Trash (macOS asks for an administrator’s password).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثبَّت لجميع المستخدمين في ‎/Library. أزله بالتطبيق أو برنامج إلغاء التثبيت الذي أضافه، أو استخدم «إظهار في Finder» وانقله إلى سلة المهملات (سيطلب macOS كلمة سر المسؤول)."
           }
         }
       }
@@ -6338,16 +6388,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "عناصر موجودة في سلة المهملات. لا يمكن التراجع عن إفراغها."
-          }
-        }
-      }
-    },
-    "Items for all users are changed with Clenvra’s helper. Install it in Settings, or use Login Items Settings.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُغيَّر العناصر الخاصة بجميع المستخدمين عبر مساعد Clenvra. ثبّته من الإعدادات، أو استخدم إعدادات عناصر تسجيل الدخول."
           }
         }
       }
@@ -7028,6 +7068,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تديره مؤسستك"
+          }
+        }
+      }
+    },
+    "Managed by your organization’s security or management software. Changing it here would weaken that protection, so only the software itself or your administrator can turn it off or remove it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تديره برامج الأمان أو الإدارة في مؤسستك. تغييره هنا يُضعف تلك الحماية، لذا لا يمكن إيقافه أو إزالته إلا من البرنامج نفسه أو من قِبل المسؤول."
           }
         }
       }
@@ -8350,6 +8400,16 @@
         }
       }
     },
+    "On": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُفعَّل"
+          }
+        }
+      }
+    },
     "On a schedule": {
       "localizations": {
         "ar": {
@@ -8490,6 +8550,16 @@
         }
       }
     },
+    "Open Login Items & Extensions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح عناصر تسجيل الدخول والامتدادات"
+          }
+        }
+      }
+    },
     "Open Login Items Settings": {
       "localizations": {
         "ar": {
@@ -8556,6 +8626,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح إعدادات الخصوصية…"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح الإعدادات"
           }
         }
       }
@@ -8753,6 +8833,16 @@
         }
       }
     },
+    "Part of its app, so uninstalling the app removes it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من تطبيقه، لذا تُزيله إزالةُ التطبيق."
+          }
+        }
+      }
+    },
     "Part of macOS": {
       "localizations": {
         "ar": {
@@ -8763,12 +8853,32 @@
         }
       }
     },
+    "Part of macOS, on the protected system volume: it cannot be removed. Some can be turned off in Login Items & Extensions.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من macOS على وحدة النظام المحمية: لا يمكن إزالته. يمكن إيقاف بعضها من عناصر تسجيل الدخول والامتدادات."
+          }
+        }
+      }
+    },
     "Part of macOS. Clenvra never removes it.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "جزء من macOS. لا يزيله Clenvra أبدًا."
+          }
+        }
+      }
+    },
+    "Part of macOS. It is protected by the system and cannot be changed or removed.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزء من macOS. يحميه النظام ولا يمكن تغييره أو إزالته."
           }
         }
       }
@@ -9544,6 +9654,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "هل تريد إزالة بيانات المتصفح؟"
+          }
+        }
+      }
+    },
+    "Remove it with the Remove button: it goes to the Trash, so you can put it back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أزله بزر «إزالة»: يُنقل إلى سلة المهملات، لذا يمكنك إعادته."
           }
         }
       }
@@ -10840,6 +10960,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "برنامج أمان أو إدارة. أزِله من تطبيقه الخاص أو اطلب ذلك من المسؤول."
+          }
+        }
+      }
+    },
+    "Security or management software. Removing it here would weaken that protection: turn it off in its own app, or ask your administrator.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامج أمان أو إدارة. إزالته هنا تُضعف تلك الحماية: أوقفه من تطبيقه أو اطلب ذلك من المسؤول."
           }
         }
       }
@@ -12555,16 +12685,6 @@
         }
       }
     },
-    "This item cannot be changed here. Login Items Settings shows what macOS allows.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يمكن تغيير هذا العنصر هنا. تعرض إعدادات عناصر تسجيل الدخول ما يسمح به macOS."
-          }
-        }
-      }
-    },
     "This item cannot be changed here. Use Login Items Settings.": {
       "localizations": {
         "ar": {
@@ -12585,12 +12705,42 @@
         }
       }
     },
+    "This item is for all users, so it is changed through Clenvra’s helper. Install it in Settings › System Helper, then try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا العنصر لجميع المستخدمين، لذا يُغيَّر عبر مساعد Clenvra. ثبّته من الإعدادات › مساعد النظام، ثم حاول مرة أخرى."
+          }
+        }
+      }
+    },
+    "This item is for all users, so it is changed through Clenvra’s helper. The installed helper is from another version of Clenvra; update it, then try again. macOS may ask you to approve it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا العنصر لجميع المستخدمين، لذا يُغيَّر عبر مساعد Clenvra. المساعد المثبَّت من إصدار آخر من Clenvra؛ حدّثه ثم حاول مرة أخرى. قد يطلب macOS موافقتك عليه."
+          }
+        }
+      }
+    },
     "This item is for all users: Disable and Enable ask for an administrator’s password each time.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "هذا العنصر لجميع المستخدمين: يطلب التعطيل والتمكين كلمة سر المسؤول في كل مرة."
+          }
+        }
+      }
+    },
+    "This item is for all users: Disable, Enable and Remove go through Clenvra’s helper, which needs to be installed or updated first.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا العنصر لجميع المستخدمين: التعطيل والتفعيل والإزالة تتم عبر مساعد Clenvra، ويجب تثبيته أو تحديثه أولًا."
           }
         }
       }
@@ -12805,6 +12955,56 @@
         }
       }
     },
+    "Turn Off": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        }
+      }
+    },
+    "Turn Off or Remove": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإيقاف أو الإزالة"
+          }
+        }
+      }
+    },
+    "Turn On": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل"
+          }
+        }
+      }
+    },
+    "Turn it off here or in Login Items & Extensions. It is removed with the app or installer that added it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوقفه من هنا أو من عناصر تسجيل الدخول والامتدادات. يُزال بالتطبيق أو المثبِّت الذي أضافه."
+          }
+        }
+      }
+    },
+    "Turn it off here or in Login Items & Extensions; its app keeps working. It is part of its app, so uninstalling the app removes it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوقفه من هنا أو من عناصر تسجيل الدخول والامتدادات؛ ويبقى تطبيقه يعمل. وهو جزء من تطبيقه، لذا تُزيله إزالةُ التطبيق."
+          }
+        }
+      }
+    },
     "Turn on Show Apple Items to see the ones built into macOS.": {
       "localizations": {
         "ar": {
@@ -12861,6 +13061,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "هل تريد إلغاء تثبيت %@ باستخدام Homebrew؟"
+          }
+        }
+      }
+    },
+    "Uninstall %@…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة تثبيت %@…"
           }
         }
       }
@@ -13079,6 +13289,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "غير مستخدمة منذ 6 أشهر"
+          }
+        }
+      }
+    },
+    "Update Clenvra’s helper?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد تحديث مساعد Clenvra؟"
           }
         }
       }
@@ -13755,6 +13975,16 @@
         }
       }
     },
+    "macOS did not change this extension.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُغيّر macOS هذا الامتداد."
+          }
+        }
+      }
+    },
     "macOS did not install the helper. Make sure Clenvra is in the Applications folder.": {
       "localizations": {
         "ar": {
@@ -13831,6 +14061,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يحتفظ macOS بقائمة أذونات التطبيقات خاصة. اسمح لـ Clenvra بالوصول الكامل إلى القرص، ثم حدّث."
+          }
+        }
+      }
+    },
+    "macOS lets only the app that installed it remove it. Turn it off in that app or in Login Items & Extensions; uninstalling the app removes it (macOS asks you to confirm).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يسمح macOS بإزالته إلا للتطبيق الذي ثبّته. أوقفه من ذلك التطبيق أو من عناصر تسجيل الدخول والامتدادات؛ وإزالة التطبيق تُزيله (سيطلب macOS تأكيدك)."
           }
         }
       }

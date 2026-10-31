@@ -9,6 +9,7 @@ struct DeveloperToolsView: View {
     @State private var searchText = ""
     @State private var isConfirmingBatch = false
     @State private var showingBatchResult = false
+    private let expansion = ExpandedGroups("developerTools")
 
     var body: some View {
         page
@@ -18,7 +19,7 @@ struct DeveloperToolsView: View {
         if let session {
             let query = AppSearch.normalized(searchText)
             List {
-                ToolStorageSection(session: session, query: query)
+                ToolStorageSection(session: session, query: query, expansion: expansion)
             }
             .pageState(isShown: !query.isEmpty && !session.rows.isEmpty && !session.rows.contains { $0.matches(query) })
             {
@@ -59,6 +60,13 @@ struct DeveloperToolsView: View {
                     .keyboardShortcut("r", modifiers: .command)
                     .help(Text("Check your tools again (⌘R)"))
                     .disabled(session.phase == .inspecting)
+                }
+                ToolbarItem {
+                    ExpandAllButton(
+                        allExpanded: expansion.allBinding(
+                            Set(session.rows.map(\.category)).map(ToolStorageSection.groupID))
+                    )
+                    .disabled(session.rows.isEmpty)
                 }
                 ToolbarSpacer(.fixed)
                 ToolbarItem {
@@ -102,36 +110,53 @@ struct ToolStorageSection: View {
     @State private var confirming: ToolStorage?
     @State private var showingOutput = false
 
+    /// Which groups are open; shared with the page's Expand All button.
+    let expansion: ExpandedGroups
+
     var body: some View {
-        Section {
+        Group {
             if session.phase == .inspecting && session.rows.isEmpty {
                 HStack {
                     ProgressView().controlSize(.small)
                     Text("Checking developer tools…").foregroundStyle(.secondary)
                 }
             }
-            ForEach(shownRows) { row in
-                ToolRow(
-                    row: row, isRunning: session.phase == .running(rowID: row.id),
-                    isChecked: Binding(
-                        get: { session.checked.contains(row.id) },
-                        set: { if $0 != session.checked.contains(row.id) { session.toggleChecked(row.id) } })
-                ) {
-                    confirming = row
+            ForEach(shownGroups, id: \.category) { group in
+                let isExpanded = expansion.binding(Self.groupID(group.category)) {
+                    shownGroups.map { Self.groupID($0.category) }
                 }
-                .disabled(isBusy)
-            }
-        } header: {
-            if !checkableShown.isEmpty {
-                Toggle(isOn: allShownChecked) {
-                    Text("Select All Shown")
+                Section {
+                    if isExpanded.wrappedValue {
+                        ForEach(group.rows) { row in
+                            ToolRow(
+                                row: row, isRunning: session.phase == .running(rowID: row.id),
+                                isChecked: Binding(
+                                    get: { session.checked.contains(row.id) },
+                                    set: { if $0 != session.checked.contains(row.id) { session.toggleChecked(row.id) } }
+                                )
+                            ) {
+                                confirming = row
+                            }
+                            .disabled(isBusy)
+                        }
+                    }
+                } header: {
+                    ToolGroupHeader(
+                        category: group.category, rows: group.rows, isExpanded: isExpanded,
+                        isChecked: checkedBinding(for: group.rows)
+                    )
+                    .disabled(isBusy)
                 }
-                .toggleStyle(.checkbox)
-                .disabled(isBusy)
             }
-        } footer: {
-            Text("Space managed by your tools. Cleaning runs the tool's own command, which does not use the Trash.")
-                .font(.callout)
+            if !shownRows.isEmpty {
+                Section {
+                } footer: {
+                    Text(
+                        "Space managed by your tools. Cleaning runs the tool's own command, which does not use the Trash."
+                    )
+                    .font(.callout)
+                }
+            }
         }
         .sheet(item: $confirming) { row in
             ConfirmToolCleanupSheet(row: row) {
@@ -153,16 +178,23 @@ struct ToolStorageSection: View {
 
     private var shownRows: [ToolStorage] { session.rows.filter { $0.matches(query) } }
 
-    /// Shown rows that have a cleanup command, the only ones that can be checked.
-    private var checkableShown: Set<String> { Set(shownRows.filter { $0.cleanup != nil }.map(\.id)) }
+    /// The shown tools by category, in the categories' own order; the tools keep the order they were found in.
+    private var shownGroups: [(category: CleanupCategory, rows: [ToolStorage])] {
+        let byCategory = Dictionary(grouping: shownRows, by: \.category)
+        return CleanupCategory.allCases.compactMap { category in byCategory[category].map { (category, $0) } }
+    }
 
-    /// Checks or unchecks every tool shown; checks on tools the search hides are kept.
-    private var allShownChecked: Binding<Bool> {
-        Binding(
-            get: { !checkableShown.isEmpty && checkableShown.isSubset(of: session.checked) },
+    static func groupID(_ category: CleanupCategory) -> String { category.rawValue }
+
+    /// Checks or unchecks every shown tool of a group that has a cleanup command; checks on hidden tools are kept.
+    /// `nil` when no tool of the group can be checked.
+    private func checkedBinding(for rows: [ToolStorage]) -> Binding<Bool>? {
+        let ids = Set(rows.filter { $0.cleanup != nil }.map(\.id))
+        guard !ids.isEmpty else { return nil }
+        return Binding(
+            get: { ids.isSubset(of: session.checked) },
             set: { checked in
-                session.setChecked(
-                    checked ? session.checked.union(checkableShown) : session.checked.subtracting(checkableShown))
+                session.setChecked(checked ? session.checked.union(ids) : session.checked.subtracting(ids))
             })
     }
 }
@@ -176,6 +208,49 @@ extension ToolStorage {
                 String(localized: tool), location, String(localized: category.title),
                 note.map { String(localized: $0) },
             ])
+    }
+}
+
+/// A group's header: open or close it, check all its tools, and its count and total size.
+private struct ToolGroupHeader: View {
+    let category: CleanupCategory
+    let rows: [ToolStorage]
+    @Binding var isExpanded: Bool
+    let isChecked: Binding<Bool>?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Button {
+                isExpanded.toggle()
+            } label: {
+                Image(systemName: "chevron.right")
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    .frame(width: 14)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isExpanded ? Text("Collapse") : Text("Expand"))
+            if let isChecked {
+                Toggle(isOn: isChecked) {
+                    Text("Include all \(Text(category.title))")
+                }
+                .toggleStyle(.checkbox)
+                .labelsHidden()
+            }
+            Image(systemName: category.symbol)
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            Text(category.title)
+                .font(.headline)
+            Text("\(rows.count) items")
+                .foregroundStyle(.secondary)
+            Spacer()
+            if let total = rows.compactMap(\.size).reduce(nil, { ($0 ?? 0) + $1 }) {
+                SizeText(bytes: total)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .contentShape(.rect)
+        .onTapGesture { isExpanded.toggle() }
     }
 }
 
