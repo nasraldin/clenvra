@@ -127,4 +127,134 @@ struct AppBackupTests {
         #expect(try FileManager.default.contentsOfDirectory(atPath: fixture.path("Backups")).isEmpty)
         #expect(fixture.exists("Applications/Writer.app"))
     }
+
+    // MARK: - Scope
+
+    @Test("a settings-only backup holds the app's settings and data, never the bundle, caches or logs")
+    func settingsOnlyBackupExcludesBundleAndCaches() async throws {
+        let app = try fixture.app("com.example.writer", name: "Writer")
+        try fixture.file("Library/Caches/com.example.writer/blob")
+        try fixture.file("Library/Logs/com.example.writer/log.txt")
+        try fixture.file("Library/Preferences/com.example.writer.plist")
+        try fixture.file("Library/Application Support/com.example.writer/db")
+        try fixture.file("Library/Saved Application State/com.example.writer.savedState/data")
+        try fixture.file("Library/HTTPStorages/com.example.writer/store")
+        try fixture.container("com.example.writer", identifier: "com.example.writer")
+        let owned = await fixture.resolver().resolve(app, installedApps: [app])
+        #expect(owned.contains { $0.kind == .caches })
+
+        let settings = AppBackup.paths(for: .settingsOnly, bundle: app.id, owned: owned)
+        let whole = AppBackup.paths(for: .wholeApp, bundle: app.id, owned: owned)
+        let backup = try await AppBackup.create(app: app, items: settings, scope: .settingsOnly, in: backups)
+
+        let expected = Set([
+            fixture.path("Library/Preferences/com.example.writer.plist"),
+            fixture.path("Library/Application Support/com.example.writer"),
+            fixture.path("Library/Saved Application State/com.example.writer.savedState"),
+            fixture.path("Library/HTTPStorages/com.example.writer"),
+            fixture.path("Library/Containers/com.example.writer"),
+        ])
+        #expect(Set(settings) == expected)
+        #expect(!settings.contains(app.id))
+        #expect(whole.first == app.id)
+        #expect(Set(whole) == Set(owned.map(\.path)).union([app.id]))
+        let listed = try #require(AppBackup.list(in: backups).first)
+        #expect(listed.url.lastPathComponent == backup.lastPathComponent)
+        #expect(listed.scope == .settingsOnly)
+        #expect(Set(listed.items.map(\.original)) == expected)
+    }
+
+    @Test("a manifest written before scopes existed reads as a whole-app backup")
+    func oldManifestIsWholeApp() throws {
+        try fixture.builder.directory("Backups/Old.clenvrabackup")
+        try fixture.file("Backups/Old.clenvrabackup/item-1.zip")
+        let manifest = """
+            {"bundleID": "com.example.old", "name": "Old", "version": "1", "created": "2026-01-01T10:00:00Z",
+             "items": [{"original": "/Applications/Old.app", "archive": "item-1.zip", "bytes": 10}]}
+            """
+        try Data(manifest.utf8).write(to: URL(filePath: fixture.path("Backups/Old.clenvrabackup/manifest.json")))
+
+        #expect(AppBackup.list(in: backups).map(\.scope) == [.wholeApp])
+    }
+
+    // MARK: - Choosing what to restore
+
+    private func deleter(running: Set<String> = []) -> DeletionExecutor {
+        let policy = ProtectionPolicy(home: fixture.home)
+        return DeletionExecutor(
+            gate: DeletionGate(
+                policy: policy, ownerState: { running.contains($0) ? .running : .notRunning }),
+            log: ActivityLog(directory: URL(filePath: fixture.path("log"))),
+            trash: BackupFixtureTrash(directory: fixture.path(".Trash")))
+    }
+
+    @Test("only the chosen items are restored; the others stay missing")
+    func restoreSelectedItemsOnly() async throws {
+        let (app, _, cache, _) = try makeApp()
+        let backup = try await AppBackup.create(app: app, items: [app.id, cache], in: backups)
+        try FileManager.default.removeItem(atPath: app.id)
+        try FileManager.default.removeItem(atPath: cache)
+
+        let result = try await AppBackup.restore(backup, items: [cache])
+
+        #expect(result.restored == [cache])
+        #expect(result.skippedExisting.isEmpty)
+        #expect(fixture.exists("Library/Caches/com.example.writer/blob"))
+        #expect(!fixture.exists("Applications/Writer.app"))
+    }
+
+    @Test("replacing moves the current copy to the Trash first, logged, then restores the backup's copy")
+    func restoreReplaceMovesCurrentToTrash() async throws {
+        let (app, payload, cache, _) = try makeApp()
+        let original = try Data(contentsOf: URL(filePath: payload))
+        let backup = try await AppBackup.create(app: app, items: [app.id, cache], in: backups)
+        try Data("upgraded".utf8).write(to: URL(filePath: payload))
+
+        // Without replacing, nothing is touched.
+        let kept = try await AppBackup.restore(backup, items: [app.id], replaceExisting: false, trash: deleter())
+        #expect(kept.skippedExisting == [app.id])
+        #expect(try Data(contentsOf: URL(filePath: payload)) == Data("upgraded".utf8))
+
+        let result = try await AppBackup.restore(backup, items: [app.id], replaceExisting: true, trash: deleter())
+
+        #expect(result.restored == [app.id])
+        #expect(result.movedToTrash == [app.id])
+        #expect(result.notReplaced.isEmpty)
+        #expect(try Data(contentsOf: URL(filePath: payload)) == original)
+        // The upgraded copy is in the Trash, never deleted; the cache was not chosen and is untouched.
+        let trashed = try FileManager.default.contentsOfDirectory(atPath: fixture.path(".Trash"))
+        #expect(trashed.count == 1)
+        let inTrash = fixture.path(".Trash/\(trashed[0])/Contents/MacOS/payload")
+        #expect(try Data(contentsOf: URL(filePath: inTrash)) == Data("upgraded".utf8))
+        #expect(fixture.exists("Library/Caches/com.example.writer/blob"))
+        let records = try await ActivityLog(directory: URL(filePath: fixture.path("log"))).readAll().records
+        #expect(records.contains { $0.itemPath == app.id && $0.outcome.isMovedToTrash })
+    }
+
+    @Test("replacing a running app's copy is refused by the deletion gate and nothing is restored over it")
+    func restoreReplaceRefusesRunningApp() async throws {
+        let (app, payload, cache, _) = try makeApp()
+        let backup = try await AppBackup.create(app: app, items: [app.id, cache], in: backups)
+        try Data("upgraded".utf8).write(to: URL(filePath: payload))
+
+        let result = try await AppBackup.restore(
+            backup, items: [app.id], replaceExisting: true, trash: deleter(running: ["com.example.writer"]))
+
+        #expect(result.restored.isEmpty)
+        #expect(result.movedToTrash.isEmpty)
+        #expect(result.notReplaced.map(\.path) == [app.id])
+        #expect(try Data(contentsOf: URL(filePath: payload)) == Data("upgraded".utf8))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: fixture.path(".Trash")).isEmpty)
+    }
+}
+
+/// Moves items into the fixture's `.Trash` folder.
+private struct BackupFixtureTrash: TrashOperations {
+    let directory: String
+
+    func moveToTrash(path: String) throws -> String {
+        let destination = directory + "/" + UUID().uuidString
+        guard rename(path, destination) == 0 else { throw FileSystemError.current("rename", path) }
+        return destination
+    }
 }

@@ -106,14 +106,14 @@ public final class AppsSession {
     public private(set) var detail: Detail?
     public private(set) var isResolving = false
     /// An uninstall or `brew` command is running.
-    public private(set) var isWorking = false
+    public internal(set) var isWorking = false
     /// Paths of owned items chosen for removal (the bundle is always included).
     public private(set) var selection: Set<String> = []
     /// Live output of the last `brew` command.
     public private(set) var homebrewOutput: [String] = []
     /// Apps checked for removal together. Independent of the selected app (`detail`): checking never changes the
     /// selection and selecting never changes the checks.
-    public private(set) var checked: Set<InstalledApp.ID> = []
+    public internal(set) var checked: Set<InstalledApp.ID> = []
     public private(set) var leftovers: [OwnedItem] = []
     public private(set) var leftoverSelection: Set<String> = []
     public private(set) var isScanningLeftovers = false
@@ -126,20 +126,22 @@ public final class AppsSession {
     @ObservationIgnored private var resolveGeneration = 0
     @ObservationIgnored private var homebrewRun = 0
 
-    private let home: String
+    let home: String
     private let policy: ProtectionPolicy
-    private let deleter: DeletionExecutor
-    private let log: ActivityLog
+    let deleter: DeletionExecutor
+    let log: ActivityLog
     private let resolver: OwnershipResolver
-    private let privileged: (any PrivilegedOperations)?
-    private let systemAllowlist: HelperAllowlist
+    let privileged: (any PrivilegedOperations)?
+    let systemAllowlist: HelperAllowlist
     private let discover: @Sendable @concurrent () async -> [InstalledApp]
     private let ownerState: @Sendable (InstalledApp) -> OwnerState
     private let requestQuit: @Sendable @concurrent (InstalledApp) async -> Void
     private let lastUsedProvider: @Sendable (String) -> Date?
     private let teamIdentifier: @Sendable (InstalledApp) -> String?
-    private let homebrew: Homebrew?
-    private let now: @Sendable () -> Date
+    let homebrew: Homebrew?
+    /// Runs the read-only `pkgutil --file-info` that tells how an app was installed; `nil` skips that check.
+    let installSourceRunner: (any CommandRunning)?
+    let now: @Sendable () -> Date
     private let executor: FSExecutor
 
     /// - Parameters:
@@ -157,6 +159,7 @@ public final class AppsSession {
         lastUsed: @escaping @Sendable (String) -> Date? = { AppInventory.lastUsedDate(of: $0) },
         teamIdentifier: @escaping @Sendable (InstalledApp) -> String? = { ManagedAgents.teamIdentifier(of: $0.id) },
         homebrew: Homebrew? = nil,
+        installSourceRunner: (any CommandRunning)? = nil,
         now: @escaping @Sendable () -> Date = { Date() },
         executor: FSExecutor = .shared
     ) {
@@ -173,6 +176,7 @@ public final class AppsSession {
         self.lastUsedProvider = lastUsed
         self.teamIdentifier = teamIdentifier
         self.homebrew = homebrew
+        self.installSourceRunner = installSourceRunner
         self.now = now
         self.executor = executor
     }
@@ -326,7 +330,7 @@ public final class AppsSession {
         return true
     }
 
-    private func buildDetail(for app: InstalledApp) async -> Detail {
+    func buildDetail(for app: InstalledApp) async -> Detail {
         let availability = await currentAvailability(of: app)
         let isRemovable = availability == .available || availability == .running
         let items =
@@ -397,7 +401,7 @@ public final class AppsSession {
     /// Whether removing `item` needs administrator rights (it goes through the helper).
     public func needsHelper(_ item: OwnedItem) -> Bool { item.handling == .revealOnly }
 
-    private func helperItem(for item: OwnedItem, owner: String?) -> DeletionItem? {
+    func helperItem(for item: OwnedItem, owner: String?) -> DeletionItem? {
         guard item.handling == .revealOnly, helperAvailable, privileged != nil else { return nil }
         return systemAllowlist.helperItem(
             path: item.path, expected: item.snapshot, owner: owner, freedBytes: item.reclaimableSize,
@@ -485,7 +489,7 @@ public final class AppsSession {
     }
 
     /// The bundle as a deletion item, guarded by the snapshot taken at review.
-    private static func deletionItem(for app: InstalledApp, bundle: BundleItem) -> DeletionItem {
+    static func deletionItem(for app: InstalledApp, bundle: BundleItem) -> DeletionItem {
         DeletionItem(
             path: app.id, ruleRoot: (app.id as NSString).deletingLastPathComponent, expected: bundle.snapshot,
             ownerBundleID: app.bundleIdentifier, freedBytes: bundle.reclaimableSize, section: .applications)
@@ -497,9 +501,9 @@ public final class AppsSession {
     }
 
     /// System leftovers go through the helper, which checks each one again. Launch items use its orphan check.
-    private func removeThroughHelper(_ items: [DeletionItem], dryRun: Bool, operationID: UUID) async
-        -> [DeletionResult]
-    {
+    func removeThroughHelper(
+        _ items: [DeletionItem], mode: HelperRequest.Mode = .moveToTrash, dryRun: Bool, operationID: UUID
+    ) async -> [DeletionResult] {
         guard !items.isEmpty else { return [] }
         guard let privileged, helperAvailable else {
             return items.map { DeletionResult(item: $0, outcome: .notAttempted) }
@@ -511,7 +515,7 @@ public final class AppsSession {
         let files = items.filter { !isLaunchItem($0) }
         if !files.isEmpty {
             let request = HelperRequest(
-                operationID: operationID, mode: dryRun ? .dryRun : .moveToTrash, items: files, ownerBundlePaths: [:])
+                operationID: operationID, mode: dryRun ? .dryRun : mode, items: files, ownerBundlePaths: [:])
             let outcomes =
                 (try? await privileged.perform(request).outcomes)
                 ?? Array(repeating: .notAttempted, count: files.count)
@@ -659,7 +663,7 @@ public final class AppsSession {
 
 extension AppsSession {
     /// Why a checked app was left installed.
-    public enum SkipReason: Sendable, Equatable {
+    public enum SkipReason: Sendable, Hashable {
         /// Open (or Clenvra cannot tell); it must be quit first.
         case running
         /// Part of macOS or Clenvra, or a security or device-management agent.
@@ -668,6 +672,8 @@ extension AppsSession {
         case changed
         /// Its backup could not be made, so nothing of it was removed.
         case backupFailed(String)
+        /// `brew uninstall` failed (with its last error line), so nothing else of it was removed.
+        case homebrewFailed(String)
     }
 
     /// What removing the checked apps did.

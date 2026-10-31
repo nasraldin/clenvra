@@ -25,6 +25,28 @@ struct ApplicationsView: View {
     @State private var batchResult: ShownBatchResult?
     @State private var showsBackups = false
     @State private var opensBackupsAfterResult = false
+    @State private var isConfirmingTrashSelected = false
+    @State private var trashResult: ShownTrashResult?
+    @State private var uninstallTargets: ShownApps?
+    @State private var backupTargets: ShownApps?
+    @State private var uninstallResult: ShownBatchResult?
+
+    /// What the toolbar actions work on: the checked apps, else the selected app.
+    private var targets: [InstalledApp] {
+        if !session.checked.isEmpty { return session.checkedApps }
+        guard let selectedID, let app = session.apps.first(where: { $0.id == selectedID }) else { return [] }
+        return [app]
+    }
+
+    /// Moving only the selected app to the Trash uses its review, with the files chosen there.
+    private var canTrashSelected: Bool {
+        guard let detail = session.detail, detail.app.id == selectedID else { return false }
+        return detail.availability == .available && detail.bundle != nil
+    }
+
+    private var canTrash: Bool {
+        !session.isWorking && (!session.checked.isEmpty || canTrashSelected)
+    }
 
     var body: some View {
         VStack(spacing: 0) { content }
@@ -37,25 +59,119 @@ struct ApplicationsView: View {
                         Button {
                             showsBackups = true
                         } label: {
-                            ToolbarLabel(title: "Backups…", symbol: "archivebox")
+                            ToolbarLabel(title: "Backups…", symbol: "clock.arrow.circlepath")
                         }
-                        .help(Text("Show app backups and restore them"))
+                        .help(Text("Show the app backups and restore all or part of them"))
                         .accessibilityIdentifier("applications.backups")
                     }
                     ToolbarItem {
-                        // Not the page's ⌘⌫ action: that belongs to Uninstall of the selected app.
                         Button {
-                            isConfirmingBatch = true
+                            backupTargets = ShownApps(apps: targets)
                         } label: {
-                            ToolbarLabel(title: "Remove \(session.checked.count) Apps…", symbol: "trash")
+                            ToolbarLabel(title: "Back Up…", symbol: "externaldrive.badge.plus")
                         }
-                        .help(Text("Review and move the checked apps to the Trash"))
-                        .disabled(session.checked.isEmpty || session.isWorking)
-                        .accessibilityIdentifier("applications.removeChecked")
+                        .help(
+                            Text(
+                                "Back up the checked apps (or the selected app): the whole app or only its settings. Nothing is removed."
+                            )
+                        )
+                        .disabled(targets.isEmpty || session.isWorking)
+                        .accessibilityIdentifier("applications.backUp")
+                    }
+                    ToolbarItem {
+                        Button {
+                            uninstallTargets = ShownApps(apps: targets)
+                        } label: {
+                            ToolbarLabel(title: "Uninstall…", symbol: "xmark.bin")
+                        }
+                        .help(
+                            Text(
+                                "Delete the checked apps (or the selected app) and everything they installed for good, as if never installed. Not to the Trash."
+                            )
+                        )
+                        .disabled(targets.isEmpty || session.isWorking)
+                        .accessibilityIdentifier("applications.uninstall")
+                    }
+                    ToolbarSpacer(.fixed)
+                    ToolbarItem {
+                        PrimaryActionButton(
+                            title: "Move to Trash…",
+                            help:
+                                "Move the checked apps (or the selected app) and their files to the Trash. You can put them back from Activity (⌘⌫)",
+                            isDisabled: !canTrash
+                        ) {
+                            if session.checked.isEmpty {
+                                isConfirmingTrashSelected = true
+                            } else {
+                                isConfirmingBatch = true
+                            }
+                        }
                     }
                     ToolbarItem {
                         InspectorToggle(isPresented: $showsDetail)
                     }
+                }
+            }
+            .sheet(isPresented: $isConfirmingTrashSelected) {
+                if let detail = session.detail {
+                    ConfirmUninstallSheet(
+                        appName: detail.app.name, count: session.selectedCount, bytes: session.selectedBytes,
+                        hasRevealOnlyItems: detail.items.contains { $0.handling == .revealOnly }
+                    ) {
+                        isConfirmingTrashSelected = false
+                        Task {
+                            let summary = await session.uninstall()
+                            if let id = selectedID, !session.apps.contains(where: { $0.id == id }) { selectedID = nil }
+                            trashResult = ShownTrashResult(summary: summary)
+                        }
+                    }
+                }
+            }
+            .sheet(item: $trashResult) { shown in
+                if let summary = shown.summary {
+                    CleanupResultSheet(summary: summary, isPreview: false)
+                } else {
+                    NotUninstalledSheet()
+                }
+            }
+            .sheet(item: $uninstallTargets) { shown in
+                ConfirmCompleteUninstallSheet(session: session, apps: shown.apps, backupFolder: backupFolder) {
+                    scope, plans in
+                    uninstallTargets = nil
+                    Task {
+                        let result = await session.uninstall(
+                            shown.apps, backup: scope, backupFolder: backupFolder, reviewed: plans)
+                        if let id = selectedID, !session.apps.contains(where: { $0.id == id }) { selectedID = nil }
+                        uninstallResult = ShownBatchResult(result: result)
+                    }
+                }
+            }
+            .sheet(
+                item: $uninstallResult,
+                onDismiss: {
+                    if opensBackupsAfterResult {
+                        opensBackupsAfterResult = false
+                        showsBackups = true
+                    }
+                }
+            ) { shown in
+                BatchUninstallResultSheet(result: shown.result, isPermanent: true) {
+                    opensBackupsAfterResult = true
+                    uninstallResult = nil
+                }
+            }
+            .sheet(
+                item: $backupTargets,
+                onDismiss: {
+                    if opensBackupsAfterResult {
+                        opensBackupsAfterResult = false
+                        showsBackups = true
+                    }
+                }
+            ) { shown in
+                AppBackupOptionsSheet(session: session, apps: shown.apps, folder: backupFolder) {
+                    opensBackupsAfterResult = true
+                    backupTargets = nil
                 }
             }
             .sheet(isPresented: $isConfirmingBatch) {
@@ -127,6 +243,19 @@ struct ApplicationsView: View {
     private var selectedUpdate: AppUpdate? {
         session.detail.flatMap { updates.results[$0.app.id] }
     }
+}
+
+/// Apps a sheet works on, for `sheet(item:)`.
+private struct ShownApps: Identifiable {
+    let id = UUID()
+    let apps: [InstalledApp]
+}
+
+/// A finished (or refused) move of the selected app to the Trash.
+private struct ShownTrashResult: Identifiable {
+    let id = UUID()
+    /// `nil` when nothing was done (the app was opened, or changed, in the meantime).
+    let summary: CleanupSummary?
 }
 
 /// Searchable table of installed apps, sortable by name, size and last use; sizes are measured as rows appear.
@@ -288,7 +417,8 @@ private struct AppListView: View {
             .width(min: 80, ideal: 95)
         }
         .contextMenu(forSelectionType: String.self) { ids in
-            FileActionsMenu(paths: ids.sorted())
+            // On a checked app, Copy Path and Show in Finder act on every checked app.
+            FileActionsMenu(paths: AppsSession.paths(for: session.apps, clicked: ids, checked: session.checked))
             if !ids.isEmpty {
                 let allChecked = ids.isSubset(of: session.checked)
                 Button {
@@ -452,7 +582,9 @@ enum ApplicationsServices {
             },
             ownerState: { app in RunningApps.state(of: app, ownership: ownership) },
             requestQuit: { app in await RunningApps.requestQuit(app) },
-            homebrew: environment.homebrew)
+            homebrew: environment.homebrew,
+            // Read-only `pkgutil --file-info`, to tell an app an installer package placed.
+            installSourceRunner: ProcessCommandRunner())
     }
 
     /// The `brew` executable, when Homebrew is installed.
