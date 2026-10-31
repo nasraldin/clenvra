@@ -42,6 +42,30 @@ final class NavigationUITests: XCTestCase {
         }
     }
 
+    /// View › Hide Sidebar hides it completely; the toolbar's sidebar button must bring it back.
+    @MainActor
+    func testSidebarButtonShowsAHiddenSidebar() {
+        let app = launchApp(language: "en")
+        defer { app.terminate() }
+        let row = app.outlines.cells.containing(.any, identifier: "sidebar.storage").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        app.windows.firstMatch.click()
+        app.typeKey("s", modifierFlags: [.command, .control])  // View › Hide Sidebar
+        XCTAssertTrue(waitUntil { !row.exists || !row.isHittable }, "View › Hide Sidebar did not hide the sidebar")
+        app.buttons["sidebar.toggle"].firstMatch.click()
+        XCTAssertTrue(waitUntil { row.exists && row.isHittable }, "The sidebar button did not show the sidebar")
+    }
+
+    @MainActor
+    private func waitUntil(_ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if condition() { return true }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+        return false
+    }
+
     @MainActor
     func testPermissionsGuideAppearsOnFirstLaunchAndCanBeDismissed() {
         let app = XCUIApplication()

@@ -8,13 +8,16 @@ struct MainWindow: View {
     /// The sidebar shrinks to a strip of icons instead of disappearing (the toolbar button); View › Hide Sidebar
     /// still hides it completely.
     @SceneStorage("sidebar.compact") private var isCompact = false
+    /// Owned here so the sidebar button can bring back a sidebar that View › Hide Sidebar (or a narrow window) hid;
+    /// starting at `.all` also stops a hidden sidebar from being restored on the next launch.
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
     /// The page last shown in each group of sibling pages, so its sidebar row reopens it.
     @SceneStorage("sidebar.lastPages") private var lastPages = ""
     /// Opens a page from a search result with the query to show there.
     @State private var searchRouter = SearchRouter()
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             Group {
                 if isCompact {
                     CompactSidebar(selection: sidebarSelection)
@@ -74,10 +77,12 @@ struct MainWindow: View {
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
-                    withAnimation(.smooth(duration: 0.3)) { isCompact.toggle() }
+                    withAnimation(.smooth(duration: 0.3)) {
+                        if columnVisibility == .detailOnly { columnVisibility = .all } else { isCompact.toggle() }
+                    }
                 } label: {
                     Label {
-                        Text(isCompact ? "Expand Sidebar" : "Collapse Sidebar")
+                        Text(isCompact || columnVisibility == .detailOnly ? "Expand Sidebar" : "Collapse Sidebar")
                     } icon: {
                         Image(systemName: "sidebar.leading")
                     }
