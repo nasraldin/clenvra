@@ -98,6 +98,15 @@ public final class StartupSession {
     public func needsLoginItemsSettings(_ item: LaunchItem) -> Bool { item.status == .requiresApproval }
 
     /// Unloads the item and tells launchd not to start it again. Its plist stays, so Enable undoes it.
+    /// Runs one action on several items (Disable, Enable, Remove) under one authorization: one administrator's
+    /// password for the whole action.
+    public func withOneAuthorization<T>(
+        isolation: isolated (any Actor)? = #isolation, _ body: () async -> T
+    ) async -> T {
+        guard let privileged else { return await body() }
+        return await privileged.withOneAuthorization(isolation: isolation, body)
+    }
+
     public func disable(_ item: LaunchItem) async -> ChangeOutcome { await setEnabled(false, item) }
 
     /// Tells launchd it may start the item again, and loads it.

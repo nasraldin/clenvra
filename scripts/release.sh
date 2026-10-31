@@ -3,7 +3,8 @@
 # One-time setup: a "Developer ID Application" certificate for team CZU6ZC4LYQ in the keychain, and
 #   xcrun notarytool store-credentials clenvra-notary --apple-id <Apple ID> --team-id CZU6ZC4LYQ
 # Usage: scripts/release.sh [--skip-notarize | --app-only]
-#   --app-only: stop after the signed app (.build/release/export/Clenvra.app), for the helper end-to-end test.
+#   --app-only: stop after the signed, notarised and stapled app (.build/release/export/Clenvra.app), for the
+#               helper end-to-end test (macOS refuses to launch an unnotarised Developer ID app from a test).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -46,7 +47,12 @@ codesign -dv "$APP" 2>&1 | grep -E "Authority=Developer ID Application|TeamIdent
   || { echo "✘ App is not signed with Developer ID for $TEAM"; exit 1; }
 
 if [[ "${1:-}" == "--app-only" ]]; then
-  echo "✔ Signed app: $APP"
+  echo "▸ Notarise the app (this takes a few minutes)"
+  ditto -c -k --keepParent "$APP" "$OUT/Clenvra-app.zip"
+  xcrun notarytool submit "$OUT/Clenvra-app.zip" --keychain-profile "$PROFILE" --wait
+  xcrun stapler staple "$APP"
+  spctl --assess --type execute --verbose=2 "$APP"
+  echo "✔ Signed and notarised app: $APP"
   exit 0
 fi
 

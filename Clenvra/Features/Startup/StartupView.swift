@@ -272,9 +272,12 @@ struct StartupView: View {
         guard !items.isEmpty, !isChanging else { return }
         isChanging = true
         Task {
-            var outcomes: [StartupSession.ChangeOutcome] = []
-            for item in items {
-                outcomes.append(enable ? await session.enable(item) : await session.disable(item))
+            let outcomes = await session.withOneAuthorization {
+                var outcomes: [StartupSession.ChangeOutcome] = []
+                for item in items {
+                    outcomes.append(enable ? await session.enable(item) : await session.disable(item))
+                }
+                return outcomes
             }
             await session.loadDisabledState()
             isChanging = false
@@ -286,8 +289,11 @@ struct StartupView: View {
         guard !items.isEmpty, !isChanging else { return }
         isChanging = true
         Task {
-            var outcomes: [StartupSession.RemovalOutcome] = []
-            for item in items { outcomes.append(await session.remove(item)) }
+            let outcomes = await session.withOneAuthorization {
+                var outcomes: [StartupSession.RemovalOutcome] = []
+                for item in items { outcomes.append(await session.remove(item)) }
+                return outcomes
+            }
             isChanging = false
             let failures = outcomes.filter { $0 != .removed }
             if let failure = failures.first {

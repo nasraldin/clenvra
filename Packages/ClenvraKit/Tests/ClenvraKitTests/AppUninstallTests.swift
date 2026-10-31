@@ -20,17 +20,36 @@ private struct UninstallFixtureTrash: TrashOperations {
 private final class RecordingHelper: PrivilegedOperations {
     let requests = Mutex<[HelperRequest]>([])
     let forgotten = Mutex<[String]>([])
+    /// Authorizations opened, and helper calls made outside one (each of those would ask for the password again).
+    let sessions = Mutex(0)
+    let callsOutsideSession = Mutex(0)
+    private let inSession = Mutex(false)
+
+    func withOneAuthorization<T>(
+        isolation: isolated (any Actor)? = #isolation, _ body: () async -> T
+    ) async -> T {
+        sessions.withLock { $0 += 1 }
+        inSession.withLock { $0 = true }
+        defer { inSession.withLock { $0 = false } }
+        return await body()
+    }
+
+    private func noteCall() {
+        if !inSession.withLock({ $0 }) { callsOutsideSession.withLock { $0 += 1 } }
+    }
     /// The answer to a request to forget an installer record.
     let forgetAnswer: PackageForget
 
     init(forgetAnswer: PackageForget = .forgotten) { self.forgetAnswer = forgetAnswer }
 
     func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget {
+        noteCall()
         forgotten.withLock { $0.append(id) }
         return forgetAnswer
     }
 
     func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse {
+        noteCall()
         requests.withLock { $0.append(request) }
         return HelperResponse(outcomes: request.items.map { _ in .removedPermanently })
     }
@@ -309,6 +328,9 @@ struct AppUninstallTests {
         #expect(result.removed == ["Writer"])
         #expect(helper.forgotten.withLock { $0 } == ["com.example.writer.pkg"])
         #expect(result.receiptsKept.isEmpty)
+        // One password for the whole Uninstall: every helper call runs inside one authorization.
+        #expect(helper.sessions.withLock { $0 } == 1)
+        #expect(helper.callsOutsideSession.withLock { $0 } == 0)
     }
 
     @Test("an installer record the helper could not forget is reported, and the app is still removed")

@@ -86,9 +86,19 @@ public final class PermissionsSession {
     /// Revokes each grant (the person's own with `tccutil`, all users' through the helper when it is installed),
     /// reads the databases once, and reports each one: revoked only when it is really gone.
     public func revoke(_ selection: [PermissionGrant]) async -> [PermissionGrant.ID: RevokeResult] {
-        var reset: Set<PermissionGrant.ID> = []
-        for grant in selection where canRevoke(grant) {
-            if await runReset(grant) { reset.insert(grant.id) }
+        // One administrator's password for the whole selection.
+        let run = {
+            var reset: Set<PermissionGrant.ID> = []
+            for grant in selection where self.canRevoke(grant) {
+                if await self.runReset(grant) { reset.insert(grant.id) }
+            }
+            return reset
+        }
+        let reset: Set<PermissionGrant.ID>
+        if let privileged {
+            reset = await privileged.withOneAuthorization(isolation: #isolation, run)
+        } else {
+            reset = await run()
         }
         if !reset.isEmpty { await load() }
         var results: [PermissionGrant.ID: RevokeResult] = [:]

@@ -106,62 +106,72 @@ extension AppsSession {
         let operation = UUID()
         let folder = backupFolder ?? AppBackup.defaultFolder(home: home)
         var removedIDs: Set<InstalledApp.ID> = []
-        for given in apps {
-            if Task.isCancelled { break }
-            let current = await uninstallPlan(for: given)
-            let app = current.app
-            if let skip = current.skip {
-                result.skipped.append((app.name, skip))
-                continue
-            }
-            let plan: UninstallPlan
-            if let reviewed {
-                guard let confirmed = reviewed.first(where: { $0.app.id == app.id }) else { continue }
-                plan = Self.restricted(current, to: confirmed)
-            } else {
-                plan = current
-            }
-            if let skip = plan.skip {
-                result.skipped.append((app.name, skip))
-                continue
-            }
-            guard let bundle = plan.bundle else {
-                result.skipped.append((app.name, .changed))
-                continue
-            }
-            if let backup, !dryRun {
-                do {
-                    let paths = AppBackup.paths(for: backup, bundle: app.id, owned: plan.items)
-                    result.backups.append(try await AppBackup.create(app: app, items: paths, scope: backup, in: folder))
-                } catch let error as AppBackupError {
-                    result.skipped.append((app.name, .backupFailed(error.message)))
-                    continue
-                } catch {
-                    result.skipped.append((app.name, .backupFailed(error.localizedDescription)))
+        // One administrator's password for the whole Uninstall: system files, bundles and installer records.
+        let run = { [self] in
+            for given in apps {
+                if Task.isCancelled { break }
+                let current = await uninstallPlan(for: given)
+                let app = current.app
+                if let skip = current.skip {
+                    result.skipped.append((app.name, skip))
                     continue
                 }
-            }
-            if !dryRun, let command = homebrewUninstallCommand(for: plan.source) {
-                if let failure = await runHomebrew(
-                    command, app: app, bytes: bundle.reclaimableSize, operationID: operation)
-                {
-                    result.skipped.append((app.name, .homebrewFailed(failure)))
+                let plan: UninstallPlan
+                if let reviewed {
+                    guard let confirmed = reviewed.first(where: { $0.app.id == app.id }) else { continue }
+                    plan = Self.restricted(current, to: confirmed)
+                } else {
+                    plan = current
+                }
+                if let skip = plan.skip {
+                    result.skipped.append((app.name, skip))
                     continue
                 }
-            }
-            let (results, bundleDone) = await removePermanently(
-                plan, bundle: bundle, dryRun: dryRun, operationID: operation)
-            result.summary.add(results)
-            if bundleDone {
-                result.removed.append(app.name)
-                removedIDs.insert(app.id)
-                // Only once the app is gone, so a kept app never loses its installer record.
-                if !dryRun, case .package(let ids) = plan.source {
-                    result.receiptsKept += await forgetInstallerRecords(ids)
+                guard let bundle = plan.bundle else {
+                    result.skipped.append((app.name, .changed))
+                    continue
                 }
-            } else {
-                result.skipped.append((app.name, .changed))
+                if let backup, !dryRun {
+                    do {
+                        let paths = AppBackup.paths(for: backup, bundle: app.id, owned: plan.items)
+                        result.backups.append(
+                            try await AppBackup.create(app: app, items: paths, scope: backup, in: folder))
+                    } catch let error as AppBackupError {
+                        result.skipped.append((app.name, .backupFailed(error.message)))
+                        continue
+                    } catch {
+                        result.skipped.append((app.name, .backupFailed(error.localizedDescription)))
+                        continue
+                    }
+                }
+                if !dryRun, let command = homebrewUninstallCommand(for: plan.source) {
+                    if let failure = await runHomebrew(
+                        command, app: app, bytes: bundle.reclaimableSize, operationID: operation)
+                    {
+                        result.skipped.append((app.name, .homebrewFailed(failure)))
+                        continue
+                    }
+                }
+                let (results, bundleDone) = await removePermanently(
+                    plan, bundle: bundle, dryRun: dryRun, operationID: operation)
+                result.summary.add(results)
+                if bundleDone {
+                    result.removed.append(app.name)
+                    removedIDs.insert(app.id)
+                    // Only once the app is gone, so a kept app never loses its installer record.
+                    if !dryRun, case .package(let ids) = plan.source {
+                        result.receiptsKept += await forgetInstallerRecords(ids)
+                    }
+                } else {
+                    result.skipped.append((app.name, .changed))
+                }
             }
+        }
+        // A dry run changes nothing, so it never needs the password.
+        if let privileged, !dryRun {
+            await privileged.withOneAuthorization(isolation: #isolation, run)
+        } else {
+            await run()
         }
         isWorking = false
         if !dryRun, !removedIDs.isEmpty {

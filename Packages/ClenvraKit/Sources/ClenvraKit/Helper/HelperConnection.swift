@@ -47,16 +47,16 @@ public struct HelperClient: Sendable {
     @concurrent public func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse {
         var request = request
         // Uninstall removes an app's system files for good: the helper asks for the administrator's password.
-        var authorization: (reference: AuthorizationRef, externalForm: Data)?
+        var authorization: (form: Data, release: () -> Void)?
         if request.mode == .irreversible, request.items.contains(where: { $0.section == .applications }) {
-            guard let made = HelperRight.makeClientAuthorization() else { throw .unavailable }
+            guard let made = Self.authorization() else { throw .unavailable }
             authorization = made
             request = HelperRequest(
                 operationID: request.operationID, mode: request.mode, items: request.items,
-                ownerBundlePaths: request.ownerBundlePaths, authorization: made.externalForm)
+                ownerBundlePaths: request.ownerBundlePaths, authorization: made.form)
         }
-        // The reference must outlive the call: the helper uses it to show the password dialog.
-        defer { if let authorization { AuthorizationFree(authorization.reference, [.destroyRights]) } }
+        // Kept until the helper has answered: it uses it to show the password dialog.
+        defer { authorization?.release() }
         guard let payload = try? request.encoded() else { throw .badReply }
         let data: Data? = try await call { proxy, finish in proxy.perform(payload) { finish(.success($0)) } }
         guard let data, let response = try? HelperResponse.decode(data),
@@ -80,10 +80,10 @@ public struct HelperClient: Sendable {
     {
         guard let payload = try? JSONEncoder().encode(item) else { throw .badReply }
         let id = operationID.uuidString
-        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
-        // The reference must outlive the call: the helper uses it to show the password dialog.
-        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
-        let form = authorization.externalForm
+        guard let authorization = Self.authorization() else { throw .unavailable }
+        // Kept until the helper has answered: it uses it to show the password dialog.
+        defer { authorization.release() }
+        let form = authorization.form
         let data: Data? = try await call { proxy, finish in
             proxy.removeOrphanedLaunchItem(payload, operationID: id, authorization: form) { finish(.success($0)) }
         }
@@ -104,10 +104,10 @@ public struct HelperClient: Sendable {
         -> LaunchItemChange
     {
         guard let payload = try? JSONEncoder().encode(item) else { throw .badReply }
-        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
-        // The reference must outlive the call: the helper uses it to show the password dialog.
-        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
-        let form = authorization.externalForm
+        guard let authorization = Self.authorization() else { throw .unavailable }
+        // Kept until the helper has answered: it uses it to show the password dialog.
+        defer { authorization.release() }
+        let form = authorization.form
         let raw: String? = try await call { proxy, finish in
             proxy.setLaunchItemEnabled(payload, enabled: enabled, authorization: form) { finish(.success($0)) }
         }
@@ -119,9 +119,10 @@ public struct HelperClient: Sendable {
     @concurrent public func resetPermission(service: String, bundleID: String) async throws(HelperClientError)
         -> PermissionReset
     {
-        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
-        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
-        let form = authorization.externalForm
+        guard let authorization = Self.authorization() else { throw .unavailable }
+        // Kept until the helper has answered: it uses it to show the password dialog.
+        defer { authorization.release() }
+        let form = authorization.form
         let raw: String? = try await call { proxy, finish in
             proxy.resetPermission(service, bundleID: bundleID, authorization: form) { finish(.success($0)) }
         }
@@ -131,14 +132,34 @@ public struct HelperClient: Sendable {
 
     /// The helper asks for an administrator's password in this login session before acting.
     @concurrent public func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget {
-        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
-        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
-        let form = authorization.externalForm
+        guard let authorization = Self.authorization() else { throw .unavailable }
+        // Kept until the helper has answered: it uses it to show the password dialog.
+        defer { authorization.release() }
+        let form = authorization.form
         let raw: String? = try await call { proxy, finish in
             proxy.forgetPackage(id, authorization: form) { finish(.success($0)) }
         }
         guard let raw, let result = PackageForget(rawValue: raw) else { throw .badReply }
         return result
+    }
+
+    /// The authorization of the user action in progress (`withOneAuthorization`), if any.
+    @TaskLocal static var actionAuthorization: Data?
+
+    /// The action's authorization, or a new one for this call alone (released, and its approval destroyed, after).
+    private static func authorization() -> (form: Data, release: () -> Void)? {
+        if let shared = actionAuthorization { return (shared, {}) }
+        guard let made = HelperRight.makeClientAuthorization() else { return nil }
+        return (made.externalForm, { AuthorizationFree(made.reference, [.destroyRights]) })
+    }
+
+    /// One authorization for every helper call of one action; destroyed afterwards, so the next action asks again.
+    public func withOneAuthorization<T>(
+        isolation: isolated (any Actor)? = #isolation, _ body: () async -> T
+    ) async -> T {
+        guard let made = HelperRight.makeClientAuthorization() else { return await body() }
+        defer { AuthorizationFree(made.reference, [.destroyRights]) }
+        return await Self.$actionAuthorization.withValue(made.externalForm, operation: body)
     }
 
     @concurrent private func call<Value: Sendable>(

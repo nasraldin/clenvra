@@ -46,10 +46,14 @@ final class HelperE2EUITests: XCTestCase {
         // Installing opens Login Items Settings; the helper waits there for approval.
         let settings = XCUIApplication(bundleIdentifier: "com.apple.systempreferences")
         XCTAssertTrue(settings.wait(for: .runningForeground, timeout: 20), "System Settings did not open")
-        let toggle = settings.switches.matching(NSPredicate(format: "label CONTAINS[c] 'Clenvra'")).firstMatch
-        XCTAssertTrue(toggle.waitForExistence(timeout: 20), "Clenvra is not listed under Allow in the Background")
-        if (toggle.value as? Int) != 1 { toggle.click() }
-        answerPasswordDialog(required: false)
+        // The switch has no name of its own: it is the one on the same row as the "Clenvra" title.
+        let title = settings.staticTexts["Clenvra"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 20), "Clenvra is not listed under App Background Activity")
+        let row = title.frame.midY
+        let toggle = settings.switches.allElementsBoundByIndex.first { abs($0.frame.midY - row) < 24 }
+        XCTAssertNotNil(toggle, "No switch on Clenvra's row")
+        if let toggle, (toggle.value as? Int) != 1 { toggle.click() }
+        answerPasswordDialog()
         attach(settings.screenshot(), "login-items")
         settings.terminate()
 
@@ -70,21 +74,28 @@ final class HelperE2EUITests: XCTestCase {
     private func disableDaemon(in app: XCUIApplication) {
         open(section: "startup", in: app)
         search("e2e", in: app)
-        let row = app.tables.firstMatch.tableRows.firstMatch
+        // Startup Items is a grouped list: the daemon's row is found by its name ("com.example.e2e.daemon").
+        let row = app.staticTexts["Example E2e Daemon"].firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15), "The seeded daemon is not listed")
         row.click()
         let disable = app.toolbars.buttons["Disable"].firstMatch
         XCTAssertTrue(disable.waitForExistence(timeout: 5))
         XCTAssertTrue(waitUntilEnabled(disable), "Disable is not offered for the daemon")
         disable.click()
-        answerPasswordDialog(required: true)
+        answerPasswordDialog()
         XCTAssertTrue(
             app.staticTexts["Disabled"].firstMatch.waitForExistence(timeout: 30), "The daemon is not shown as disabled")
+        // Clenvra confirms what happened in an alert; Return presses its OK (a query for "OK" also finds the
+        // Touch Bar's copy, which cannot be clicked).
+        let confirmation = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH 'Disabled. It was stopped'"))
+            .firstMatch
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 10), "No confirmation after Disable")
         attach(app.windows.firstMatch.screenshot(), "daemon-disabled")
+        app.typeKey(.return, modifierFlags: [])
     }
 
-    /// Applications: check Writer, Uninstall Permanently without a backup; the helper asks for the password for its
-    /// root-owned files and again to forget its installer record.
+    /// Applications: check Writer, Uninstall Permanently without a backup; the helper asks for the password once
+    /// for its root-owned files and its installer record.
     @MainActor
     private func uninstallWriter(in app: XCUIApplication) {
         open(section: "applications", in: app)
@@ -102,9 +113,8 @@ final class HelperE2EUITests: XCTestCase {
         attach(app.windows.firstMatch.screenshot(), "uninstall-confirmation")
         confirm.click()
 
-        // One dialog for the root-owned files, one for the installer record.
-        answerPasswordDialog(required: true)
-        answerPasswordDialog(required: false)
+        // One password for the whole Uninstall: its root-owned files, its bundle and its installer record.
+        answerPasswordDialog()
         let done = app.buttons["Done"].firstMatch
         XCTAssertTrue(done.waitForExistence(timeout: 60), "No result after Uninstall")
         attach(app.windows.firstMatch.screenshot(), "uninstall-result")
@@ -113,30 +123,17 @@ final class HelperE2EUITests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// Types the account's password into the macOS authorization dialog (SecurityAgent) when it appears.
+    /// Has the VM's password agent (`scripts/e2e/password-agent.swift`) answer the macOS password dialog. The
+    /// dialog is hidden from UI automation and the runner has no Accessibility, so the test asks for the answer by
+    /// posting the agent's notification. Each step then checks the outcome (helper up, item disabled, app gone).
     @MainActor
-    private func answerPasswordDialog(required: Bool, file: StaticString = #filePath, line: UInt = #line) {
-        let agent = XCUIApplication(bundleIdentifier: "com.apple.SecurityAgent")
-        let secure = agent.secureTextFields.firstMatch
-        guard secure.waitForExistence(timeout: required ? 30 : 8) else {
-            if required { XCTFail("No password dialog appeared", file: file, line: line) }
-            return
-        }
-        attach(agent.screenshot(), "password-dialog")
-        let user = agent.textFields.firstMatch
-        if user.exists, (user.value as? String ?? "").isEmpty {
-            user.click()
-            user.typeText("admin")
-        }
-        secure.click()
-        secure.typeText(password)
-        agent.typeKey(.return, modifierFlags: [])
-        // The dialog closes once accepted.
-        let gone = NSPredicate(format: "exists == false")
-        let closed = XCTNSPredicateExpectation(predicate: gone, object: secure)
-        XCTAssertEqual(
-            XCTWaiter.wait(for: [closed], timeout: 20), .completed, "The password was not accepted",
-            file: file, line: line)
+    private func answerPasswordDialog() {
+        DistributedNotificationCenter.default().postNotificationName(
+            Notification.Name("com.nasraldin.clenvra.e2e.typePassword"), object: nil, userInfo: nil,
+            deliverImmediately: true)
+        Thread.sleep(forTimeInterval: 3)
+        attach(XCUIScreen.main.screenshot(), "password-dialog")
+        Thread.sleep(forTimeInterval: 5)
     }
 
     @MainActor

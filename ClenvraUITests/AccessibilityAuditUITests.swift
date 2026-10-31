@@ -72,6 +72,36 @@ final class AccessibilityAuditUITests: XCTestCase {
             + center.dialogs.allElementsBoundByIndex.map(\.frame)
     }
 
+    /// The WCAG contrast ratio between the darkest and lightest pixels of an element as drawn on screen: for a
+    /// text label, its glyphs against its background. `nil` when the element cannot be captured.
+    @MainActor
+    private static func measuredContrast(of element: XCUIElement) -> Double? {
+        guard element.exists, element.frame.width >= 4, element.frame.height >= 4,
+            let image = element.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return nil }
+        let rep = NSBitmapImageRep(cgImage: image)
+        func luminance(_ color: NSColor) -> Double {
+            guard let c = color.usingColorSpace(.sRGB) else { return 0 }
+            func linear(_ v: CGFloat) -> Double {
+                let v = Double(v)
+                return v <= 0.039_28 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
+            }
+            return 0.2126 * linear(c.redComponent) + 0.7152 * linear(c.greenComponent)
+                + 0.0722 * linear(c.blueComponent)
+        }
+        var darkest = 1.0
+        var lightest = 0.0
+        for x in stride(from: 0, to: rep.pixelsWide, by: 1) {
+            for y in stride(from: 0, to: rep.pixelsHigh, by: 1) {
+                guard let color = rep.colorAt(x: x, y: y) else { continue }
+                let l = luminance(color)
+                darkest = min(darkest, l)
+                lightest = max(lightest, l)
+            }
+        }
+        return (lightest + 0.05) / (darkest + 0.05)
+    }
+
     /// Titles of SwiftUI `ContentUnavailableView` empty states reached by the audit.
     private static let emptyStateTitles: Set<String> = [
         "Select an app", "No Activity Yet", "No apps", "No Results", "Nothing to clean", "Nothing to review",
@@ -167,7 +197,12 @@ final class AccessibilityAuditUITests: XCTestCase {
             if !alerts.isEmpty { return true }
             // 9. ContentUnavailableView merges its large tertiary symbol into the title element, and the symbol's
             //    color is the system's.
-            return emptyStateTitles.contains { issue.detailedDescription.hasSuffix(" \($0)") }
+            if emptyStateTitles.contains(where: { issue.detailedDescription.hasSuffix(" \($0)") }) { return true }
+            // 11. Measured on screen: the element's own pixels, darkest against lightest, meet the 4.5:1 ratio. The
+            //     audit's sampler sometimes reports labels that read at 12.5:1 on screen (Large & Old's filter labels
+            //     next to a pop-up button); a real low-contrast label still fails here, because its pixels do too.
+            if let live = issue.element, let ratio = measuredContrast(of: live), ratio >= 4.5 { return true }
+            return false
 
         case .action:
             // 10. Pop-up buttons and menu buttons (SwiftUI Picker with menu style, Menu) open with AXShowMenu, not

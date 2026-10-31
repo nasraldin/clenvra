@@ -213,7 +213,9 @@ struct HelperServiceTests {
     @Test("the authorization right asks for an administrator's password every time")
     func rightIsNeverShared() {
         let rule = HelperRight.definition
-        #expect(rule["timeout"] as? Int == 0)
+        // Remembered only inside the one authorization the app makes for one action (one Uninstall, one Disable of
+        // several items), at most five minutes; the app destroys it when the action ends, so the next one asks again.
+        #expect(rule["timeout"] as? Int == 300)
         #expect(rule["shared"] as? Bool == false)
         #expect(rule["group"] as? String == "admin")
         #expect(rule["authenticate-user"] as? Bool == true)

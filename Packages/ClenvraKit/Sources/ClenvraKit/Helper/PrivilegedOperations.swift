@@ -18,6 +18,9 @@ public protocol PrivilegedOperations: Sendable {
         -> PermissionReset
     /// Runs `pkgutil --forget <id>` as root, after an administrator's password.
     @concurrent func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget
+    /// Runs one user action (an Uninstall, a Disable of several items) under one authorization, so the
+    /// administrator's password is asked once for the whole action, and again for the next action.
+    func withOneAuthorization<T>(isolation: isolated (any Actor)?, _ body: () async -> T) async -> T
 }
 
 extension PrivilegedOperations {
@@ -32,6 +35,13 @@ extension PrivilegedOperations {
 
     @concurrent public func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget {
         throw .unavailable
+    }
+
+    /// Helpers without password-protected operations (test helpers) need no shared authorization.
+    public func withOneAuthorization<T>(
+        isolation: isolated (any Actor)? = #isolation, _ body: () async -> T
+    ) async -> T {
+        await body()
     }
 }
 
