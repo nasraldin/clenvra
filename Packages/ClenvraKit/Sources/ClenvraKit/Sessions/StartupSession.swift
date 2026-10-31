@@ -16,8 +16,26 @@ public final class StartupSession {
         case refused(ActivityRecord.Outcome)
     }
 
+    public enum ChangeOutcome: Sendable, Equatable {
+        case done
+        /// Apple's own, managed, unreadable, or Mac-wide without the helper.
+        case notAllowed
+        /// The plist is not the file that was listed; refresh and review it again.
+        case changedSinceReview
+        /// The administrator's password was not given.
+        case notAuthorized
+        /// `launchctl` or the helper refused.
+        case failed
+    }
+
     public private(set) var items: [LaunchItem] = []
     public private(set) var isLoading = false
+    /// Labels launchd keeps from starting in this login (`launchctl print-disabled gui/<uid>`).
+    public private(set) var disabledInLogin: Set<String> = []
+    /// Labels launchd keeps from starting for the whole Mac (`launchctl print-disabled system`).
+    public private(set) var disabledSystemWide: Set<String> = []
+    /// Each plist as it was when listed; disabling or enabling refuses a file that changed since.
+    private var reviewed: [LaunchItem.ID: FileSnapshot] = [:]
     /// Whether the privileged helper is installed and answering; orphaned system items can be removed only then.
     public var helperAvailable = false
 
@@ -49,8 +67,114 @@ public final class StartupSession {
     public func load(installedApps: [InstalledApp]) async {
         isLoading = true
         let reader = reader
-        items = (try? await executor.run { reader.read(installedApps: installedApps) }) ?? []
+        let read = try? await executor.run {
+            let items = reader.read(installedApps: installedApps)
+            var snapshots: [LaunchItem.ID: FileSnapshot] = [:]
+            for item in items {
+                snapshots[item.id] = try? SafeWalk.resolve(item.plistPath).snapshot
+            }
+            return (items, snapshots)
+        }
+        items = read?.0 ?? []
+        reviewed = read?.1 ?? [:]
         isLoading = false
+    }
+
+    // MARK: - Disable and enable
+
+    /// Whether the item can be kept from starting (and allowed again). The person's own agents directly; Mac-wide
+    /// items only through the helper, with an administrator's password each time. Never Apple's or managed items.
+    public func canDisable(_ item: LaunchItem) -> Bool {
+        guard !item.isApple, !isManaged(item), !item.parseError, item.label != nil else { return false }
+        return item.domain == .userAgent || helperAvailable && privileged != nil
+    }
+
+    public func isDisabled(_ item: LaunchItem) -> Bool {
+        guard let label = item.label else { return false }
+        return item.domain == .systemDaemon ? disabledSystemWide.contains(label) : disabledInLogin.contains(label)
+    }
+
+    /// macOS is waiting for the person to allow this item in Login Items Settings; only there can it be allowed.
+    public func needsLoginItemsSettings(_ item: LaunchItem) -> Bool { item.status == .requiresApproval }
+
+    /// Unloads the item and tells launchd not to start it again. Its plist stays, so Enable undoes it.
+    public func disable(_ item: LaunchItem) async -> ChangeOutcome { await setEnabled(false, item) }
+
+    /// Tells launchd it may start the item again, and loads it.
+    public func enable(_ item: LaunchItem) async -> ChangeOutcome { await setEnabled(true, item) }
+
+    /// Reads which items launchd keeps from starting. Separate from `load`, which only reads files.
+    public func loadDisabledState() async {
+        disabledInLogin = await disabledLabels(in: "gui/\(userID)") ?? disabledInLogin
+        disabledSystemWide = await disabledLabels(in: "system") ?? disabledSystemWide
+    }
+
+    /// Labels marked `disabled` (or `true` on older systems) in `launchctl print-disabled` output.
+    public nonisolated static func disabledLabels(fromPrintDisabled output: String) -> Set<String> {
+        var labels: Set<String> = []
+        for line in output.split(whereSeparator: \.isNewline) {
+            guard let match = line.wholeMatch(of: /\s*"([^"]+)"\s*=>\s*(\w+)\s*/) else { continue }
+            if ["disabled", "true"].contains(match.output.2.lowercased()) { labels.insert(String(match.output.1)) }
+        }
+        return labels
+    }
+
+    private func disabledLabels(in domain: String) async -> Set<String>? {
+        guard let result = await launchctl(["print-disabled", domain]), result.exitStatus == 0 else { return nil }
+        return Self.disabledLabels(fromPrintDisabled: result.standardOutput)
+    }
+
+    private func setEnabled(_ enabled: Bool, _ item: LaunchItem) async -> ChangeOutcome {
+        guard canDisable(item), let label = item.label else { return .notAllowed }
+        guard let expected = reviewed[item.id], (try? SafeWalk.resolve(item.plistPath).snapshot) == expected else {
+            return .changedSinceReview
+        }
+        let outcome =
+            item.domain == .userAgent
+            ? await setOwnAgentEnabled(enabled, plist: item.plistPath, label: label)
+            : await setThroughHelper(enabled, item: item, expected: expected)
+        guard outcome == .done else { return outcome }
+        switch (item.domain, enabled) {
+        case (.systemDaemon, true): disabledSystemWide.remove(label)
+        case (.systemDaemon, false): disabledSystemWide.insert(label)
+        case (_, true): disabledInLogin.remove(label)
+        case (_, false): disabledInLogin.insert(label)
+        }
+        return .done
+    }
+
+    private func setOwnAgentEnabled(_ enabled: Bool, plist: String, label: String) async -> ChangeOutcome {
+        let domain = "gui/\(userID)"
+        if enabled {
+            guard await launchctl(["enable", "\(domain)/\(label)"])?.exitStatus == 0 else { return .failed }
+            // Loading it now is a bonus; once enabled it starts at the next login either way.
+            _ = await launchctl(["bootstrap", domain, plist])
+        } else {
+            guard let stop = await launchctl(["bootout", domain, plist]),
+                stop.exitStatus == 0 || Self.notLoadedStatuses.contains(stop.exitStatus)
+            else { return .failed }
+            guard await launchctl(["disable", "\(domain)/\(label)"])?.exitStatus == 0 else { return .failed }
+        }
+        return .done
+    }
+
+    /// The helper checks the plist, the label and the folder again, and asks for the administrator's password.
+    private func setThroughHelper(_ enabled: Bool, item: LaunchItem, expected: FileSnapshot) async -> ChangeOutcome {
+        guard let privileged else { return .notAllowed }
+        let request = DeletionItem(
+            path: item.plistPath, ruleRoot: (item.plistPath as NSString).deletingLastPathComponent,
+            expected: expected, ownerBundleID: nil, freedBytes: 0, section: .startup)
+        do {
+            switch try await privileged.setLaunchItemEnabled(request, enabled: enabled) {
+            case .done: return .done
+            case .refused: return .notAllowed
+            case .changedSinceReview: return .changedSinceReview
+            case .notAuthorized: return .notAuthorized
+            case .failed: return .failed
+            }
+        } catch {
+            return .failed
+        }
     }
 
     public func canRemove(_ item: LaunchItem) -> Bool {

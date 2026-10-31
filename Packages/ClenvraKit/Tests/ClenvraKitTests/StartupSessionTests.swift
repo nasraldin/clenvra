@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import Synchronization
 import Testing
 
 @testable import ClenvraKit
@@ -12,6 +13,35 @@ private struct StartupTrash: TrashOperations {
         let destination = directory + "/" + UUID().uuidString
         guard rename(path, destination) == 0 else { throw FileSystemError.current("rename", path) }
         return destination
+    }
+}
+
+/// Stands in for the installed helper: records each enable/disable request and answers with `answer`.
+private final class RecordingHelper: PrivilegedOperations {
+    struct Call: Sendable {
+        let item: DeletionItem
+        let enabled: Bool
+    }
+
+    let answer: LaunchItemChange
+    private let recorded = Mutex<[Call]>([])
+    var calls: [Call] { recorded.withLock { $0 } }
+
+    init(answer: LaunchItemChange) {
+        self.answer = answer
+    }
+
+    func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse { throw .unavailable }
+    func restore(_ record: ActivityRecord) async throws(HelperClientError) -> RestoreError? { throw .unavailable }
+    func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async throws(HelperClientError)
+        -> ActivityRecord.Outcome
+    { throw .unavailable }
+    func deleteLocalSnapshot(date: String) async throws(HelperClientError) -> SnapshotDeletion { throw .unavailable }
+    func setLaunchItemEnabled(_ item: DeletionItem, enabled: Bool) async throws(HelperClientError)
+        -> LaunchItemChange
+    {
+        recorded.withLock { $0.append(Call(item: item, enabled: enabled)) }
+        return answer
     }
 }
 
@@ -232,6 +262,157 @@ struct StartupSessionTests {
         #expect(runner.commands.last?.arguments == ["bootstrap", "gui/\(uid)", plist])
         #expect(activity.isReenabled(itemPath: plist, operationID: operation.id))
         #expect(!activity.canReenable(itemPath: plist, operationID: operation.id))
+    }
+
+    // MARK: - Disable and enable
+
+    private func session(privileged: RecordingHelper) -> StartupSession {
+        let policy = ProtectionPolicy(home: path("home"))
+        return StartupSession(
+            reader: LaunchItemReader(
+                userAgents: path("home/Library/LaunchAgents"), systemAgents: path("system/LaunchAgents"),
+                systemDaemons: path("system/LaunchDaemons"), status: { _ in .enabled }),
+            runner: runner, userID: 501,
+            deleter: DeletionExecutor(
+                gate: DeletionGate(policy: policy, ownerState: { _ in .notRunning }),
+                log: ActivityLog(directory: fixture.url("log")), trash: StartupTrash(directory: path(".Trash"))),
+            privileged: privileged)
+    }
+
+    @Test("disabling an own agent unloads it, then disables it in launchd; its plist stays")
+    func disableOwnAgentRunsLaunchctl() async throws {
+        let plist = path("home/Library/LaunchAgents/com.vendor.ok.plist")
+        runner.stub("/bin/launchctl", ["bootout", "gui/501", plist])
+        runner.stub("/bin/launchctl", ["disable", "gui/501/com.vendor.ok"])
+        let session = session()
+        await session.load(installedApps: [])
+        let item = try #require(session.items.first { $0.label == "com.vendor.ok" })
+
+        #expect(session.canDisable(item))
+        #expect(await session.disable(item) == .done)
+
+        #expect(
+            runner.commands.map(\.arguments) == [["bootout", "gui/501", plist], ["disable", "gui/501/com.vendor.ok"]])
+        #expect(session.isDisabled(item))
+        #expect(FileManager.default.fileExists(atPath: plist))
+    }
+
+    @Test("enabling reverses a disable: enable in launchd, then load it again")
+    func enableReverses() async throws {
+        let plist = path("home/Library/LaunchAgents/com.vendor.ok.plist")
+        runner.stub("/bin/launchctl", ["bootout", "gui/501", plist])
+        runner.stub("/bin/launchctl", ["disable", "gui/501/com.vendor.ok"])
+        runner.stub("/bin/launchctl", ["enable", "gui/501/com.vendor.ok"])
+        runner.stub("/bin/launchctl", ["bootstrap", "gui/501", plist])
+        let session = session()
+        await session.load(installedApps: [])
+        let item = try #require(session.items.first { $0.label == "com.vendor.ok" })
+        #expect(await session.disable(item) == .done)
+
+        #expect(await session.enable(item) == .done)
+
+        #expect(
+            runner.commands.map(\.arguments).suffix(2) == [
+                ["enable", "gui/501/com.vendor.ok"], ["bootstrap", "gui/501", plist],
+            ])
+        #expect(!session.isDisabled(item))
+    }
+
+    @Test("Apple and managed items are never disabled, and nothing runs")
+    func disableRefusesAppleItems() async throws {
+        let session = session()
+        await session.load(installedApps: [])
+        let apple = try #require(session.items.first { $0.label == "com.apple.something" })
+
+        #expect(!session.canDisable(apple))
+        #expect(await session.disable(apple) == .notAllowed)
+        #expect(runner.commands.isEmpty)
+    }
+
+    @Test("a Mac-wide item is disabled only through the helper, with the plist as it was reviewed")
+    func systemItemGoesThroughHelper() async throws {
+        let helper = RecordingHelper(answer: .done)
+        let plist = path("system/LaunchDaemons/com.vendor.daemon.plist")
+        let session = session(privileged: helper)
+        await session.load(installedApps: [])
+        let daemon = try #require(session.items.first { $0.label == "com.vendor.daemon" })
+        #expect(!session.canDisable(daemon))  // helper not confirmed yet
+        #expect(await session.disable(daemon) == .notAllowed)
+        session.helperAvailable = true
+        #expect(session.canDisable(daemon))
+
+        #expect(await session.disable(daemon) == .done)
+        #expect(await session.enable(daemon) == .done)
+
+        #expect(runner.commands.isEmpty)
+        let calls = helper.calls
+        #expect(calls.map(\.enabled) == [false, true])
+        #expect(calls.map(\.item.path) == [plist, plist])
+        #expect(calls.first?.item.expected == (try SafeWalk.resolve(plist).snapshot))
+    }
+
+    @Test("a plist that changed since it was reviewed is refused, own or Mac-wide, and nothing runs")
+    func changedPlistIsRefused() async throws {
+        let helper = RecordingHelper(answer: .done)
+        let session = session(privileged: helper)
+        session.helperAvailable = true
+        await session.load(installedApps: [])
+        let own = try #require(session.items.first { $0.label == "com.vendor.ok" })
+        let daemon = try #require(session.items.first { $0.label == "com.vendor.daemon" })
+        try writePlist(
+            "home/Library/LaunchAgents/com.vendor.ok.plist", label: "com.vendor.ok", program: "/tmp/somewhere-else")
+        try writePlist(
+            "system/LaunchDaemons/com.vendor.daemon.plist", label: "com.vendor.daemon", program: "/tmp/other-daemon")
+
+        #expect(await session.disable(own) == .changedSinceReview)
+        #expect(await session.disable(daemon) == .changedSinceReview)
+        #expect(runner.commands.isEmpty)
+        #expect(helper.calls.isEmpty)
+    }
+
+    @Test("a refusal from the helper is passed on")
+    func helperRefusalIsReported() async throws {
+        let helper = RecordingHelper(answer: .notAuthorized)
+        let session = session(privileged: helper)
+        session.helperAvailable = true
+        await session.load(installedApps: [])
+        let daemon = try #require(session.items.first { $0.label == "com.vendor.daemon" })
+
+        #expect(await session.disable(daemon) == .notAuthorized)
+        #expect(!session.isDisabled(daemon))
+    }
+
+    @Test("the Disabled state is read from launchctl print-disabled, for this user and for the Mac")
+    func readsDisabledState() async throws {
+        runner.stub(
+            "/bin/launchctl", ["print-disabled", "gui/501"],
+            stdout: """
+                disabled services = {
+                \t"com.vendor.ok" => disabled
+                \t"com.vendor.orphan" => enabled
+                }
+                login item associations = {
+                }
+                """)
+        runner.stub(
+            "/bin/launchctl", ["print-disabled", "system"],
+            stdout: """
+                disabled services = {
+                \t"com.vendor.daemon" => true
+                \t"com.vendor.other" => false
+                }
+                """)
+        let session = session()
+        await session.load(installedApps: [])
+        await session.loadDisabledState()
+        func item(_ label: String) throws -> LaunchItem { try #require(session.items.first { $0.label == label }) }
+
+        #expect(session.isDisabled(try item("com.vendor.ok")))
+        #expect(!session.isDisabled(try item("com.vendor.orphan")))
+        #expect(session.isDisabled(try item("com.vendor.daemon")))
+        #expect(
+            StartupSession.disabledLabels(fromPrintDisabled: "\t\"a.b\" => disabled\n\t\"c.d\" => enabled\n")
+                == ["a.b"])
     }
 
     @Test("without a re-enabler, Activity never offers re-enabling")

@@ -12,7 +12,8 @@ struct StartupView: View {
     @State private var highlighted: Set<StartupRow.ID> = []
     @State private var showsInspector = false
     private let groups = ExpandedGroups("startup")
-    @State private var removing: LaunchItem?
+    @State private var removing: [LaunchItem] = []
+    @State private var isChanging = false
     @State private var message: LocalizedStringResource?
     @State private var searchText = ""
     private var query: String { AppSearch.normalized(searchText) }
@@ -33,24 +34,27 @@ struct StartupView: View {
             .detailsPanel(isPresented: $showsInspector, width: 300) {
                 StartupInspector(
                     item: highlightedItems.count == 1 ? highlightedItems.first : nil, session: session,
-                    ownerName: highlightedItems.first.flatMap(ownerName), remove: { removing = $0 },
-                    report: { message = $0 }
+                    ownerName: highlightedItems.first.flatMap(ownerName), remove: { removing = [$0] },
+                    change: { change([$0], enable: $1) }, report: { message = $0 }
                 )
             }
             // Listing what is installed is instant and changes nothing, like Finder showing a folder.
-            .task(id: installedApps.count) { await session.load(installedApps: installedApps) }
+            .task(id: installedApps.count) { await reload() }
             .confirmationDialog(
-                Text("Remove this startup item?"),
-                isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
+                removing.count == 1
+                    ? Text("Remove this startup item?") : Text("Remove \(removing.count) startup items?"),
+                isPresented: Binding(get: { !removing.isEmpty }, set: { if !$0 { removing = [] } }),
                 presenting: removing
-            ) { item in
+            ) { items in
                 Button(role: .destructive) {
-                    Task { message = await session.remove(item).message }
+                    remove(items)
                 } label: {
                     Text("Stop and Move to Trash")
                 }
             } message: { _ in
-                Text("It is stopped now and will not start again. Its file goes to the Trash, so you can put it back.")
+                Text(
+                    "Stopped now, they will not start again. Their files go to the Trash, so you can put them back."
+                )
             }
             .alert(
                 Text(AppSection.startup.title),
@@ -118,7 +122,9 @@ struct StartupView: View {
 
     @ViewBuilder private func contextMenu(for ids: Set<StartupRow.ID>) -> some View {
         let items = session.items.filter { ids.contains($0.id) }
-        if items.count == 1, let item = items.first {
+        if items.count > 1 {
+            actionButtons(for: items)
+        } else if let item = items.first {
             Button {
                 highlighted = ids
                 showsInspector = true
@@ -147,13 +153,42 @@ struct StartupView: View {
                     Text("Start")
                 }
             }
-            if session.canRemove(item) {
-                Divider()
+            Divider()
+            actionButtons(for: [item])
+            if !session.canDisable(item) || session.needsLoginItemsSettings(item) {
                 Button {
-                    removing = item
+                    SMAppService.openSystemSettingsLoginItems()
                 } label: {
-                    Text("Remove…")
+                    Text("Manage in Login Items Settings")
                 }
+            }
+        }
+    }
+
+    /// Disable, Enable and Remove for every item that allows it.
+    @ViewBuilder private func actionButtons(for items: [LaunchItem]) -> some View {
+        let disabling = disableTargets(items)
+        let enabling = enableTargets(items)
+        let removable = items.filter(session.canRemove)
+        if !disabling.isEmpty {
+            Button {
+                change(disabling, enable: false)
+            } label: {
+                disabling.count == 1 ? Text("Disable") : Text("Disable \(disabling.count) Items")
+            }
+        }
+        if !enabling.isEmpty {
+            Button {
+                change(enabling, enable: true)
+            } label: {
+                enabling.count == 1 ? Text("Enable") : Text("Enable \(enabling.count) Items")
+            }
+        }
+        if !removable.isEmpty {
+            Button {
+                removing = removable
+            } label: {
+                removable.count == 1 ? Text("Remove…") : Text("Remove \(removable.count) Items…")
             }
         }
     }
@@ -163,7 +198,33 @@ struct StartupView: View {
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItemGroup {
             Button {
-                Task { await session.load(installedApps: installedApps) }
+                change(disableTargets(highlightedItems), enable: false)
+            } label: {
+                ToolbarLabel(title: "Disable", symbol: "pause.circle")
+            }
+            .help(Text("Stop the selected items and keep them from starting again. Enable undoes it."))
+            .disabled(isChanging || disableTargets(highlightedItems).isEmpty)
+
+            Button {
+                change(enableTargets(highlightedItems), enable: true)
+            } label: {
+                ToolbarLabel(title: "Enable", symbol: "play.circle")
+            }
+            .help(Text("Allow the selected disabled items to start again"))
+            .disabled(isChanging || enableTargets(highlightedItems).isEmpty)
+
+            Button {
+                removing = highlightedItems.filter(session.canRemove)
+            } label: {
+                ToolbarLabel(title: "Remove", symbol: "trash")
+            }
+            .help(Text("Stop the selected items and move their files to the Trash"))
+            .disabled(isChanging || !highlightedItems.contains(where: session.canRemove))
+        }
+
+        ToolbarItemGroup {
+            Button {
+                Task { await reload() }
             } label: {
                 ToolbarLabel(title: "Refresh", symbol: "arrow.clockwise")
             }
@@ -188,6 +249,57 @@ struct StartupView: View {
 
         ToolbarItem {
             InspectorToggle(isPresented: $showsInspector)
+        }
+    }
+
+    // MARK: - Actions
+
+    private func reload() async {
+        await session.load(installedApps: installedApps)
+        await session.loadDisabledState()
+    }
+
+    private func disableTargets(_ items: [LaunchItem]) -> [LaunchItem] {
+        items.filter { session.canDisable($0) && !session.isDisabled($0) }
+    }
+
+    private func enableTargets(_ items: [LaunchItem]) -> [LaunchItem] {
+        items.filter { session.canDisable($0) && session.isDisabled($0) }
+    }
+
+    /// One item at a time: each Mac-wide item asks for an administrator's password.
+    private func change(_ items: [LaunchItem], enable: Bool) {
+        guard !items.isEmpty, !isChanging else { return }
+        isChanging = true
+        Task {
+            var outcomes: [StartupSession.ChangeOutcome] = []
+            for item in items {
+                outcomes.append(enable ? await session.enable(item) : await session.disable(item))
+            }
+            await session.loadDisabledState()
+            isChanging = false
+            message = StartupSession.ChangeOutcome.summary(outcomes, enabling: enable)
+        }
+    }
+
+    private func remove(_ items: [LaunchItem]) {
+        guard !items.isEmpty, !isChanging else { return }
+        isChanging = true
+        Task {
+            var outcomes: [StartupSession.RemovalOutcome] = []
+            for item in items { outcomes.append(await session.remove(item)) }
+            isChanging = false
+            let failures = outcomes.filter { $0 != .removed }
+            if let failure = failures.first {
+                message =
+                    failures.count == outcomes.count
+                    ? failure.message : "Some items were moved to the Trash. Others were kept: \(failure.message)"
+            } else {
+                message =
+                    outcomes.count == 1
+                    ? StartupSession.RemovalOutcome.removed.message
+                    : "\(outcomes.count) items were stopped and moved to the Trash."
+            }
         }
     }
 
@@ -317,12 +429,16 @@ private struct StartupStatus: View {
         if item.programState == .missing { return "Program missing" }
         if item.isApple { return "Part of macOS" }
         if session.isManaged(item) { return "Managed by your organisation" }
+        if session.isDisabled(item) { return "Disabled" }
+        if session.needsLoginItemsSettings(item) { return "Waiting for approval" }
         return "Installed"
     }
 
     private var symbol: String {
         if item.programState == .missing { return "exclamationmark.triangle" }
         if item.isApple || session.isManaged(item) { return "lock" }
+        if session.isDisabled(item) { return "pause.circle" }
+        if session.needsLoginItemsSettings(item) { return "hand.raised" }
         return "checkmark.circle"
     }
 }
@@ -333,6 +449,8 @@ private struct StartupInspector: View {
     let session: StartupSession
     let ownerName: String?
     let remove: (LaunchItem) -> Void
+    /// Disable (`false`) or enable (`true`) the item.
+    let change: (LaunchItem, Bool) -> Void
     let report: (LocalizedStringResource) -> Void
 
     @State private var isRunning: Bool?
@@ -425,6 +543,34 @@ private struct StartupInspector: View {
                     Text("Location")
                 }
 
+                Section {
+                    HStack {
+                        if session.canDisable(item) {
+                            if session.isDisabled(item) {
+                                Button {
+                                    change(item, true)
+                                } label: {
+                                    Text("Enable")
+                                }
+                            } else {
+                                Button {
+                                    change(item, false)
+                                } label: {
+                                    Text("Disable")
+                                }
+                            }
+                        }
+                        Button {
+                            SMAppService.openSystemSettingsLoginItems()
+                        } label: {
+                            Text("Manage in Login Items Settings")
+                        }
+                    }
+                } footer: {
+                    Text(disableExplanation(for: item))
+                        .font(.callout)
+                }
+
                 if session.canControl(item) || session.canRemove(item) {
                     Section {
                         HStack {
@@ -484,6 +630,23 @@ private struct StartupInspector: View {
         }
     }
 
+    private func disableExplanation(for item: LaunchItem) -> LocalizedStringResource {
+        if item.isApple || session.isManaged(item) {
+            return "This item cannot be changed here. Login Items Settings shows what macOS allows."
+        }
+        if session.needsLoginItemsSettings(item) {
+            return "macOS is waiting for you to allow this item. Only Login Items Settings can allow it."
+        }
+        if !session.canDisable(item) {
+            return
+                "Items for all users are changed with Clenvra’s helper. Install it in Settings, or use Login Items Settings."
+        }
+        if item.domain == .userAgent {
+            return "Disable stops it and keeps it from starting again; its file stays. Enable undoes it."
+        }
+        return "This item is for all users: Disable and Enable ask for an administrator’s password each time."
+    }
+
     private func act(_ action: @escaping () async -> LocalizedStringResource) {
         guard let item else { return }
         isWorking = true
@@ -532,6 +695,30 @@ extension StartupSession.RemovalOutcome {
         case .couldNotStop: "macOS could not stop this item, so it was kept."
         case .refused(let outcome): outcome.explanation
         }
+    }
+}
+
+extension StartupSession.ChangeOutcome {
+    fileprivate var message: LocalizedStringResource {
+        switch self {
+        case .done: "Done."
+        case .notAllowed: "This item cannot be changed here. Use Login Items Settings."
+        case .changedSinceReview: "This item changed since it was listed, so nothing was done. Refresh and try again."
+        case .notAuthorized: "Nothing was changed: an administrator’s password is needed for items for all users."
+        case .failed: "macOS could not change this item."
+        }
+    }
+
+    /// One message for a batch: the first problem, or what was done.
+    fileprivate static func summary(_ outcomes: [Self], enabling: Bool) -> LocalizedStringResource {
+        let failures = outcomes.filter { $0 != .done }
+        if let failure = failures.first {
+            return failures.count == outcomes.count
+                ? failure.message : "Some items were changed. Others were not: \(failure.message)"
+        }
+        return enabling
+            ? "Enabled. It can start again, and was started now if macOS allowed it."
+            : "Disabled. It was stopped and will not start again until you enable it."
     }
 }
 

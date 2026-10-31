@@ -11,8 +11,12 @@ struct PermissionsView: View {
     @State private var showsInspector = false
     private let groups = ExpandedGroups("permissions")
     @State private var clients: [String: PermissionClient] = [:]
-    @State private var revoking: PermissionGrant?
-    @State private var failed: PermissionGrant?
+    @State private var revoking: [PermissionGrant] = []
+    /// Grants that are still there after Revoke.
+    @State private var failed: [PermissionGrant] = []
+    /// The selection holds only programs listed by path, which only System Settings can change.
+    @State private var notRevocable: PermissionGrant?
+    @State private var isRevoking = false
     @State private var searchText = ""
     private var query: String { AppSearch.normalized(searchText) }
 
@@ -29,32 +33,29 @@ struct PermissionsView: View {
             .detailsPanel(isPresented: $showsInspector, width: 300) {
                 PermissionInspector(
                     grant: highlightedGrants.count == 1 ? highlightedGrants.first : nil, session: session,
-                    client: highlightedGrants.first.map(client), revoke: { revoking = $0 })
+                    client: highlightedGrants.first.map(client), revoke: { askToRevoke([$0]) })
             }
             // Reading the privacy database changes nothing, like the Startup Items page.
             .task { if session.phase == .idle { await session.load() } }
             .task(id: session.grants) { resolveClients() }
             .confirmationDialog(
-                Text("Revoke this permission?"),
-                isPresented: Binding(get: { revoking != nil }, set: { if !$0 { revoking = nil } }),
+                revoking.count == 1 ? Text("Revoke this permission?") : Text("Revoke \(revoking.count) permissions?"),
+                isPresented: Binding(get: { !revoking.isEmpty }, set: { if !$0 { revoking = [] } }),
                 presenting: revoking
-            ) { grant in
+            ) { grants in
                 Button(role: .destructive) {
-                    Task {
-                        if await session.revoke(grant) == .failed { failed = grant }
-                    }
+                    revoke(grants)
                 } label: {
                     Text("Revoke")
                 }
-            } message: { grant in
-                Text(
-                    "\(client(for: grant).name) will lose access to \(String(localized: PermissionService.title(grant.service))). macOS asks again the next time it needs it."
-                )
+            } message: { grants in
+                revokeMessage(grants)
             }
             .alert(
-                Text("Could not revoke this permission"),
-                isPresented: Binding(get: { failed != nil }, set: { if !$0 { failed = nil } }),
-                presenting: failed
+                failed.count == 1
+                    ? Text("Could not revoke this permission") : Text("Could not revoke \(failed.count) permissions"),
+                isPresented: Binding(get: { !failed.isEmpty }, set: { if !$0 { failed = [] } }),
+                presenting: failed.first
             ) { grant in
                 Button {
                     NSWorkspace.shared.open(PermissionService.settingsURL(grant.service))
@@ -62,15 +63,77 @@ struct PermissionsView: View {
                     Text("Open Privacy Settings")
                 }
                 Button(role: .cancel) {
-                    failed = nil
+                    failed = []
                 } label: {
                     Text("OK")
                 }
             } message: { grant in
-                Text(
-                    "\(client(for: grant).name) still has access to \(String(localized: PermissionService.title(grant.service))). Change it in System Settings."
-                )
+                if failed.count == 1 {
+                    Text(
+                        "\(client(for: grant).name) still has access to \(String(localized: PermissionService.title(grant.service))). Change it in System Settings."
+                    )
+                } else {
+                    Text("These apps still have access. Change them in System Settings.")
+                }
             }
+            .alert(
+                Text("This permission cannot be revoked here"),
+                isPresented: Binding(get: { notRevocable != nil }, set: { if !$0 { notRevocable = nil } }),
+                presenting: notRevocable
+            ) { grant in
+                Button {
+                    NSWorkspace.shared.open(PermissionService.settingsURL(grant.service))
+                } label: {
+                    Text("Open Privacy Settings")
+                }
+                Button(role: .cancel) {
+                    notRevocable = nil
+                } label: {
+                    Text("OK")
+                }
+            } message: { _ in
+                Text("Programs listed by path, not as an app, can only be changed in System Settings.")
+            }
+    }
+
+    // MARK: - Revoke
+
+    /// Revocable grants go to the confirmation; a selection of only path programs explains why it cannot.
+    private func askToRevoke(_ grants: [PermissionGrant]) {
+        let revocable = grants.filter(session.canRevoke)
+        if revocable.isEmpty {
+            notRevocable = grants.first
+        } else {
+            revoking = revocable
+        }
+    }
+
+    private func revoke(_ grants: [PermissionGrant]) {
+        guard !isRevoking else { return }
+        isRevoking = true
+        Task {
+            let results = await session.revoke(grants)
+            isRevoking = false
+            failed = grants.filter { results[$0.id] != .revoked }
+        }
+    }
+
+    private func revokeMessage(_ grants: [PermissionGrant]) -> Text {
+        let needsPassword = grants.contains(where: session.revokesThroughHelper)
+        if grants.count == 1, let grant = grants.first {
+            let name = client(for: grant).name
+            let service = String(localized: PermissionService.title(grant.service))
+            return needsPassword
+                ? Text(
+                    "\(name) will lose access to \(service) for all users. macOS asks for an administrator’s password first."
+                )
+                : Text("\(name) will lose access to \(service). macOS asks again the next time it needs it.")
+        }
+        return needsPassword
+            ? Text(
+                "These apps will lose these permissions. Permissions for all users ask for an administrator’s password."
+            )
+            : Text("These apps will lose these permissions. macOS asks again the next time they need them.")
     }
 
     @ViewBuilder private var placeholder: some View {
@@ -182,7 +245,16 @@ struct PermissionsView: View {
 
     @ViewBuilder private func contextMenu(for ids: Set<PermissionRow.ID>) -> some View {
         let grants = session.grants.filter { ids.contains($0.id) }
-        if grants.count == 1, let grant = grants.first {
+        if grants.count > 1 {
+            let revocable = grants.filter(session.canRevoke)
+            if !revocable.isEmpty {
+                Button {
+                    askToRevoke(revocable)
+                } label: {
+                    Text("Revoke \(revocable.count) Permissions…")
+                }
+            }
+        } else if let grant = grants.first {
             Button {
                 highlighted = ids
                 showsInspector = true
@@ -204,7 +276,7 @@ struct PermissionsView: View {
             if session.canRevoke(grant) {
                 Divider()
                 Button {
-                    revoking = grant
+                    askToRevoke([grant])
                 } label: {
                     Text("Revoke…")
                 }
@@ -215,6 +287,16 @@ struct PermissionsView: View {
     // MARK: - Toolbar
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItemGroup {
+            Button {
+                askToRevoke(highlightedGrants)
+            } label: {
+                ToolbarLabel(title: "Revoke", symbol: "hand.raised.slash")
+            }
+            .help(Text("Remove the selected permissions. macOS asks again the next time the app needs them."))
+            .disabled(isRevoking || highlightedGrants.isEmpty)
+        }
+
         ToolbarItemGroup {
             Button {
                 Task { await session.load() }
@@ -434,7 +516,12 @@ private struct PermissionInspector: View {
                         }
                     }
                 } footer: {
-                    if session.canRevoke(grant) {
+                    if session.revokesThroughHelper(grant) {
+                        Text(
+                            "This permission is for all users. Revoke asks for an administrator’s password, then removes it."
+                        )
+                        .font(.callout)
+                    } else if session.canRevoke(grant) {
                         Text("Revoke removes this permission. macOS asks again the next time the app needs it.")
                             .font(.callout)
                     } else {
