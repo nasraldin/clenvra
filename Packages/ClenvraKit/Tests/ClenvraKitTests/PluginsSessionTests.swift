@@ -43,14 +43,19 @@ struct PluginsSessionTests {
         try data.write(to: fixture.url(relative + "/Contents/Info.plist"))
     }
 
-    private func session() -> PluginsSession {
+    private func session(apps: PluginsSession.AppControl = .none) -> PluginsSession {
         let policy = ProtectionPolicy(home: path("home"))
         return PluginsSession(
             reader: PluginReader(
                 home: path("home"), systemRoot: path("system"), runner: runner, teamIdentifier: { _ in nil }),
             deleter: DeletionExecutor(
                 gate: DeletionGate(policy: policy, ownerState: { _ in .notRunning }),
-                log: ActivityLog(directory: fixture.url("log")), trash: PluginTrash(directory: path(".Trash"))))
+                log: ActivityLog(directory: fixture.url("log")), trash: PluginTrash(directory: path(".Trash"))),
+            apps: apps)
+    }
+
+    private func item(_ path: String, in session: PluginsSession) -> PluginItem? {
+        session.groups.flatMap(\.items).first { $0.path == path }
     }
 
     @Test("scanning groups items by kind, hides Apple's own items by default and selects nothing")
@@ -164,5 +169,123 @@ struct PluginsSessionTests {
 
         #expect(Set(session.issues) == [.unreadableOutput(.appExtensions), .commandFailed(.systemExtensions)])
         #expect(session.groups.map(\.kind) == [.preferencePane, .vst3PlugIn])
+    }
+
+    // MARK: - Containing apps
+
+    @Test("an extension whose app is open names that app; others, managed and macOS apps do not")
+    func containingAppIsRunning() async throws {
+        let apps = FakeApps(running: ["/Applications/Notes Pro.app/", "/Applications/Defender.app"])
+        let session = session(apps: apps.control)
+        await session.scan()
+        session.showsAppleItems = true
+
+        let share = try #require(item("/Applications/Notes Pro.app/Contents/PlugIns/Share.appex", in: session))
+        let blocker = try #require(
+            item(path("home") + "/Applications/Blocker.app/Contents/PlugIns/Blocker Safari.appex", in: session))
+        let defender = try #require(item("/Applications/Defender.app/Contents/PlugIns/Finder.appex", in: session))
+        let pane = try #require(item(path("home/Library/PreferencePanes/Mine.prefPane"), in: session))
+
+        #expect(session.runningApp(for: share) == "/Applications/Notes Pro.app")
+        #expect(session.runningApp(for: blocker) == nil)
+        #expect(session.runningApp(for: defender) == nil)  // security software is never acted on
+        #expect(session.runningApp(for: pane) == nil)
+
+        apps.running = []
+        #expect(session.runningApp(for: share) == "/Applications/Notes Pro.app")  // until refreshed
+        session.refreshRunningApps()
+        #expect(session.runningApp(for: share) == nil)
+    }
+
+    @Test("an app inside /System is never offered for quitting")
+    func systemAppIsNotQuittable() async throws {
+        let apps = FakeApps(running: ["/System/Applications/Reminders.app"])
+        let session = session(apps: apps.control)
+        await session.scan()
+        session.showsAppleItems = true
+
+        let reminders = try #require(
+            item("/System/Applications/Reminders.app/Contents/PlugIns/RemindersQuickLookExtension.appex", in: session))
+        #expect(session.runningApp(for: reminders) == nil)
+        #expect(!session.quitApp("/System/Applications/Reminders.app", force: false))
+        #expect(apps.quits.isEmpty)
+    }
+
+    @Test("quitting asks politely first; when that fails, Force Quit is offered and used")
+    func quitThenForceQuit() async {
+        let apps = FakeApps(running: ["/Applications/Notes Pro.app"])
+        apps.politeSucceeds = false
+        let session = session(apps: apps.control)
+        await session.scan()
+        #expect(!session.needsForceQuit("/Applications/Notes Pro.app"))
+
+        #expect(!session.quitApp("/Applications/Notes Pro.app", force: false))
+        #expect(session.needsForceQuit("/Applications/Notes Pro.app"))
+
+        #expect(session.quitApp("/Applications/Notes Pro.app", force: true))
+        #expect(apps.quits.map(\.path) == ["/Applications/Notes Pro.app", "/Applications/Notes Pro.app"])
+        #expect(apps.quits.map(\.force) == [false, true])
+    }
+
+    @Test("an app that is not running is not quit")
+    func quitNotRunning() async {
+        let apps = FakeApps(running: [])
+        let session = session(apps: apps.control)
+        await session.scan()
+
+        #expect(!session.quitApp("/Applications/Notes Pro.app", force: true))
+        #expect(apps.quits.isEmpty)
+    }
+
+    // MARK: - Icons
+
+    @Test("an extension's icon comes from its own bundle, then its app, then none")
+    func iconSources() {
+        let appex = PluginItem(
+            name: "Share", kind: .appExtension, path: "/A.app/Contents/PlugIns/S.appex", bundleIdentifier: "x",
+            version: nil, domain: .appBundle, containingApp: "/A.app", handling: .revealOnly)
+        #expect(appex.iconSources(hasOwnIcon: { _ in true }) == ["/A.app/Contents/PlugIns/S.appex", "/A.app"])
+        #expect(appex.iconSources(hasOwnIcon: { _ in false }) == ["/A.app"])
+
+        let system = PluginItem(
+            name: "Net", kind: .systemExtension, path: nil, bundleIdentifier: "y", version: nil, domain: .system,
+            handling: .revealOnly)
+        #expect(system.iconSources(hasOwnIcon: { _ in true }).isEmpty)
+    }
+
+    @Test("a bundle has its own icon when its Info.plist names one")
+    func ownIcon() {
+        #expect(PluginItem.declaresIcon(["CFBundleIconFile": "AppIcon"]))
+        #expect(PluginItem.declaresIcon(["CFBundleIconName": "AppIcon"]))
+        #expect(PluginItem.declaresIcon(["CFBundleIcons": ["CFBundlePrimaryIcon": ["CFBundleIconFiles": ["i"]]]]))
+        #expect(!PluginItem.declaresIcon(["CFBundleIdentifier": "x"]))
+        #expect(!PluginItem.declaresIcon(["CFBundleIconFile": ""]))
+    }
+
+    @Test("the containing app is shown by its name")
+    func containingAppName() {
+        let appex = PluginItem(
+            name: "Share", kind: .appExtension, path: nil, bundleIdentifier: "x", version: nil, domain: .appBundle,
+            containingApp: "/Applications/Notes Pro.app", handling: .revealOnly)
+        #expect(appex.containingAppName == "Notes Pro")
+    }
+}
+
+/// Running apps and quit requests, recorded instead of touching real apps.
+@MainActor
+private final class FakeApps {
+    var running: Set<String>
+    var politeSucceeds = true
+    private(set) var quits: [(path: String, force: Bool)] = []
+
+    init(running: Set<String>) { self.running = running }
+
+    var control: PluginsSession.AppControl {
+        PluginsSession.AppControl(
+            runningAppPaths: { [unowned self] in running },
+            quit: { [unowned self] path, force in
+                quits.append((path, force))
+                return force || politeSucceeds
+            })
     }
 }

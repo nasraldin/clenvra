@@ -15,12 +15,63 @@ struct PluginsView: View {
     @State private var isConfirming = false
     @State private var shownSummary: ShownPluginSummary?
     @State private var scanned: Date?
+    /// Table rows, built when the scan, search or sort changes (never while scrolling: with Apple's items shown
+    /// there are hundreds).
+    @State private var tableGroups: [PluginTableGroup] = []
+    @State private var itemsByID: [String: PluginItem] = [:]
+    /// The open app the Quit confirmation is about.
+    @State private var quitTarget: QuitTarget?
     /// Groups the person closed, remembered across launches (F4).
     private let expansion = ExpandedGroups("extensions")
+
+    /// An open app the person asked to quit, so its extension can then be removed with the app.
+    struct QuitTarget: Identifiable {
+        /// The app's bundle path.
+        let id: String
+        let name: String
+        let force: Bool
+    }
 
     var body: some View {
         content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onChange(of: session.groups, initial: true) { rebuildRows() }
+            .onChange(of: searchText) { rebuildRows() }
+            .onChange(of: sortOrder) { rebuildRows() }
+            .onReceive(
+                NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)
+            ) { _ in
+                session.refreshRunningApps()
+            }
+            .onReceive(
+                NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)
+            ) { _ in
+                session.refreshRunningApps()
+            }
+            .confirmationDialog(
+                quitTarget?.force == true ? "Force Quit Application" : "Quit Application",
+                isPresented: Binding(get: { quitTarget != nil }, set: { if !$0 { quitTarget = nil } }),
+                presenting: quitTarget
+            ) { target in
+                if target.force {
+                    Button("Force Quit", role: .destructive) {
+                        session.quitApp(target.id, force: true)
+                    }
+                } else {
+                    Button("Quit", role: .destructive) {
+                        session.quitApp(target.id, force: false)
+                    }
+                }
+                Button("Cancel", role: .cancel) {
+                    quitTarget = nil
+                }
+            } message: { target in
+                if target.force {
+                    Text("Force quitting immediately terminates \(target.name). Any unsaved data will be lost.")
+                } else {
+                    Text("Are you sure you want to quit \(target.name)? Unsaved changes may be lost.")
+                }
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if session.removableCount > 0 {
                     SelectionStatusBar(
@@ -74,7 +125,7 @@ struct PluginsView: View {
                 .accessibilityIdentifier("review.results")
                 .accessibilityLabel(Text(AppSection.extensions.title))
         }
-        .pageState(isShown: visibleGroups.isEmpty) { state }
+        .pageState(isShown: tableGroups.isEmpty) { state }
     }
 
     @ViewBuilder private var state: some View {
@@ -119,8 +170,8 @@ struct PluginsView: View {
                 HStack(spacing: 6) {
                     checkbox(for: row)
                     if let item = row.item {
-                        FileNameCell(name: item.name, path: item.path)
-                        if let app = item.containingApp {
+                        PluginNameCell(item: item)
+                        if let app = row.appName {
                             Text("Part of \(app)")
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
@@ -151,20 +202,27 @@ struct PluginsView: View {
             }
             .width(min: 70, ideal: 90)
         } rows: {
-            ForEach(visibleGroups) { group in
-                DisclosureTableRow(PluginRow(group: group), isExpanded: expandedBinding(group.kind)) {
-                    ForEach(matches(in: group).map(PluginRow.init(item:)).sorted(using: sortOrder)) { row in
+            ForEach(tableGroups) { group in
+                DisclosureTableRow(group.header, isExpanded: expandedBinding(group.kind)) {
+                    ForEach(group.rows) { row in
                         TableRow(row)
                     }
                 }
             }
         }
         .contextMenu(forSelectionType: PluginRow.ID.self) { ids in
-            let items = session.groups.flatMap(\.items).filter { ids.contains($0.id) }
+            let items = items(for: ids)
             if !items.isEmpty {
                 FileActionsMenu(paths: items.compactMap(\.path)) {
                     highlighted = ids
                     showsInspector = true
+                }
+                let apps = runningApps(for: items)
+                if !apps.isEmpty {
+                    Divider()
+                    ForEach(apps, id: \.path) { app in
+                        quitButton(appPath: app.path, name: app.name)
+                    }
                 }
             }
         } primaryAction: { ids in
@@ -186,13 +244,10 @@ struct PluginsView: View {
             .toggleStyle(.checkbox)
             .labelsHidden()
             .disabled(!session.canSelect(item))
-        } else if let group = session.groups.first(where: { $0.kind == row.kind }),
-            group.items.contains(where: session.canSelect)
-        {
-            let removable = group.items.filter(session.canSelect)
+        } else if let group = tableGroups.first(where: { $0.kind == row.kind }), !group.removableIDs.isEmpty {
             Toggle(
                 isOn: Binding(
-                    get: { removable.allSatisfy { session.selection.contains($0.id) } },
+                    get: { group.removableIDs.allSatisfy(session.selection.contains) },
                     set: { session.setSelected($0, kind: group.kind) })
             ) {
                 Text("Include all \(Text(group.kind.title))")
@@ -203,9 +258,21 @@ struct PluginsView: View {
     }
 
     @ViewBuilder private var inspector: some View {
-        let items = session.groups.flatMap(\.items).filter { highlighted.contains($0.id) }
+        let items = items(for: highlighted)
         if items.count == 1, let item = items.first {
-            ItemInspector(name: item.name, path: item.path) {
+            ItemInspector(
+                name: item.name, path: item.path,
+                icon: IconCache.shared.icon(for: item)
+                    ?? NSImage(systemSymbolName: "puzzlepiece.extension", accessibilityDescription: nil)
+            ) {
+                if let app = session.runningApp(for: item) {
+                    let name = item.containingAppName ?? app
+                    Section {
+                        Text("\(name) is open. Quit it first, then remove this extension together with its app.")
+                            .font(.callout)
+                        quitButton(appPath: app, name: name)
+                    }
+                }
                 Section {
                     LabeledContent {
                         Text(item.kind.title)
@@ -300,8 +367,42 @@ struct PluginsView: View {
 
     // MARK: - Data
 
-    private var visibleGroups: [PluginsSession.Group] {
-        session.groups.filter { !matches(in: $0).isEmpty }
+    /// Builds the table rows once per scan, search or sort change, so scrolling only draws.
+    private func rebuildRows() {
+        let order = sortOrder
+        tableGroups = session.groups.compactMap { group in
+            let matching = matches(in: group)
+            guard !matching.isEmpty else { return nil }
+            return PluginTableGroup(
+                header: PluginRow(group: group), rows: matching.map(PluginRow.init(item:)).sorted(using: order),
+                removableIDs: group.items.filter(session.canSelect).map(\.id))
+        }
+        itemsByID = Dictionary(
+            session.groups.flatMap(\.items).map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    private func items(for ids: Set<PluginRow.ID>) -> [PluginItem] {
+        ids.sorted().compactMap { itemsByID[$0] }
+    }
+
+    /// The distinct open apps the items ship in, by name.
+    private func runningApps(for items: [PluginItem]) -> [(path: String, name: String)] {
+        var seen: Set<String> = []
+        return items.compactMap { item in
+            guard let app = session.runningApp(for: item), seen.insert(app).inserted else { return nil }
+            return (app, item.containingAppName ?? app)
+        }
+    }
+
+    /// Quit (or Force Quit, after a polite quit was refused) an open app, after confirmation.
+    private func quitButton(appPath: String, name: String) -> some View {
+        let force = session.needsForceQuit(appPath)
+        return Button {
+            quitTarget = QuitTarget(id: appPath, name: name, force: force)
+        } label: {
+            Text(force ? "Force Quit \(name)…" : "Quit \(name)…")
+        }
+        .help(Text("Quit the app this extension belongs to, so you can remove it"))
     }
 
     private func matches(in group: PluginsSession.Group) -> [PluginItem] {
@@ -327,6 +428,8 @@ nonisolated struct PluginRow: Identifiable, Sendable {
     let name: String
     let size: Int64
     let itemCount: Int
+    /// The app the extension ships in, by name.
+    let appName: String?
 
     init(group: PluginsSession.Group) {
         id = "kind:" + String(describing: group.kind)
@@ -335,6 +438,7 @@ nonisolated struct PluginRow: Identifiable, Sendable {
         name = String(describing: group.kind)  // Kind rows are not sorted; the cell shows the localized title.
         size = group.items.reduce(0) { $0 + ($1.size ?? 0) }
         itemCount = group.items.count
+        appName = nil
     }
 
     init(item: PluginItem) {
@@ -344,6 +448,64 @@ nonisolated struct PluginRow: Identifiable, Sendable {
         name = item.name
         size = item.size ?? 0
         itemCount = 1
+        appName = item.containingAppName
+    }
+}
+
+/// One kind of extension with its matching rows, already filtered and sorted.
+nonisolated struct PluginTableGroup: Identifiable, Sendable {
+    var id: String { header.id }
+    var kind: PluginItem.Kind { header.kind }
+    let header: PluginRow
+    let rows: [PluginRow]
+    /// Items of this kind the user may select (the group checkbox covers them all).
+    let removableIDs: [String]
+}
+
+/// The extension's own icon (or its app's, or a generic symbol) and name. Icons come from `IconCache`, so a row
+/// asks `NSWorkspace` and reads its bundle at most once, not on every scroll.
+private struct PluginNameCell: View {
+    let item: PluginItem
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Group {
+                if let icon = IconCache.shared.icon(for: item) {
+                    Image(nsImage: icon)
+                        .resizable()
+                } else {
+                    Image(systemName: "puzzlepiece.extension")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(width: 16, height: 16)
+            .accessibilityHidden(true)
+            Text(verbatim: item.name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .help(Text(verbatim: item.path ?? item.name))
+    }
+}
+
+extension PluginsSession.AppControl {
+    /// The running apps `NSWorkspace` reports; quitting goes through `NSRunningApplication` only, never Clenvra
+    /// itself.
+    static let live = PluginsSession.AppControl(
+        runningAppPaths: {
+            Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleURL.map(bundlePath) })
+        },
+        quit: { path, force in
+            let apps = NSWorkspace.shared.runningApplications.filter {
+                $0 != NSRunningApplication.current && $0.bundleURL.map(bundlePath) == path
+            }
+            return apps.map { force ? $0.forceTerminate() : $0.terminate() }.contains(true)
+        })
+
+    private static func bundlePath(_ url: URL) -> String {
+        var path = url.standardizedFileURL.path(percentEncoded: false)
+        while path.count > 1, path.hasSuffix("/") { path.removeLast() }
+        return path
     }
 }
 
