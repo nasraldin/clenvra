@@ -10,6 +10,7 @@ struct OverviewView: View {
 
     @State private var volumes: [Volume] = []
     @State private var fullDiskAccess = FullDiskAccess.Status.unknown
+    @State private var helperUpdateFailed = false
     @State private var searchText = ""
     @Environment(SearchRouter.self) private var router: SearchRouter?
 
@@ -41,6 +42,7 @@ struct OverviewView: View {
             VStack(alignment: .leading, spacing: 24) {
                 disks
                 if fullDiskAccess == .notGranted { fullDiskAccessNote }
+                if environment.helperNeedsUpdate { helperUpdateNote }
                 scanSection
                 if hasScanned { recommendationsSection }
                 OverviewHealthLine(
@@ -182,6 +184,39 @@ struct OverviewView: View {
     }
 
     // MARK: - Full Disk Access
+
+    /// After an app update the installed helper speaks an older protocol, so every helper action is off until it is
+    /// reinstalled; this says so where it is seen first.
+    private var helperUpdateNote: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 8) {
+                Label {
+                    Text("The system helper needs an update").font(.headline)
+                } icon: {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                }
+                Text(
+                    "It is from another version of Clenvra, so system cleanup, Uninstall’s system files and changes for all users are off until it is updated. macOS may ask you to approve it again."
+                )
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    Task { helperUpdateFailed = !(await environment.updateHelper()) }
+                } label: {
+                    Text("Update Helper")
+                }
+                .accessibilityIdentifier("overview.updateHelper")
+                if helperUpdateFailed {
+                    Text("macOS did not update the helper. Make sure Clenvra is in the Applications folder.")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(4)
+        }
+    }
 
     private var fullDiskAccessNote: some View {
         GroupBox {

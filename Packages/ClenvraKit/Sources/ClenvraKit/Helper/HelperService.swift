@@ -318,6 +318,17 @@ public struct HelperService: Sendable {
         return .reset
     }
 
+    /// Runs `pkgutil --forget <id>` as root, after an administrator's password, so an uninstalled app leaves no
+    /// installer record. Apple's records and malformed IDs are refused before asking.
+    @concurrent public func forgetPackage(id: String, authorization: Data?) async -> PackageForget {
+        guard Self.isValidBundleID(id), !id.lowercased().hasPrefix("com.apple.") else { return .invalid }
+        guard authorize(authorization) else { return .notAuthorized }
+        let result = try? await runner.run(
+            Command(executable: "/usr/sbin/pkgutil", arguments: ["--forget", id], timeout: .seconds(30)))
+        guard let result, result.terminationReason == .exited, result.exitStatus == 0 else { return .failed }
+        return .forgotten
+    }
+
     /// Letters, digits, ".", "_" and "-", starting with a letter or digit, at most 255 characters.
     static func isValidBundleID(_ value: String) -> Bool {
         guard (1...255).contains(value.count), let first = value.unicodeScalars.first,

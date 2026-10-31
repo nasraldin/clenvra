@@ -19,6 +19,16 @@ private struct UninstallFixtureTrash: TrashOperations {
 /// Records what is asked of the helper and answers as if it had deleted every item; it never touches a file.
 private final class RecordingHelper: PrivilegedOperations {
     let requests = Mutex<[HelperRequest]>([])
+    let forgotten = Mutex<[String]>([])
+    /// The answer to a request to forget an installer record.
+    let forgetAnswer: PackageForget
+
+    init(forgetAnswer: PackageForget = .forgotten) { self.forgetAnswer = forgetAnswer }
+
+    func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget {
+        forgotten.withLock { $0.append(id) }
+        return forgetAnswer
+    }
 
     func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse {
         requests.withLock { $0.append(request) }
@@ -45,7 +55,8 @@ struct AppUninstallTests {
 
     private func session(
         homebrew: AppsSession.Homebrew? = nil, privileged: (any PrivilegedOperations)? = nil,
-        receipts: OwnershipResolver.ReceiptLookup? = nil, running: Set<String> = []
+        receipts: OwnershipResolver.ReceiptLookup? = nil, running: Set<String> = [],
+        installSourceRunner: (any CommandRunning)? = nil
     ) -> AppsSession {
         let home = fixture.home
         let policy = ProtectionPolicy(home: home)
@@ -67,7 +78,7 @@ struct AppUninstallTests {
             ownerState: { app in app.bundleIdentifier.map(ownerState) ?? .unknown },
             lastUsed: { _ in nil },
             teamIdentifier: { _ in nil },
-            homebrew: homebrew)
+            homebrew: homebrew, installSourceRunner: installSourceRunner)
     }
 
     private func records() async throws -> [ActivityRecord] {
@@ -275,6 +286,46 @@ struct AppUninstallTests {
         #expect(!fixture.exists("Applications/Writer.app"))
         let logged = try await records().filter { $0.itemPath == systemPath }
         #expect(logged.map(\.outcome) == [.removedPermanently])
+    }
+
+    @Test("an app installed by a package leaves no installer record: the helper forgets it after the app is gone")
+    func uninstallForgetsInstallerRecord() async throws {
+        let app = try fixture.app("com.example.writer", name: "Writer")
+        let pkgutil = FakeCommandRunner()
+        pkgutil.stub(
+            InstallSource.pkgutilPath, ["--file-info", app.id],
+            stdout: "volume: /\npath: \(app.id)\n\npkgid: com.example.writer.pkg\npkg-version: 1.0\n")
+        let helper = RecordingHelper()
+        let session = session(privileged: helper, installSourceRunner: pkgutil)
+        session.helperAvailable = true
+        await session.load()
+
+        let preview = await session.uninstall([app], backup: nil, dryRun: true)
+        #expect(helper.forgotten.withLock { $0 }.isEmpty)  // a dry run changes nothing
+        #expect(preview.receiptsKept.isEmpty)
+
+        let result = await session.uninstall([app], backup: nil)
+
+        #expect(result.removed == ["Writer"])
+        #expect(helper.forgotten.withLock { $0 } == ["com.example.writer.pkg"])
+        #expect(result.receiptsKept.isEmpty)
+    }
+
+    @Test("an installer record the helper could not forget is reported, and the app is still removed")
+    func uninstallReportsKeptRecord() async throws {
+        let app = try fixture.app("com.example.writer", name: "Writer")
+        let pkgutil = FakeCommandRunner()
+        pkgutil.stub(InstallSource.pkgutilPath, ["--file-info", app.id], stdout: "pkgid: com.example.writer.pkg\n")
+        let helper = RecordingHelper(forgetAnswer: .notAuthorized)
+        let session = session(privileged: helper, installSourceRunner: pkgutil)
+        session.helperAvailable = true
+        await session.load()
+
+        let result = await session.uninstall([app], backup: nil)
+
+        #expect(result.removed == ["Writer"])
+        #expect(result.receiptsKept == ["com.example.writer.pkg"])
+        #expect(!fixture.exists("Applications/Writer.app"))
     }
 
     @Test("Copy Path and Show in Finder act on every checked app when the clicked one is checked")

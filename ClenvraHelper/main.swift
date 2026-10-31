@@ -118,6 +118,16 @@ final class HelperEndpoint: NSObject, ClenvraHelperProtocol, Sendable {
             idleWatch.end()
         }
     }
+
+    func forgetPackage(_ id: String, authorization: Data, reply: @escaping @Sendable (String?) -> Void) {
+        idleWatch.begin()
+        let service = service
+        Task {
+            let result = await service.forgetPackage(id: id, authorization: authorization)
+            reply(result.rawValue)
+            idleWatch.end()
+        }
+    }
 }
 
 final class ListenerDelegate: NSObject, NSXPCListenerDelegate {

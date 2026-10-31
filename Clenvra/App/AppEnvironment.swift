@@ -1,6 +1,7 @@
 import AppKit
 import ClenvraKit
 import Foundation
+import ServiceManagement
 import Synchronization
 
 /// Long-lived services shared by every section. Created once at launch.
@@ -27,6 +28,8 @@ final class AppEnvironment {
     let helper = HelperClient()
     /// Installed, approved, and answering with this version's protocol.
     private(set) var helperAvailable = false
+    /// Installed and answering, but from another version of Clenvra (after an app update): it needs reinstalling.
+    private(set) var helperNeedsUpdate = false
     /// Available once the login-shell PATH is known (tools from Homebrew, nvm, volta… live there).
     private(set) var toolSession: ToolStorageSession?
 
@@ -126,13 +129,30 @@ final class AppEnvironment {
     }
 
     func refreshHelper() async {
-        let available = (try? await helper.protocolVersion()) == HelperIdentity.protocolVersion
+        let version = try? await helper.protocolVersion()
+        let available = version == HelperIdentity.protocolVersion
+        helperNeedsUpdate = version != nil && !available
         helperAvailable = available
         cleanupSession.helperAvailable = available
         startupSession.helperAvailable = available
         appsSession.helperAvailable = available
         snapshotsSession.helperAvailable = available
         permissionsSession.helperAvailable = available
+    }
+
+    /// Replaces an out-of-date helper with this version's: removes it, then installs it again. macOS may ask for
+    /// approval in Login Items Settings, which is opened when needed. `false` when macOS refused.
+    func updateHelper() async -> Bool {
+        let service = SMAppService.daemon(plistName: HelperIdentity.daemonPlistName)
+        try? await service.unregister()
+        do {
+            try service.register()
+        } catch  where service.status != .requiresApproval {
+            return false
+        } catch {}
+        if service.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+        await refreshHelper()
+        return true
     }
 
     /// Cleanup's rules: the catalog, the system rules (through the helper) and the user's own review-only rules.

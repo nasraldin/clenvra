@@ -686,6 +686,8 @@ extension AppsSession {
         public var summary = CleanupSummary()
         /// Backup folders made in this run, also for apps that were not removed afterwards.
         public var backups: [URL] = []
+        /// Installer records of removed apps that the helper could not forget (no helper, no password, refused).
+        public var receiptsKept: [String] = []
 
         public init() {}
     }

@@ -6062,12 +6062,12 @@
         }
       }
     },
-    "Installed by a package (%@). Its installer record stays.": {
+    "Installed by a package (%@). Its installer record is removed too; macOS asks for an administrator’s password.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ثُبّت بحزمة (%@). يبقى سجل التثبيت."
+            "value": "ثُبّت بحزمة (%@). يُزال سجل التثبيت أيضًا، ويطلب macOS كلمة سر المسؤول."
           }
         }
       }
@@ -6208,6 +6208,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أصبح مفعّلًا مرة أخرى."
+          }
+        }
+      }
+    },
+    "It is from another version of Clenvra, so system cleanup, Uninstall’s system files and changes for all users are off until it is updated. macOS may ask you to approve it again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنه من إصدار آخر من Clenvra، لذا يتوقف تنظيف النظام وحذف ملفات النظام عند إلغاء التثبيت والتغييرات لجميع المستخدمين حتى يُحدَّث. قد يطلب macOS موافقتك مرة أخرى."
           }
         }
       }
@@ -12105,6 +12115,16 @@
         }
       }
     },
+    "The app is gone, but these installer records stay (no helper or no password): %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُزيل التطبيق، لكن سجلات التثبيت هذه باقية (لا يوجد مساعد أو لم تُدخل كلمة السر): %@"
+          }
+        }
+      }
+    },
     "The app is open, or it changed after you reviewed it. Quit it and try again.": {
       "localizations": {
         "ar": {
@@ -12281,6 +12301,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر حذف اللقطة."
+          }
+        }
+      }
+    },
+    "The system helper needs an update": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساعد النظام يحتاج إلى تحديث"
           }
         }
       }
@@ -13033,6 +13063,16 @@
         }
       }
     },
+    "Update Helper": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديث المساعد"
+          }
+        }
+      }
+    },
     "Update available %@": {
       "localizations": {
         "ar": {
@@ -13721,6 +13761,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يُزل macOS المساعد."
+          }
+        }
+      }
+    },
+    "macOS did not update the helper. Make sure Clenvra is in the Applications folder.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يحدّث macOS المساعد. تأكد من وجود Clenvra في مجلد التطبيقات."
           }
         }
       }

@@ -148,6 +148,32 @@ struct HelperServiceTests {
         #expect(runner.commands.isEmpty)
     }
 
+    // MARK: - Installer records
+
+    @Test("an installer record is forgotten with pkgutil as root, after authorization")
+    func forgetPackageRunsPkgutil() async {
+        runner.stub("/usr/sbin/pkgutil", ["--forget", "com.vendor.writer.pkg"])
+
+        let result = await service().forgetPackage(id: "com.vendor.writer.pkg", authorization: nil)
+
+        #expect(result == .forgotten)
+        #expect(runner.commands.map(\.arguments) == [["--forget", "com.vendor.writer.pkg"]])
+        #expect(authorizations.count.withLock { $0 } == 1)
+    }
+
+    @Test("Apple's records and malformed IDs are refused before authorization; no password, nothing runs")
+    func forgetPackageRefuses() async {
+        for id in [
+            "com.apple.pkg.Safari", "COM.APPLE.x", "", "-x", "a b", "x;rm", "../x", String(repeating: "a", count: 300),
+        ] {
+            #expect(await service().forgetPackage(id: id, authorization: nil) == .invalid)
+        }
+        #expect(authorizations.count.withLock { $0 } == 0)
+        #expect(
+            await service(authorized: false).forgetPackage(id: "com.vendor.x", authorization: nil) == .notAuthorized)
+        #expect(runner.commands.isEmpty)
+    }
+
     // MARK: - Permissions
 
     @Test("a permission for all users is reset with tccutil as root, after authorization")

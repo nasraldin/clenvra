@@ -155,6 +155,10 @@ extension AppsSession {
             if bundleDone {
                 result.removed.append(app.name)
                 removedIDs.insert(app.id)
+                // Only once the app is gone, so a kept app never loses its installer record.
+                if !dryRun, case .package(let ids) = plan.source {
+                    result.receiptsKept += await forgetInstallerRecords(ids)
+                }
             } else {
                 result.skipped.append((app.name, .changed))
             }
@@ -182,6 +186,16 @@ extension AppsSession {
     }
 
     /// The `brew` command that removes a Homebrew app, run as the user; `nil` for other apps or without Homebrew.
+    /// Asks the helper (with the administrator's password) to forget each installer record; returns those kept.
+    private func forgetInstallerRecords(_ ids: [String]) async -> [String] {
+        guard helperAvailable, let privileged else { return ids }
+        var kept: [String] = []
+        for id in ids where (try? await privileged.forgetPackage(id: id)) != .forgotten {
+            kept.append(id)
+        }
+        return kept
+    }
+
     func homebrewUninstallCommand(for source: InstallSource) -> Command? {
         guard let homebrew else { return nil }
         let arguments: [String]

@@ -23,6 +23,8 @@ import Synchronization
     /// A TCC service, a bundle ID and an `AuthorizationExternalForm` in; a `PermissionReset` raw value out.
     func resetPermission(
         _ service: String, bundleID: String, authorization: Data, reply: @escaping @Sendable (String?) -> Void)
+    /// A package ID and an `AuthorizationExternalForm` in; a `PackageForget` raw value out.
+    func forgetPackage(_ id: String, authorization: Data, reply: @escaping @Sendable (String?) -> Void)
 }
 
 /// Why a call to the helper did not get an answer.
@@ -124,6 +126,18 @@ public struct HelperClient: Sendable {
             proxy.resetPermission(service, bundleID: bundleID, authorization: form) { finish(.success($0)) }
         }
         guard let raw, let result = PermissionReset(rawValue: raw) else { throw .badReply }
+        return result
+    }
+
+    /// The helper asks for an administrator's password in this login session before acting.
+    @concurrent public func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget {
+        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
+        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
+        let form = authorization.externalForm
+        let raw: String? = try await call { proxy, finish in
+            proxy.forgetPackage(id, authorization: form) { finish(.success($0)) }
+        }
+        guard let raw, let result = PackageForget(rawValue: raw) else { throw .badReply }
         return result
     }
 

@@ -16,6 +16,8 @@ public protocol PrivilegedOperations: Sendable {
     /// Runs `tccutil reset <service> <bundle ID>` as root, after an administrator's password.
     @concurrent func resetPermission(service: String, bundleID: String) async throws(HelperClientError)
         -> PermissionReset
+    /// Runs `pkgutil --forget <id>` as root, after an administrator's password.
+    @concurrent func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget
 }
 
 extension PrivilegedOperations {
@@ -27,6 +29,10 @@ extension PrivilegedOperations {
     @concurrent public func resetPermission(service: String, bundleID: String) async throws(HelperClientError)
         -> PermissionReset
     { throw .unavailable }
+
+    @concurrent public func forgetPackage(id: String) async throws(HelperClientError) -> PackageForget {
+        throw .unavailable
+    }
 }
 
 extension HelperClient: PrivilegedOperations {}
@@ -52,5 +58,16 @@ public enum PermissionReset: String, Codable, Sendable {
     /// No administrator's password was given.
     case notAuthorized
     /// `tccutil` refused.
+    case failed
+}
+
+/// What the helper did with a request to forget an uninstalled app's installer record.
+public enum PackageForget: String, Codable, Sendable {
+    case forgotten
+    /// Apple's record or a malformed ID; nothing was asked or run.
+    case invalid
+    /// No administrator's password was given.
+    case notAuthorized
+    /// `pkgutil` refused (for example, no such record).
     case failed
 }

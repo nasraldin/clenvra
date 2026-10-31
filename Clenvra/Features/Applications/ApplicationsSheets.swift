@@ -195,6 +195,13 @@ struct BatchUninstallResultSheet: View {
             if !result.backups.isEmpty {
                 Text("\(result.backups.count) backups were made.")
             }
+            if !result.receiptsKept.isEmpty {
+                Text(
+                    "The app is gone, but these installer records stay (no helper or no password): \(result.receiptsKept.joined(separator: ", "))"
+                )
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
             List(lines) { line in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Image(systemName: line.reason == nil ? "checkmark.circle.fill" : "minus.circle")
@@ -403,7 +410,7 @@ extension InstallSource {
         case .homebrewFormula(let name): "Homebrew formula \(name): removed with “brew uninstall” first."
         case .appStore: "From the App Store. You can download it again from your purchases."
         case .package(let ids):
-            "Installed by a package (\(ids.joined(separator: ", "))). Its installer record stays."
+            "Installed by a package (\(ids.joined(separator: ", "))). Its installer record is removed too; macOS asks for an administrator’s password."
         case .direct: nil
         }
     }
