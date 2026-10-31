@@ -8,6 +8,13 @@ import SwiftUI
 struct StartupView: View {
     let session: StartupSession
     let installedApps: [InstalledApp]
+    /// The helper is installed but from another Clenvra version.
+    let helperNeedsUpdate: Bool
+    let updateHelper: () async -> Bool
+
+    @Environment(\.openSettings) private var openSettings
+    /// A Mac-wide item was asked to change while the helper is missing or out of date.
+    @State private var asksForHelper = false
 
     @State private var highlighted: Set<StartupRow.ID> = []
     @State private var showsInspector = false
@@ -34,7 +41,7 @@ struct StartupView: View {
             .detailsPanel(isPresented: $showsInspector, width: 300) {
                 StartupInspector(
                     item: highlightedItems.count == 1 ? highlightedItems.first : nil, session: session,
-                    ownerName: highlightedItems.first.flatMap(ownerName), remove: { removing = [$0] },
+                    ownerName: highlightedItems.first.flatMap(ownerName), remove: { askToRemove([$0]) },
                     change: { change([$0], enable: $1) }, report: { message = $0 }
                 )
             }
@@ -55,6 +62,37 @@ struct StartupView: View {
                 Text(
                     "Stopped now, they will not start again. Their files go to the Trash, so you can put them back."
                 )
+            }
+            .alert(
+                helperNeedsUpdate ? Text("Update Clenvra’s helper?") : Text("Install Clenvra’s helper?"),
+                isPresented: $asksForHelper
+            ) {
+                Button {
+                    if helperNeedsUpdate {
+                        Task {
+                            if !(await updateHelper()) {
+                                message =
+                                    "macOS did not update the helper. Make sure Clenvra is in the Applications folder."
+                            }
+                        }
+                    } else {
+                        openSettings()
+                    }
+                } label: {
+                    helperNeedsUpdate ? Text("Update Helper") : Text("Open Settings")
+                }
+                Button(role: .cancel) {
+                } label: {
+                    Text("Cancel")
+                }
+            } message: {
+                helperNeedsUpdate
+                    ? Text(
+                        "This item is for all users, so it is changed through Clenvra’s helper. The installed helper is from another version of Clenvra; update it, then try again. macOS may ask you to approve it."
+                    )
+                    : Text(
+                        "This item is for all users, so it is changed through Clenvra’s helper. Install it in Settings › System Helper, then try again."
+                    )
             }
             .alert(
                 Text(AppSection.startup.title),
@@ -169,7 +207,7 @@ struct StartupView: View {
     @ViewBuilder private func actionButtons(for items: [LaunchItem]) -> some View {
         let disabling = disableTargets(items)
         let enabling = enableTargets(items)
-        let removable = items.filter(session.canRemove)
+        let removable = items.filter(session.mayRemove)
         if !disabling.isEmpty {
             Button {
                 change(disabling, enable: false)
@@ -186,7 +224,7 @@ struct StartupView: View {
         }
         if !removable.isEmpty {
             Button {
-                removing = removable
+                askToRemove(removable)
             } label: {
                 removable.count == 1 ? Text("Remove…") : Text("Remove \(removable.count) Items…")
             }
@@ -214,12 +252,12 @@ struct StartupView: View {
             .disabled(isChanging || enableTargets(highlightedItems).isEmpty)
 
             Button {
-                removing = highlightedItems.filter(session.canRemove)
+                askToRemove(highlightedItems.filter(session.mayRemove))
             } label: {
                 ToolbarLabel(title: "Remove", symbol: "trash")
             }
             .help(Text("Stop the selected items and move their files to the Trash"))
-            .disabled(isChanging || !highlightedItems.contains(where: session.canRemove))
+            .disabled(isChanging || !highlightedItems.contains(where: session.mayRemove))
         }
 
         ToolbarItemGroup {
@@ -260,16 +298,16 @@ struct StartupView: View {
     }
 
     private func disableTargets(_ items: [LaunchItem]) -> [LaunchItem] {
-        items.filter { session.canDisable($0) && !session.isDisabled($0) }
+        items.filter { session.mayDisable($0) && !session.isDisabled($0) }
     }
 
     private func enableTargets(_ items: [LaunchItem]) -> [LaunchItem] {
-        items.filter { session.canDisable($0) && session.isDisabled($0) }
+        items.filter { session.mayDisable($0) && session.isDisabled($0) }
     }
 
     /// One item at a time: each Mac-wide item asks for an administrator's password.
     private func change(_ items: [LaunchItem], enable: Bool) {
-        guard !items.isEmpty, !isChanging else { return }
+        guard !items.isEmpty, !isChanging, !waitsForHelper(items) else { return }
         isChanging = true
         Task {
             let outcomes = await session.withOneAuthorization {
@@ -283,6 +321,19 @@ struct StartupView: View {
             isChanging = false
             message = StartupSession.ChangeOutcome.summary(outcomes, enabling: enable)
         }
+    }
+
+    /// Asks to confirm the removal, or for the helper first when a Mac-wide item needs it.
+    private func askToRemove(_ items: [LaunchItem]) {
+        guard !items.isEmpty, !waitsForHelper(items) else { return }
+        removing = items
+    }
+
+    /// Mac-wide items change through the helper; when it is missing or out of date, say so instead of failing.
+    private func waitsForHelper(_ items: [LaunchItem]) -> Bool {
+        guard items.contains(where: session.waitsForHelper) else { return false }
+        asksForHelper = true
+        return true
     }
 
     private func remove(_ items: [LaunchItem]) {
@@ -551,7 +602,7 @@ private struct StartupInspector: View {
 
                 Section {
                     HStack {
-                        if session.canDisable(item) {
+                        if session.mayDisable(item) {
                             if session.isDisabled(item) {
                                 Button {
                                     change(item, true)
@@ -577,7 +628,7 @@ private struct StartupInspector: View {
                         .font(.callout)
                 }
 
-                if session.canControl(item) || session.canRemove(item) {
+                if session.canControl(item) || session.mayRemove(item) {
                     Section {
                         HStack {
                             if session.canControl(item) {
@@ -599,7 +650,7 @@ private struct StartupInspector: View {
                                 .disabled(isWorking || isRunning == true)
                             }
                             Spacer()
-                            if session.canRemove(item) {
+                            if session.mayRemove(item) {
                                 Button(role: .destructive) {
                                     remove(item)
                                 } label: {
@@ -637,15 +688,23 @@ private struct StartupInspector: View {
     }
 
     private func disableExplanation(for item: LaunchItem) -> LocalizedStringResource {
-        if item.isApple || session.isManaged(item) {
-            return "This item cannot be changed here. Login Items Settings shows what macOS allows."
+        if item.isApple {
+            return "Part of macOS. It is protected by the system and cannot be changed or removed."
+        }
+        if session.isManaged(item) {
+            return
+                "Managed by your organization’s security or management software. Changing it here would weaken that protection, so only the software itself or your administrator can turn it off or remove it."
         }
         if session.needsLoginItemsSettings(item) {
             return "macOS is waiting for you to allow this item. Only Login Items Settings can allow it."
         }
-        if !session.canDisable(item) {
+        if !session.mayDisable(item) {
             return
-                "Items for all users are changed with Clenvra’s helper. Install it in Settings, or use Login Items Settings."
+                "Clenvra could not read this item’s file, so it is not changed. Use Login Items Settings or Show in Finder."
+        }
+        if session.waitsForHelper(item) {
+            return
+                "This item is for all users: Disable, Enable and Remove go through Clenvra’s helper, which needs to be installed or updated first."
         }
         if item.domain == .userAgent {
             return "Disable stops it and keeps it from starting again; its file stays. Enable undoes it."

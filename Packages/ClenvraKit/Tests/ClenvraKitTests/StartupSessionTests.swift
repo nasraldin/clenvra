@@ -431,4 +431,24 @@ struct StartupSessionTests {
         #expect(!activity.canReenable(itemPath: plist, operationID: operation.id))
         #expect(await activity.reenable(itemPath: plist, operationID: operation.id) == .notAllowed)
     }
+
+    @Test("a Mac-wide item is offered Remove and Disable, waiting for the helper rather than refused")
+    func macWideItemWaitsForHelper() async throws {
+        let session = session(privileged: RecordingHelper(answer: .done))
+        await session.load(installedApps: [])
+        func item(_ label: String) throws -> LaunchItem { try #require(session.items.first { $0.label == label }) }
+        let daemon = try item("com.vendor.daemon")  // Mac-wide, program missing
+        let apple = try item("com.apple.something")
+        let own = try item("com.vendor.orphan")
+
+        #expect(session.mayRemove(daemon) && session.mayDisable(daemon))
+        #expect(session.waitsForHelper(daemon))
+        #expect(!session.canRemove(daemon) && !session.canDisable(daemon))
+        #expect(!session.mayRemove(apple) && !session.mayDisable(apple) && !session.waitsForHelper(apple))
+        #expect(session.mayRemove(own) && !session.waitsForHelper(own))
+
+        session.helperAvailable = true
+        #expect(!session.waitsForHelper(daemon))
+        #expect(session.canRemove(daemon) && session.canDisable(daemon))
+    }
 }

@@ -187,7 +187,9 @@ struct MainWindow: View {
         case .extensions:
             applications(.extensions)
         case .startup:
-            StartupView(session: environment.startupSession, installedApps: environment.installedApps)
+            StartupView(
+                session: environment.startupSession, installedApps: environment.installedApps,
+                helperNeedsUpdate: environment.helperNeedsUpdate, updateHelper: environment.updateHelper)
         case .system:
             system(.health)
         case .processes:

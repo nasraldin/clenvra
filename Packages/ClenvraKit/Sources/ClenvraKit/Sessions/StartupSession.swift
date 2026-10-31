@@ -84,9 +84,17 @@ public final class StartupSession {
 
     /// Whether the item can be kept from starting (and allowed again). The person's own agents directly; Mac-wide
     /// items only through the helper, with an administrator's password each time. Never Apple's or managed items.
-    public func canDisable(_ item: LaunchItem) -> Bool {
-        guard !item.isApple, !isManaged(item), !item.parseError, item.label != nil else { return false }
-        return item.domain == .userAgent || helperAvailable && privileged != nil
+    public func canDisable(_ item: LaunchItem) -> Bool { mayDisable(item) && !waitsForHelper(item) }
+
+    /// Allowed to be disabled, perhaps once the helper is installed or updated (`waitsForHelper`).
+    public func mayDisable(_ item: LaunchItem) -> Bool {
+        !item.isApple && !isManaged(item) && !item.parseError && item.label != nil
+    }
+
+    /// A Mac-wide item that Disable, Enable or Remove would change through the helper, which is not installed or is
+    /// from another version: the page offers the action and asks for the helper instead of greying it out.
+    public func waitsForHelper(_ item: LaunchItem) -> Bool {
+        item.domain != .userAgent && !(helperAvailable && privileged != nil)
     }
 
     public func isDisabled(_ item: LaunchItem) -> Bool {
@@ -186,9 +194,12 @@ public final class StartupSession {
         }
     }
 
-    public func canRemove(_ item: LaunchItem) -> Bool {
-        guard !item.isApple, !isManaged(item) else { return false }
-        return item.domain == .userAgent || needsHelper(item) && helperAvailable && privileged != nil
+    public func canRemove(_ item: LaunchItem) -> Bool { mayRemove(item) && !waitsForHelper(item) }
+
+    /// Allowed to be removed, perhaps once the helper is ready: the person's own agents, and Mac-wide items whose
+    /// program is gone. A Mac-wide item of an installed app is disabled instead, so the app keeps working.
+    public func mayRemove(_ item: LaunchItem) -> Bool {
+        !item.isApple && !isManaged(item) && (item.domain == .userAgent || needsHelper(item))
     }
 
     /// A system agent or daemon whose program is gone (SB-4): only the privileged helper can remove it.
