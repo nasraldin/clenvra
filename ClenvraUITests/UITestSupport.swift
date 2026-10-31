@@ -4,7 +4,7 @@ import XCTest
 /// The sidebar pages in display order, as their `sidebar.<id>` / `section.<id>` identifiers.
 let allSections = [
     "overview", "cleanup", "developer", "developerTools", "largeFiles", "downloads", "duplicates", "similarPhotos",
-    "otherClutter", "storage", "disks",
+    "otherClutter", "recentItems", "appRecentItems", "storage", "disks",
     "applications", "leftovers", "extensions", "startup", "system", "processes", "security", "permissions", "snapshots",
     "activity",
 ]
@@ -31,8 +31,41 @@ func launchApp(language: String, appearance: Appearance = .light, arguments: [St
         // What Xcode's right-to-left run option passes, so the layout mirrors as on an Arabic system.
         app.launchArguments += ["-NSForceRightToLeftWritingDirection", "YES", "-AppleTextDirection", "YES"]
     }
+    // In the test VM only: banners macOS posts (such as "Quick Look Previewer Extensions Added" while Xcode registers
+    // its apps) stay over the top of the window until closed.
+    if ProcessInfo.processInfo.environment["CLENVRA_VM"] != nil { closeNotificationBanners() }
+    // Windows other apps left open (Finder reopens its windows) must not cover the app or the audit measures them.
+    for other in NSWorkspace.shared.runningApplications
+    where other.activationPolicy == .regular && other.bundleIdentifier != Bundle.main.bundleIdentifier {
+        other.hide()
+    }
     app.launch()
     return app
+}
+
+/// Closes notification banners with Notification Center's own Close button (shown under the pointer), as a person
+/// would.
+@MainActor
+private func closeNotificationBanners() {
+    let center = XCUIApplication(bundleIdentifier: "com.apple.notificationcenterui")
+    let banners = center.dialogs.scrollViews.groups.matching(NSPredicate(format: "label != ''"))
+    for _ in 0..<5 {
+        let banner = banners.firstMatch
+        guard banner.waitForExistence(timeout: 1) else { return }
+        banner.hover()
+        let close = center.buttons.matching(NSPredicate(format: "label IN %@", ["Close", "Clear"])).firstMatch
+        if close.waitForExistence(timeout: 2) {
+            close.click()
+        } else {
+            XCTContext.runActivity(named: "Notification Center") { activity in
+                let tree = XCTAttachment(string: center.debugDescription)
+                tree.lifetime = .keepAlways
+                activity.add(tree)
+            }
+            return
+        }
+        _ = banner.waitForNonExistence(timeout: 2)
+    }
 }
 
 /// Pages that share one sidebar row: the row, and the page's position in the switcher at the top of the page.
@@ -40,6 +73,7 @@ let switcherPages: [String: (row: String, index: Int)] = [
     "developer": ("developer", 0), "developerTools": ("developer", 1),
     "largeFiles": ("largeFiles", 0), "downloads": ("largeFiles", 1), "duplicates": ("largeFiles", 2),
     "similarPhotos": ("largeFiles", 3), "otherClutter": ("largeFiles", 4),
+    "recentItems": ("recentItems", 0), "appRecentItems": ("recentItems", 1),
 ]
 
 @MainActor
