@@ -43,6 +43,9 @@ struct DisksView: View {
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // The grid reflows once when the details panel opens, instead of resizing tiles on every frame of
+                    // the panel's slide-in.
+                    .transaction { $0.animation = nil }
                 }
             }
         }
@@ -95,7 +98,8 @@ struct DisksView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(title)
                     .font(.headline)
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120, maximum: 160), spacing: 12)], spacing: 12) {
+                // Tiles keep one size, as on the desktop; only how many fit in a row changes.
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140, maximum: 140), spacing: 12)], spacing: 12) {
                     ForEach(disks) { disk in
                         // A real button, so VoiceOver gets a name and a press action; double-click opens, as in Finder.
                         Button {
