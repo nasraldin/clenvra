@@ -34,7 +34,11 @@ final class RecentItemsE2EUITests: XCTestCase {
             XCTAssertTrue(checkbox.waitForExistence(timeout: 10), "\(list) is not listed")
             checkbox.click()
         }
+        // As a person would: a list highlighted while it is cleared (its rows then go away).
+        app.staticTexts["Recent Documents"].firstMatch.click()
         clear(in: app, expecting: ["The lists are empty now.", "Cleared."])
+        sleep(5)
+        XCTAssertEqual(app.state, .runningForeground, "Clenvra stopped after clearing")
         XCTAssertTrue(
             app.checkBoxes["Include Recent Documents"].waitForNonExistence(timeout: 10),
             "Recent Documents is still listed")
@@ -44,6 +48,8 @@ final class RecentItemsE2EUITests: XCTestCase {
         XCTAssertTrue(textEdit.waitForExistence(timeout: 10), "TextEdit's list is not listed")
         textEdit.click()
         clear(in: app, expecting: ["Cleared."])
+        sleep(5)
+        XCTAssertEqual(app.state, .runningForeground, "Clenvra stopped after clearing")
         XCTAssertTrue(textEdit.waitForNonExistence(timeout: 10), "TextEdit's list is still listed")
     }
 }

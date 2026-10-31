@@ -28,7 +28,14 @@ struct RecentItemsView: View {
     private var section: AppSection { page == .mac ? .recentItems : .appRecentItems }
 
     var body: some View {
-        table
+        let shown = visibleGroups
+        // A new table whenever rows come or go (after Clear, Refresh or a search) instead of SwiftUI changing the old
+        // one in place: on macOS 27 that crashed when a list with highlighted rows went away. Open groups are kept
+        // in scene storage, so they survive.
+        let rowIDs = shown.flatMap { [$0.id] + $0.children.map(\.id) }
+        table(shown)
+            .id(rowIDs)
+            .onChange(of: rowIDs) { highlighted = [] }
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(section.title))
             .pageState(isShown: visibleGroups.isEmpty) { state }
@@ -93,7 +100,7 @@ struct RecentItemsView: View {
 
     // MARK: - Table
 
-    private var table: some View {
+    private func table(_ visibleGroups: [RecentRow]) -> some View {
         Table(of: RecentRow.self, selection: $highlighted) {
             TableColumn(Text("Name")) { row in
                 HStack(spacing: 6) {
@@ -240,6 +247,7 @@ struct RecentItemsView: View {
     }
 
     private func clear() {
+        highlighted = []
         Task {
             if page == .mac {
                 let includesFinder = session.selectedLists.contains(.finderFolders)
@@ -272,7 +280,8 @@ struct RecentItemsView: View {
     }
 
     private func refreshOpenApps() {
-        openApps = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        let open = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        if open != openApps { openApps = open }
     }
 
     // MARK: - Rows
@@ -311,7 +320,7 @@ nonisolated struct RecentRow: Identifiable, Sendable {
         path = nil
         isGroup = true
         children = names.enumerated().map { index, name in
-            RecentRow(id: "list:\(list.rawValue):\(index)", title: name, path: nil, list: list)
+            RecentRow(id: "list:\(list.rawValue):\(index):\(name)", title: name, path: nil, list: list)
         }
     }
 
@@ -324,7 +333,8 @@ nonisolated struct RecentRow: Identifiable, Sendable {
         isGroup = true
         children = list.documents.enumerated().map { index, path in
             RecentRow(
-                id: "app:\(list.bundleIdentifier):\(index)", title: (path as NSString).lastPathComponent, path: path,
+                id: "app:\(list.bundleIdentifier):\(index):\(path)", title: (path as NSString).lastPathComponent,
+                path: path,
                 list: nil)
         }
     }
