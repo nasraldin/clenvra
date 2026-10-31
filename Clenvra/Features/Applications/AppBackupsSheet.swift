@@ -2,8 +2,10 @@ import AppKit
 import ClenvraKit
 import SwiftUI
 
-/// The app backups in the backups folder: restore one, show it in Finder, or move it to the Trash.
-/// Restoring never overwrites: anything already at an item's place is left alone and listed.
+/// The app backups in the backups folder, grouped by app, newest first. Choose one or more backups, choose which of
+/// their items to put back, and restore them; or show them in Finder or move them to the Trash. Restoring never
+/// overwrites: unless "Replace the current version" is on, anything already at an item's place is left alone;
+/// with it on, the current copy is moved to the Trash first (it can be put back from Activity).
 struct AppBackupsSheet: View {
     let session: AppsSession
     let folder: URL
@@ -11,13 +13,31 @@ struct AppBackupsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var backups: [AppBackupInfo] = []
     @State private var hasLoaded = false
-    @State private var selectedID: AppBackupInfo.ID?
+    @State private var selection: Set<AppBackupInfo.ID> = []
+    /// Items the user unchecked, per backup; every item is checked by default.
+    @State private var unchecked: [AppBackupInfo.ID: Set<String>] = [:]
+    @State private var replacesExisting = false
     @State private var isWorking = false
     @State private var isConfirmingTrash = false
-    @State private var restoreResult: ShownRestoreResult?
+    @State private var restoreResults: ShownRestoreResults?
     @State private var trashFailed = false
 
-    private var selected: AppBackupInfo? { backups.first { $0.id == selectedID } }
+    private var selected: [AppBackupInfo] { backups.filter { selection.contains($0.id) } }
+
+    /// Backups grouped by app (bundle identifier, else name), each group newest first, groups by name.
+    private var groups: [(key: String, name: String, backups: [AppBackupInfo])] {
+        let grouped = Dictionary(grouping: backups) { $0.bundleID ?? $0.name }
+        return grouped.map { key, value in
+            (key: key, name: value.first?.name ?? key, backups: value.sorted { $0.created > $1.created })
+        }
+        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    private func chosenItems(of backup: AppBackupInfo) -> Set<String> {
+        Set(backup.items.map(\.original)).subtracting(unchecked[backup.id] ?? [])
+    }
+
+    private var chosenCount: Int { selected.reduce(0) { $0 + chosenItems(of: $1).count } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -26,28 +46,44 @@ struct AppBackupsSheet: View {
             PathText(path: folder.path(percentEncoded: false))
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            table
-                .frame(minHeight: 200, maxHeight: 320)
+            HStack(alignment: .top, spacing: 12) {
+                list
+                    .frame(minWidth: 300, minHeight: 260, maxHeight: 360)
+                itemsChecklist
+                    .frame(minWidth: 300, minHeight: 260, maxHeight: 360)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle(isOn: $replacesExisting) {
+                    Text("Replace the current version")
+                }
+                .accessibilityIdentifier("applications.backups.replace")
+                Text(
+                    "When something is already at an item's place, it is moved to the Trash first and the backup's copy is put back. You can put the current copy back from Activity. When off, existing items are left alone."
+                )
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
             HStack {
                 Button {
                     restore()
                 } label: {
-                    Text("Restore")
+                    Text("Restore \(chosenCount) Items")
                 }
-                .help(Text("Put the app and its files back where they were. Nothing that exists there is replaced."))
-                .disabled(selected == nil || isWorking)
+                .help(Text("Put the checked items of the chosen backups back where they were"))
+                .disabled(chosenCount == 0 || isWorking || session.isWorking)
                 Button {
-                    if let selected { NSWorkspace.shared.activateFileViewerSelecting([selected.url]) }
+                    NSWorkspace.shared.activateFileViewerSelecting(selected.map(\.url))
                 } label: {
                     Text("Show in Finder")
                 }
-                .disabled(selected == nil)
+                .disabled(selected.isEmpty)
                 Button {
                     isConfirmingTrash = true
                 } label: {
-                    Text("Move Backup to Trash")
+                    Text("Move Backups to Trash")
                 }
-                .disabled(selected == nil || isWorking || session.isWorking)
+                .disabled(selected.isEmpty || isWorking || session.isWorking)
                 if isWorking {
                     ProgressView()
                         .controlSize(.small)
@@ -62,58 +98,43 @@ struct AppBackupsSheet: View {
             }
         }
         .padding(24)
-        .frame(width: 620)
+        .frame(width: 720)
         .task { await reload() }
         .confirmationDialog(
-            Text("Move this backup to the Trash?"), isPresented: $isConfirmingTrash, presenting: selected
-        ) { backup in
+            Text("Move \(selected.count) backups to the Trash?"), isPresented: $isConfirmingTrash
+        ) {
             Button(role: .destructive) {
-                trash(backup)
+                trash(selected)
             } label: {
                 Text("Move to Trash")
             }
-        } message: { backup in
-            Text("The backup of \(backup.name) can no longer be restored once the Trash is emptied.")
+        } message: {
+            Text("These backups can no longer be restored once the Trash is emptied.")
         }
-        .alert(Text("The backup could not be moved to the Trash."), isPresented: $trashFailed) {
+        .alert(Text("A backup could not be moved to the Trash."), isPresented: $trashFailed) {
             Button {
                 trashFailed = false
             } label: {
                 Text("OK")
             }
         }
-        .sheet(item: $restoreResult) { shown in
-            RestoreResultSheet(name: shown.name, result: shown.result)
+        .sheet(item: $restoreResults) { shown in
+            RestoreResultSheet(results: shown.results)
         }
     }
 
-    private var table: some View {
-        Table(backups, selection: $selectedID) {
-            TableColumn(Text("Name")) { backup in
-                HStack(spacing: 6) {
-                    Image(systemName: "archivebox")
-                        .foregroundStyle(.secondary)
-                        .accessibilityHidden(true)
-                    Text(verbatim: backup.name)
-                        .lineLimit(1)
+    private var list: some View {
+        List(selection: $selection) {
+            ForEach(groups, id: \.key) { group in
+                Section {
+                    ForEach(group.backups) { backup in
+                        BackupRow(backup: backup)
+                            .tag(backup.id)
+                    }
+                } header: {
+                    Text(verbatim: group.name)
                 }
             }
-            .width(min: 140, ideal: 200)
-            TableColumn(Text("Version")) { backup in
-                Text(verbatim: backup.version ?? "")
-                    .foregroundStyle(.secondary)
-            }
-            .width(min: 60, ideal: 80)
-            TableColumn(Text("Date")) { backup in
-                Text(backup.created, format: .dateTime.year().month(.abbreviated).day().hour().minute())
-                    .foregroundStyle(.secondary)
-            }
-            .width(min: 120, ideal: 150)
-            TableColumn(Text("Size")) { backup in
-                SizeText(bytes: backup.archiveBytes)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .width(min: 60, ideal: 80)
         }
         .pageState(isShown: backups.isEmpty) {
             if hasLoaded {
@@ -124,7 +145,7 @@ struct AppBackupsSheet: View {
                         Image(systemName: "archivebox")
                     }
                 } description: {
-                    Text("Backups made when you remove several apps appear here.")
+                    Text("Back up apps with Back Up…, or before removing them; the backups appear here.")
                 }
             } else {
                 ProgressView()
@@ -133,80 +154,173 @@ struct AppBackupsSheet: View {
         .accessibilityIdentifier("applications.backups.list")
     }
 
+    private var itemsChecklist: some View {
+        List {
+            ForEach(selected) { backup in
+                Section {
+                    ForEach(backup.items, id: \.original) { item in
+                        Toggle(isOn: itemBinding(backup, item.original)) {
+                            HStack {
+                                PathText(path: item.original)
+                                Spacer()
+                                SizeText(bytes: item.bytes)
+                            }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
+                } header: {
+                    Text(backup.created, format: .dateTime.year().month(.abbreviated).day().hour().minute())
+                }
+            }
+        }
+        .pageState(isShown: selected.isEmpty) {
+            ContentUnavailableView {
+                Label {
+                    Text("Choose backups")
+                } icon: {
+                    Image(systemName: "checklist")
+                }
+            } description: {
+                Text("Choose one or more backups to see what they hold and what to restore.")
+            }
+        }
+        .accessibilityIdentifier("applications.backups.items")
+    }
+
+    private func itemBinding(_ backup: AppBackupInfo, _ path: String) -> Binding<Bool> {
+        Binding(
+            get: { !(unchecked[backup.id]?.contains(path) ?? false) },
+            set: { isOn in
+                var paths = unchecked[backup.id] ?? []
+                if isOn { paths.remove(path) } else { paths.insert(path) }
+                unchecked[backup.id] = paths
+            })
+    }
+
     private func reload() async {
         let folder = folder
         backups = await Task.detached { AppBackup.list(in: folder) }.value
-        if let selectedID, !backups.contains(where: { $0.id == selectedID }) { self.selectedID = nil }
+        selection.formIntersection(backups.map(\.id))
         hasLoaded = true
     }
 
     private func restore() {
-        guard let backup = selected else { return }
+        let chosen = selected.filter { !chosenItems(of: $0).isEmpty }
+        guard !chosen.isEmpty else { return }
+        let items = Dictionary(uniqueKeysWithValues: chosen.map { ($0.url, chosenItems(of: $0)) })
+        let replaces = replacesExisting
         isWorking = true
         Task {
-            let result: RestoreResult
-            do {
-                result = try await AppBackup.restore(backup.url)
-            } catch {
-                var failed = RestoreResult()
-                let reason = (error as? AppBackupError)?.message ?? error.localizedDescription
-                failed.failed = [.init(path: backup.url.path(percentEncoded: false), reason: reason)]
-                result = failed
-            }
+            let results = await session.restore(chosen, items: items, replaceExisting: replaces)
             isWorking = false
-            restoreResult = ShownRestoreResult(name: backup.name, result: result)
-            // Restored apps show up in the list again.
-            if !result.restored.isEmpty { await session.load() }
+            restoreResults = ShownRestoreResults(results: results)
         }
     }
 
-    private func trash(_ backup: AppBackupInfo) {
+    private func trash(_ chosen: [AppBackupInfo]) {
         Task {
-            let summary = await session.trashBackup(backup)
-            if summary?.movedToTrashCount != 1 { trashFailed = true }
+            var failed = false
+            for backup in chosen {
+                let summary = await session.trashBackup(backup)
+                if summary?.movedToTrashCount != 1 { failed = true }
+            }
+            trashFailed = failed
             await reload()
         }
     }
 }
 
-private struct ShownRestoreResult: Identifiable {
-    let id = UUID()
-    let name: String
-    let result: RestoreResult
+/// One backup: when, what it holds and its size.
+private struct BackupRow: View {
+    let backup: AppBackupInfo
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: backup.scope == .wholeApp ? "archivebox" : "gearshape")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(backup.created, format: .dateTime.year().month(.abbreviated).day().hour().minute())
+                Text(subtitle)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            SizeText(bytes: backup.archiveBytes)
+        }
+    }
+
+    private var subtitle: String {
+        let scope =
+            backup.scope == .wholeApp ? String(localized: "Whole app") : String(localized: "Settings only")
+        return [backup.version, scope].compactMap { $0 }.joined(separator: " · ")
+    }
 }
 
-/// What a restore put back, and every path it left alone with the reason.
+private struct ShownRestoreResults: Identifiable {
+    let id = UUID()
+    let results: [AppsSession.RestoredBackup]
+}
+
+/// What each restore put back, the current copies it moved to the Trash, and every path it left alone with the
+/// reason.
 private struct RestoreResultSheet: View {
-    let name: String
-    let result: RestoreResult
+    let results: [AppsSession.RestoredBackup]
 
     @Environment(\.dismiss) private var dismiss
 
+    private var restoredCount: Int { results.reduce(0) { $0 + $1.result.restored.count } }
+    private var skipped: [String] { results.flatMap(\.result.skippedExisting) }
+    private var movedToTrash: [String] { results.flatMap(\.result.movedToTrash) }
+    private var notReplaced: [CleanupSummary.Problem] { results.flatMap(\.result.notReplaced) }
+    private var failed: [RestoreResult.Failure] { results.flatMap(\.result.failed) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Restored \(result.restored.count) items of \(name)")
+            Text("Restored \(restoredCount) items")
                 .font(.title3.bold())
-            if !result.skippedExisting.isEmpty {
-                Text("\(result.skippedExisting.count) items were not restored because something is already there")
+            if !movedToTrash.isEmpty {
+                Text("\(movedToTrash.count) current items were moved to the Trash first")
                     .font(.headline)
-                Text("Nothing was replaced. Move the existing item away first if you want the backup's copy.")
+                Text("You can put them back from Activity.")
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                List(result.skippedExisting, id: \.self) { path in
+                List(movedToTrash, id: \.self) { path in
                     PathText(path: path)
                 }
-                .frame(minHeight: 60, maxHeight: 160)
+                .frame(minHeight: 60, maxHeight: 140)
             }
-            if !result.failed.isEmpty {
-                Text("\(result.failed.count) items could not be restored")
+            if !skipped.isEmpty {
+                Text("\(skipped.count) items were not restored because something is already there")
                     .font(.headline)
-                List(result.failed, id: \.path) { failure in
+                Text("Nothing was replaced. Turn on “Replace the current version” to swap in the backup's copy.")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                List(skipped, id: \.self) { path in
+                    PathText(path: path)
+                }
+                .frame(minHeight: 60, maxHeight: 140)
+            }
+            if !notReplaced.isEmpty {
+                Text("\(notReplaced.count) current items could not be moved to the Trash, so they were kept")
+                    .font(.headline)
+                List(notReplaced, id: \.path) { problem in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(problem.reason.explanation)
+                        PathText(path: problem.path)
+                    }
+                }
+                .frame(minHeight: 60, maxHeight: 140)
+            }
+            if !failed.isEmpty {
+                Text("\(failed.count) items could not be restored")
+                    .font(.headline)
+                List(failed, id: \.path) { failure in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: failure.reason)
                         PathText(path: failure.path)
                     }
                 }
-                .frame(minHeight: 60, maxHeight: 160)
+                .frame(minHeight: 60, maxHeight: 140)
             }
             HStack {
                 Spacer()
@@ -219,7 +333,7 @@ private struct RestoreResultSheet: View {
             }
         }
         .padding(24)
-        .frame(width: 500)
+        .frame(width: 520)
         .accessibilityIdentifier("review.results")
     }
 }

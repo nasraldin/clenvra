@@ -8,7 +8,6 @@ struct AppDetailView: View {
     /// The update check's answer for the selected app; `nil` when not checked or checks are off.
     var update: AppUpdate?
 
-    @State private var isConfirmingUninstall = false
     @State private var resettingApp: InstalledApp?
     @State private var isConfirmingHomebrew = false
     @State private var shownResult: ShownResult?
@@ -110,28 +109,7 @@ struct AppDetailView: View {
                 .menuIndicator(.hidden)
                 .help(Text("More actions"))
             }
-
-            ToolbarSpacer(.fixed)
-
-            ToolbarItem {
-                PrimaryActionButton(
-                    title: "Uninstall…", help: "Review and move the app and its selected files to the Trash (⌘⌫)",
-                    isDisabled: !canUninstall
-                ) {
-                    isConfirmingUninstall = true
-                }
-            }
-        }
-        .sheet(isPresented: $isConfirmingUninstall) {
-            if let detail = session.detail {
-                ConfirmUninstallSheet(
-                    appName: detail.app.name, count: session.selectedCount, bytes: session.selectedBytes,
-                    hasRevealOnlyItems: detail.items.contains { $0.handling == .revealOnly }
-                ) {
-                    isConfirmingUninstall = false
-                    Task { shownResult = ShownResult(summary: await session.uninstall(), isPreview: false) }
-                }
-            }
+            // Move to Trash, Uninstall and Back Up are the page's toolbar actions, for the checked apps or this one.
         }
         .sheet(isPresented: $isConfirmingHomebrew) {
             if let command = session.homebrewCommand, let detail = session.detail {

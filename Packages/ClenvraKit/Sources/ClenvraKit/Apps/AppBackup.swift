@@ -17,6 +17,24 @@ public struct AppBackupManifest: Codable, Sendable, Equatable {
     public let version: String?
     public let created: Date
     public let items: [Item]
+    /// What was backed up; manifests written before scopes existed are whole-app backups.
+    public var scope: AppBackup.Scope = .wholeApp
+}
+
+extension AppBackupManifest {
+    private enum CodingKeys: String, CodingKey {
+        case bundleID, name, version, created, items, scope
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bundleID = try container.decodeIfPresent(String.self, forKey: .bundleID)
+        name = try container.decode(String.self, forKey: .name)
+        version = try container.decodeIfPresent(String.self, forKey: .version)
+        created = try container.decode(Date.self, forKey: .created)
+        items = try container.decode([Item].self, forKey: .items)
+        scope = try container.decodeIfPresent(AppBackup.Scope.self, forKey: .scope) ?? .wholeApp
+    }
 }
 
 /// A backup found in the backups folder.
@@ -31,6 +49,7 @@ public struct AppBackupInfo: Sendable, Equatable, Identifiable {
     public let items: [AppBackupManifest.Item]
     /// Space the backup itself uses: the size of its zips.
     public let archiveBytes: Int64
+    public var scope: AppBackup.Scope = .wholeApp
 
     /// Size of the backed-up items, as they were on disk.
     public var bytes: Int64 { items.reduce(0) { $0 + $1.bytes } }
@@ -54,6 +73,11 @@ public struct RestoreResult: Sendable, Equatable {
     public var skippedExisting: [String] = []
     /// Paths that could not be put back (for example, no permission), each with the reason.
     public var failed: [Failure] = []
+    /// Current copies moved to the Trash (logged in Activity, so they can be put back) to make room for the backup's.
+    public var movedToTrash: [String] = []
+    /// Current copies the deletion gate refused to move (open, changed, protected), so the backup's copy was not
+    /// restored over them.
+    public var notReplaced: [CleanupSummary.Problem] = []
 
     public init() {}
 }
@@ -68,10 +92,13 @@ public enum AppBackupError: Error, Sendable, Equatable {
     case archive(path: String, message: String)
     /// The manifest could not be written or read.
     case manifest(String)
+    /// There was nothing to back up (for example, a settings-only backup of an app without settings).
+    case nothingToBackUp
 
     /// A short reason for the result sheet, in the system's words where there are some.
     public var message: String {
         switch self {
+        case .nothingToBackUp: String(cString: strerror(ENOENT))
         case .folder(_, let code): String(cString: strerror(code))
         case .missingItem(let path): String(cString: strerror(ENOENT)) + ": " + path
         case .archive(_, let message): message
@@ -86,6 +113,32 @@ public enum AppBackupError: Error, Sendable, Equatable {
 /// `ditto` zip per item (keeping permissions, extended attributes and resource forks). Restoring never
 /// overwrites anything and never asks for administrator rights.
 public enum AppBackup {
+    /// What a backup holds.
+    public enum Scope: String, Codable, Sendable, Hashable, CaseIterable {
+        /// The bundle and every file the app owns: its whole state, for example before an upgrade.
+        case wholeApp
+        /// Only the app's settings and data: preferences, Application Support, containers, saved state, cookies
+        /// and web storage. Never the bundle, caches or logs.
+        case settingsOnly
+    }
+
+    /// Kinds of owned items a settings-only backup keeps.
+    static let settingsKinds: Set<OwnedItem.Kind> = [
+        .preferences, .applicationSupport, .container, .groupContainer, .savedState, .cookies, .httpStorage,
+    ]
+
+    /// The paths a backup of `scope` takes: the bundle first (whole app only), then the owned items, in order.
+    /// Items holding something protected (keys, keychains) are never copied.
+    public static func paths(for scope: Scope, bundle: String, owned: [OwnedItem]) -> [String] {
+        let items = owned.filter { !$0.containsProtectedItem }
+        switch scope {
+        case .wholeApp:
+            return [bundle] + items.map(\.path).filter { $0 != bundle }
+        case .settingsOnly:
+            return items.filter { settingsKinds.contains($0.kind) }.map(\.path)
+        }
+    }
+
     public static let folderExtension = "clenvrabackup"
     public static let manifestName = "manifest.json"
     static let ditto = "/usr/bin/ditto"
@@ -100,9 +153,10 @@ public enum AppBackup {
     /// Backs up `items` (absolute paths, normally the bundle first) into a new folder inside `folder`. Every zip
     /// is checked to exist and be non-empty; on any failure the partial backup is removed and the error thrown.
     @concurrent public static func create(
-        app: InstalledApp, items: [String], in folder: URL, runner: any CommandRunning = ProcessCommandRunner(),
-        now: Date = Date()
+        app: InstalledApp, items: [String], scope: Scope = .wholeApp, in folder: URL,
+        runner: any CommandRunning = ProcessCommandRunner(), now: Date = Date()
     ) async throws -> URL {
+        guard !items.isEmpty else { throw AppBackupError.nothingToBackUp }
         let root = folder.path(percentEncoded: false)
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -127,7 +181,8 @@ public enum AppBackup {
                 entries.append(.init(original: path, archive: archive, bytes: size(of: path)))
             }
             let manifest = AppBackupManifest(
-                bundleID: app.bundleIdentifier, name: app.name, version: app.version, created: now, items: entries)
+                bundleID: app.bundleIdentifier, name: app.name, version: app.version, created: now, items: entries,
+                scope: scope)
             do {
                 try encoder.encode(manifest).write(
                     to: URL(filePath: backup + "/" + manifestName), options: .atomic)
@@ -156,16 +211,24 @@ public enum AppBackup {
                 }
                 return AppBackupInfo(
                     url: url, bundleID: manifest.bundleID, name: manifest.name, version: manifest.version,
-                    created: manifest.created, items: manifest.items, archiveBytes: archives)
+                    created: manifest.created, items: manifest.items, archiveBytes: archives, scope: manifest.scope)
             }
             .sorted { $0.created == $1.created ? $0.url.path < $1.url.path : $0.created > $1.created }
     }
 
-    /// Puts each item back where it was, only if nothing exists there now. Items are extracted next to their
-    /// original place and moved in with an exclusive rename, so an item that appears meanwhile is not overwritten.
-    @concurrent public static func restore(_ backup: URL, runner: any CommandRunning = ProcessCommandRunner())
-        async throws -> RestoreResult
-    {
+    /// Puts items back where they were. Items are extracted next to their original place and moved in with an
+    /// exclusive rename, so nothing is ever overwritten.
+    /// - Parameters:
+    ///   - items: original paths to restore; `nil` restores every item of the backup.
+    ///   - replaceExisting: when something exists at an item's place, move it to the Trash first through `trash`
+    ///     (the deletion gate, logged in Activity, so it can be put back). Without it, or without `trash`, existing
+    ///     items are left alone and reported.
+    ///   - trash: the deletion executor that moves current copies to the Trash; never deletes anything.
+    @concurrent public static func restore(
+        _ backup: URL, items chosen: Set<String>? = nil, replaceExisting: Bool = false,
+        trash: DeletionExecutor? = nil, operationID: UUID = UUID(),
+        runner: any CommandRunning = ProcessCommandRunner()
+    ) async throws -> RestoreResult {
         let manifest: AppBackupManifest
         do {
             manifest = try readManifest(backup)
@@ -174,12 +237,25 @@ public enum AppBackup {
         }
         let folder = backup.path(percentEncoded: false)
         var result = RestoreResult()
-        for item in manifest.items {
+        for item in manifest.items where chosen?.contains(item.original) ?? true {
             let original = item.original
             var info = stat()
             if lstat(original, &info) == 0 {
-                result.skippedExisting.append(original)
-                continue
+                guard replaceExisting, let trash else {
+                    result.skippedExisting.append(original)
+                    continue
+                }
+                // The current copy goes to the Trash first; the backup's copy only comes back if that worked.
+                let current = DeletionItem(
+                    path: original, ruleRoot: (original as NSString).deletingLastPathComponent,
+                    expected: FileSnapshot(info), ownerBundleID: manifest.bundleID, freedBytes: 0,
+                    section: .applications)
+                let outcome = await trash.run([current], mode: .moveToTrash, operationID: operationID).first?.outcome
+                guard let outcome, outcome.isMovedToTrash else {
+                    result.notReplaced.append(.init(path: original, reason: outcome ?? .notAttempted))
+                    continue
+                }
+                result.movedToTrash.append(original)
             }
             do {
                 if try await restoreItem(item, from: folder, runner: runner) {

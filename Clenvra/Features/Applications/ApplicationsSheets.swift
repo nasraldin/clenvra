@@ -14,7 +14,7 @@ struct ConfirmUninstallSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Label {
-                Text("Uninstall \(appName)?")
+                Text("Move \(appName) to the Trash?")
                     .font(.title3.bold())
             } icon: {
                 Image(systemName: "trash")
@@ -64,7 +64,7 @@ struct ConfirmBatchUninstallSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Label {
-                Text("Remove \(apps.count) apps?")
+                Text("Move \(apps.count) apps to the Trash?")
                     .font(.title3.bold())
             } icon: {
                 Image(systemName: "trash")
@@ -149,6 +149,8 @@ struct ShownBatchResult: Identifiable {
 /// Which apps were removed, which were kept and why, and the way to the backups.
 struct BatchUninstallResultSheet: View {
     let result: AppsSession.BatchUninstallResult
+    /// Uninstall deleted the apps for good; otherwise they were moved to the Trash.
+    var isPermanent = false
     let showBackups: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -169,8 +171,20 @@ struct BatchUninstallResultSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Removed \(result.removed.count) apps")
-                .font(.title3.bold())
+            if isPermanent {
+                Text("Uninstalled \(result.removed.count) apps")
+                    .font(.title3.bold())
+            } else {
+                Text("Removed \(result.removed.count) apps")
+                    .font(.title3.bold())
+            }
+            if result.summary.removedPermanentlyCount > 0 {
+                Text(
+                    "\(result.summary.removedPermanentlyCount) items were deleted for good, freeing about \(result.summary.freedBytes.formatted(.byteCount(style: .file)))."
+                )
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
             if result.summary.movedToTrashCount > 0 {
                 Text(
                     "About \(result.summary.freedBytes.formatted(.byteCount(style: .file))) is now in the Trash. Empty the Trash to free that space; until then you can put items back."
@@ -190,6 +204,10 @@ struct BatchUninstallResultSheet: View {
                         Text(verbatim: line.name)
                         if let reason = line.reason {
                             Text(reason.explanation)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        } else if isPermanent {
+                            Text("Deleted for good")
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                         } else {
@@ -239,6 +257,154 @@ extension AppsSession.SkipReason {
         case .protected: "Kept: it is part of macOS or Clenvra, or a security or management tool."
         case .changed: "Kept: it changed or moved after you checked it."
         case .backupFailed(let reason): "Kept: its backup failed (\(reason))."
+        case .homebrewFailed(let reason): "Kept: Homebrew could not remove it (\(reason))."
+        }
+    }
+}
+
+/// Confirmation before uninstalling apps completely: lists, per app, everything that will be deleted for good and
+/// how (Homebrew apps through `brew`), what stays and why, with "Back up first" on by default.
+struct ConfirmCompleteUninstallSheet: View {
+    let session: AppsSession
+    let apps: [InstalledApp]
+    let backupFolder: URL
+    /// Called with the backup scope (`nil` = no backup) and the plans shown, so nothing else is touched.
+    let confirm: (AppBackup.Scope?, [AppsSession.UninstallPlan]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var plans: [AppsSession.UninstallPlan]?
+    @State private var backsUp = true
+    @State private var scope = AppBackup.Scope.wholeApp
+
+    private var removable: [AppsSession.UninstallPlan] { (plans ?? []).filter { $0.skip == nil } }
+    private var bytes: Int64 { removable.reduce(0) { $0 + $1.bytes } }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label {
+                Text("Uninstall \(apps.count) apps completely?")
+                    .font(.title3.bold())
+            } icon: {
+                Image(systemName: "xmark.bin")
+                    .foregroundStyle(.red)
+            }
+            Text(
+                "Each app and everything listed below are deleted for good, as if the app had never been installed. They do not go to the Trash and can't be put back, except from a backup."
+            )
+            .fixedSize(horizontal: false, vertical: true)
+            if let plans {
+                List {
+                    ForEach(plans) { plan in
+                        Section {
+                            planRows(plan)
+                        } header: {
+                            HStack(spacing: 6) {
+                                AppIcon(path: plan.app.id, size: 16)
+                                Text(verbatim: plan.app.name)
+                            }
+                        }
+                    }
+                }
+                .frame(minHeight: 180, maxHeight: 320)
+                .accessibilityIdentifier("applications.uninstall.plan")
+                Text("Together this frees about \(bytes.formatted(.byteCount(style: .file))).")
+                    .foregroundStyle(.secondary)
+            } else {
+                ProgressView {
+                    Text("Finding everything the apps installed…")
+                }
+                .frame(maxWidth: .infinity, minHeight: 180)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle(isOn: $backsUp) {
+                    Text("Back up first")
+                }
+                .accessibilityIdentifier("applications.uninstall.backup")
+                Picker(selection: $scope) {
+                    Text("Whole app").tag(AppBackup.Scope.wholeApp)
+                    Text("Settings only").tag(AppBackup.Scope.settingsOnly)
+                } label: {
+                    Text("Back up")
+                }
+                .pickerStyle(.radioGroup)
+                .disabled(!backsUp)
+                PathText(path: backupFolder.path(percentEncoded: false))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Text("If an app's backup fails, that app is kept.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            HStack {
+                Spacer()
+                Button(role: .cancel) {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                }
+                .keyboardShortcut(.cancelAction)
+                Button(role: .destructive) {
+                    confirm(backsUp ? scope : nil, plans ?? [])
+                } label: {
+                    Text("Uninstall Permanently")
+                }
+                .disabled(removable.isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 560)
+        .task { plans = await session.uninstallPlans(for: apps) }
+    }
+
+    @ViewBuilder private func planRows(_ plan: AppsSession.UninstallPlan) -> some View {
+        if let skip = plan.skip {
+            Text(skip.explanation)
+                .foregroundStyle(.secondary)
+        } else {
+            if let line = plan.source.uninstallLine {
+                Label {
+                    Text(line)
+                } icon: {
+                    Image(systemName: "terminal")
+                }
+                .font(.callout)
+            }
+            HStack {
+                PathText(path: plan.app.id)
+                Spacer()
+                if let bundle = plan.bundle { SizeText(bytes: bundle.reclaimableSize) }
+            }
+            ForEach(plan.items) { item in
+                HStack {
+                    PathText(path: item.path)
+                    if session.needsHelper(item) {
+                        Image(systemName: "lock")
+                            .foregroundStyle(.secondary)
+                            .help(Text("Needs your administrator password"))
+                    }
+                    Spacer()
+                    SizeText(bytes: item.reclaimableSize)
+                }
+            }
+            if !plan.kept.isEmpty {
+                Text("\(plan.kept.count) items stay: they are shared with another app, protected, or need the helper.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+extension InstallSource {
+    /// How Uninstall removes an app installed this way, when it is more than deleting files.
+    var uninstallLine: LocalizedStringResource? {
+        switch self {
+        case .homebrewCask(let token): "Homebrew cask \(token): removed with “brew uninstall --cask --zap” first."
+        case .homebrewFormula(let name): "Homebrew formula \(name): removed with “brew uninstall” first."
+        case .appStore: "From the App Store. You can download it again from your purchases."
+        case .package(let ids):
+            "Installed by a package (\(ids.joined(separator: ", "))). Its installer record stays."
+        case .direct: nil
         }
     }
 }
