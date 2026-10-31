@@ -59,6 +59,7 @@ public struct HelperService: Sendable {
     private let processPaths: @Sendable () -> [String]?
     private let fileSystem: FSExecutor
     private let runner: any CommandRunning
+    private let authorize: @Sendable (Data?) -> Bool
 
     /// - Parameters:
     ///   - clientHome: home folder of the user whose app connected (from the connection's user ID, never from the
@@ -67,12 +68,16 @@ public struct HelperService: Sendable {
     ///   - staging: a root-only folder on the same volume where Put Back checks an item before placing it.
     ///   - log: the helper's own activity log, in a root-owned folder.
     ///   - ownPaths: Clenvra's own files (the helper's log folder, the app bundle), never removed.
+    ///   - authorize: asks for an administrator's password for the client's authorization (`HelperRight.authorize`
+    ///     in the helper). Changing Mac-wide startup items and permissions needs it every time; refuses by default.
     public init(
         allowlist: HelperAllowlist, clientHome: String, clientUID: uid_t, log: ActivityLog, staging: String,
         ownPaths: [String] = [],
         processPaths: @escaping @Sendable () -> [String]? = OwnerActivity.currentProcessPaths,
-        fileSystem: FSExecutor = .shared, runner: any CommandRunning = ProcessCommandRunner()
+        fileSystem: FSExecutor = .shared, runner: any CommandRunning = ProcessCommandRunner(),
+        authorize: @escaping @Sendable (Data?) -> Bool = { _ in false }
     ) {
+        self.authorize = authorize
         self.allowlist = allowlist
         self.clientHome = clientHome
         self.clientUID = clientUID
@@ -235,6 +240,74 @@ public struct HelperService: Sendable {
         let response = await perform(
             HelperRequest(operationID: operationID, mode: .moveToTrash, items: [item], ownerBundlePaths: [:]))
         return response.outcomes.first ?? .notAttempted
+    }
+
+    /// Disables or enables a Mac-wide launch item. Only a plist directly in `/Library/LaunchAgents` or
+    /// `/Library/LaunchDaemons`, exactly as the person reviewed it, with a valid non-Apple, non-managed label; and
+    /// only after an administrator's password. The plist itself is never changed or moved, so this is reversible.
+    @concurrent public func setLaunchItemEnabled(_ item: DeletionItem, enabled: Bool, authorization: Data?) async
+        -> LaunchItemChange
+    {
+        guard allowlist.isSystemLaunchItem(item), !Self.belongsToManagedSoftware(item) else { return .refused }
+        guard Self.isUnchanged(item) else { return .changedSinceReview }
+        guard let plist = Self.launchPlist(at: item.path), let label = Self.validLabel(plist["Label"]),
+            !ManagedAgents.isManaged(identifier: label)
+        else { return .refused }
+        guard authorize(authorization) else { return .notAuthorized }
+        // The password dialog may have been open for a while: check the file again right before acting.
+        guard Self.isUnchanged(item) else { return .changedSinceReview }
+
+        let isDaemon = (item.ruleRoot as NSString).lastPathComponent == "LaunchDaemons"
+        let domain = isDaemon ? "system" : "gui/\(clientUID)"
+        if enabled {
+            guard await launchctl(["enable", "\(domain)/\(label)"]) == 0 else { return .failed }
+            // Loading it now is a bonus; once enabled it starts at the next boot or login either way.
+            _ = await launchctl(["bootstrap", domain, item.path])
+        } else {
+            // Not loaded (3, 113) is fine: disabling still keeps it from starting again.
+            guard let status = await launchctl(["bootout", domain, item.path]), [0, 3, 113].contains(status) else {
+                return .failed
+            }
+            guard await launchctl(["disable", "\(domain)/\(label)"]) == 0 else { return .failed }
+        }
+        return .done
+    }
+
+    private static func isUnchanged(_ item: DeletionItem) -> Bool {
+        (try? SafeWalk.resolve(item.path).snapshot) == item.expected
+    }
+
+    /// The exit status of `launchctl`, or `nil` when it did not run to completion.
+    private func launchctl(_ arguments: [String]) async -> Int32? {
+        let command = Command(executable: "/bin/launchctl", arguments: arguments, timeout: .seconds(15))
+        guard let result = try? await runner.run(command), result.terminationReason == .exited else { return nil }
+        return result.exitStatus
+    }
+
+    // MARK: - Permissions for every user
+
+    /// Resets one app's permission for one service with `tccutil` as root. Only services System Settings shows by
+    /// name and well-formed bundle IDs; never `All`, never a path; and only after an administrator's password.
+    @concurrent public func resetPermission(service: String, bundleID: String, authorization: Data?) async
+        -> PermissionReset
+    {
+        let short = PermissionService.shortName(service)
+        guard PermissionService.isKnown(short), Self.isValidBundleID(bundleID) else { return .invalid }
+        guard authorize(authorization) else { return .notAuthorized }
+        let result = try? await runner.run(
+            Command(executable: "/usr/bin/tccutil", arguments: ["reset", short, bundleID], timeout: .seconds(15)))
+        guard let result, result.terminationReason == .exited, result.exitStatus == 0 else { return .failed }
+        return .reset
+    }
+
+    /// Letters, digits, ".", "_" and "-", starting with a letter or digit, at most 255 characters.
+    static func isValidBundleID(_ value: String) -> Bool {
+        guard (1...255).contains(value.count), let first = value.unicodeScalars.first,
+            first.isASCII && (first.properties.isAlphabetic || ("0"..."9").contains(first))
+        else { return false }
+        return value.unicodeScalars.allSatisfy {
+            $0.isASCII && ($0.properties.isAlphabetic || ("0"..."9").contains($0) || "._-".unicodeScalars.contains($0))
+        }
     }
 
     /// A small, regular property list file, read without following links.

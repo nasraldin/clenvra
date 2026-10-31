@@ -86,6 +86,35 @@ final class HelperEndpoint: NSObject, ClenvraHelperProtocol, Sendable {
             idleWatch.end()
         }
     }
+
+    func setLaunchItemEnabled(
+        _ item: Data, enabled: Bool, authorization: Data, reply: @escaping @Sendable (String?) -> Void
+    ) {
+        guard let decoded = try? JSONDecoder().decode(DeletionItem.self, from: item) else {
+            reply(nil)
+            return
+        }
+        idleWatch.begin()
+        let service = service
+        Task {
+            let result = await service.setLaunchItemEnabled(decoded, enabled: enabled, authorization: authorization)
+            reply(result.rawValue)
+            idleWatch.end()
+        }
+    }
+
+    func resetPermission(
+        _ permission: String, bundleID: String, authorization: Data, reply: @escaping @Sendable (String?) -> Void
+    ) {
+        idleWatch.begin()
+        let service = service
+        Task {
+            let result = await service.resetPermission(
+                service: permission, bundleID: bundleID, authorization: authorization)
+            reply(result.rawValue)
+            idleWatch.end()
+        }
+    }
 }
 
 final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
@@ -99,7 +128,9 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
             allowlist: HelperAllowlist(), clientHome: home, clientUID: uid,
             log: ActivityLog(directory: URL(filePath: logDirectory, directoryHint: .isDirectory)),
             staging: stagingDirectory,
-            ownPaths: ["/Library/Application Support/Clenvra"] + (appBundlePath.map { [$0] } ?? []))
+            ownPaths: ["/Library/Application Support/Clenvra"] + (appBundlePath.map { [$0] } ?? []),
+            // Mac-wide startup items and permissions: an administrator's password every time.
+            authorize: HelperRight.authorize)
         connection.exportedInterface = NSXPCInterface(with: (any ClenvraHelperProtocol).self)
         connection.exportedObject = HelperEndpoint(service: service)
         connection.resume()
@@ -122,6 +153,8 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
 mkdir("/Library/Application Support/Clenvra", 0o755)
 mkdir(logDirectory, 0o700)
 mkdir(stagingDirectory, 0o700)
+// The password rule for Mac-wide changes; never shared, never remembered.
+HelperRight.install()
 
 let delegate = ListenerDelegate()
 let listener = NSXPCListener(machServiceName: HelperIdentity.machServiceName)

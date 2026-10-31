@@ -1,4 +1,5 @@
 public import Foundation
+import Security
 import Synchronization
 
 /// The helper's XPC interface: few methods, typed payloads as JSON, never free-form paths or commands.
@@ -14,6 +15,13 @@ import Synchronization
     func removeOrphanedLaunchItem(_ item: Data, operationID: String, reply: @escaping @Sendable (Data?) -> Void)
     /// A snapshot date in; a `SnapshotDeletion` raw value out.
     func deleteLocalSnapshot(_ date: String, reply: @escaping @Sendable (String?) -> Void)
+    /// A JSON `DeletionItem` for a plist in /Library/LaunchDaemons or /Library/LaunchAgents, whether to enable it,
+    /// and an `AuthorizationExternalForm` in; a `LaunchItemChange` raw value out.
+    func setLaunchItemEnabled(
+        _ item: Data, enabled: Bool, authorization: Data, reply: @escaping @Sendable (String?) -> Void)
+    /// A TCC service, a bundle ID and an `AuthorizationExternalForm` in; a `PermissionReset` raw value out.
+    func resetPermission(
+        _ service: String, bundleID: String, authorization: Data, reply: @escaping @Sendable (String?) -> Void)
 }
 
 /// Why a call to the helper did not get an answer.
@@ -69,6 +77,36 @@ public struct HelperClient: Sendable {
     @concurrent public func deleteLocalSnapshot(date: String) async throws(HelperClientError) -> SnapshotDeletion {
         let raw: String? = try await call { proxy, finish in proxy.deleteLocalSnapshot(date) { finish(.success($0)) } }
         guard let raw, let result = SnapshotDeletion(rawValue: raw) else { throw .badReply }
+        return result
+    }
+
+    /// The helper asks for an administrator's password in this login session before acting.
+    @concurrent public func setLaunchItemEnabled(_ item: DeletionItem, enabled: Bool) async throws(HelperClientError)
+        -> LaunchItemChange
+    {
+        guard let payload = try? JSONEncoder().encode(item) else { throw .badReply }
+        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
+        // The reference must outlive the call: the helper uses it to show the password dialog.
+        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
+        let form = authorization.externalForm
+        let raw: String? = try await call { proxy, finish in
+            proxy.setLaunchItemEnabled(payload, enabled: enabled, authorization: form) { finish(.success($0)) }
+        }
+        guard let raw, let result = LaunchItemChange(rawValue: raw) else { throw .badReply }
+        return result
+    }
+
+    /// The helper asks for an administrator's password in this login session before acting.
+    @concurrent public func resetPermission(service: String, bundleID: String) async throws(HelperClientError)
+        -> PermissionReset
+    {
+        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
+        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
+        let form = authorization.externalForm
+        let raw: String? = try await call { proxy, finish in
+            proxy.resetPermission(service, bundleID: bundleID, authorization: form) { finish(.success($0)) }
+        }
+        guard let raw, let result = PermissionReset(rawValue: raw) else { throw .badReply }
         return result
     }
 

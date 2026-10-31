@@ -1,7 +1,38 @@
 import Foundation
+import Synchronization
 import Testing
 
 @testable import ClenvraKit
+
+/// Stands in for the installed helper: records each reset and runs `effect` before answering.
+private final class PermissionHelper: PrivilegedOperations {
+    struct Call: Sendable {
+        let service: String
+        let bundleID: String
+    }
+
+    let answer: PermissionReset
+    let effect: @Sendable () -> Void
+    private let recorded = Mutex<[Call]>([])
+    var calls: [Call] { recorded.withLock { $0 } }
+
+    init(answer: PermissionReset, effect: @escaping @Sendable () -> Void) {
+        self.answer = answer
+        self.effect = effect
+    }
+
+    func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse { throw .unavailable }
+    func restore(_ record: ActivityRecord) async throws(HelperClientError) -> RestoreError? { throw .unavailable }
+    func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async throws(HelperClientError)
+        -> ActivityRecord.Outcome
+    { throw .unavailable }
+    func deleteLocalSnapshot(date: String) async throws(HelperClientError) -> SnapshotDeletion { throw .unavailable }
+    func resetPermission(service: String, bundleID: String) async throws(HelperClientError) -> PermissionReset {
+        recorded.withLock { $0.append(Call(service: service, bundleID: bundleID)) }
+        effect()
+        return answer
+    }
+}
 
 @MainActor
 @Suite("Permissions session")
@@ -137,6 +168,66 @@ struct PermissionsSessionTests {
 
         #expect(await session.revoke(grant) == .failed)
         #expect(session.grants.contains { $0.id == grant.id })
+    }
+
+    @Test("a grant for all users is revoked through the helper, never with tccutil as the user")
+    func revokeSystemGrantThroughHelper() async throws {
+        try writeBoth()
+        let runner = FakeCommandRunner()
+        let systemPath = systemPath
+        let helper = PermissionHelper(answer: .reset) {
+            // What tccutil run as root does to the Mac's database.
+            try? TCCFixture.remove(
+                service: "kTCCServiceScreenCapture", client: "com.obsproject.obs-studio", from: systemPath)
+        }
+        let session = PermissionsSession(
+            userDatabase: userPath, systemDatabase: systemPath, runner: runner, privileged: helper)
+        session.helperAvailable = true
+        await session.load()
+        let grant = try #require(session.grants.first { $0.scope == .system })
+
+        #expect(session.canRevoke(grant))
+        #expect(await session.revoke(grant) == .revoked)
+
+        #expect(runner.commands.isEmpty)
+        #expect(helper.calls.map(\.service) == ["ScreenCapture"])
+        #expect(helper.calls.map(\.bundleID) == ["com.obsproject.obs-studio"])
+        #expect(!session.grants.contains { $0.id == grant.id })
+    }
+
+    @Test("when the helper refuses or the grant survives, it is reported as failed")
+    func helperRefusalReported() async throws {
+        try writeBoth()
+        let helper = PermissionHelper(answer: .notAuthorized) {}
+        let session = PermissionsSession(
+            userDatabase: userPath, systemDatabase: systemPath, runner: FakeCommandRunner(), privileged: helper)
+        session.helperAvailable = true
+        await session.load()
+        let grant = try #require(session.grants.first { $0.scope == .system })
+
+        #expect(await session.revoke(grant) == .failed)
+        #expect(session.grants.contains { $0.id == grant.id })
+    }
+
+    @Test("revoking several grants reports each one, and reads the databases once at the end")
+    func revokeManyReportsEach() async throws {
+        try writeBoth()
+        let runner = FakeCommandRunner()
+        runner.stub("/usr/bin/tccutil", ["reset", "Camera", "us.zoom.xos"])
+        runner.stub("/usr/bin/tccutil", ["reset", "Microphone", "us.zoom.xos"], stderr: "Failed", status: 1)
+        let session = session(runner)
+        await session.load()
+        let camera = try #require(session.grants.first { $0.id == "user:kTCCServiceCamera:us.zoom.xos" })
+        let microphone = try #require(session.grants.first { $0.id == "user:kTCCServiceMicrophone:us.zoom.xos" })
+        let tool = try #require(session.grants.first { !$0.clientIsBundleID })
+        try TCCFixture.remove(service: "kTCCServiceCamera", client: "us.zoom.xos", from: userPath)
+
+        let results = await session.revoke([camera, microphone, tool])
+
+        #expect(results == [camera.id: .revoked, microphone.id: .failed, tool.id: .failed])
+        #expect(runner.commands.count == 2)
+        #expect(!session.grants.contains { $0.id == camera.id })
+        #expect(session.grants.contains { $0.id == microphone.id })
     }
 
     @Test("a grant whose client is a path cannot be revoked, and nothing runs")

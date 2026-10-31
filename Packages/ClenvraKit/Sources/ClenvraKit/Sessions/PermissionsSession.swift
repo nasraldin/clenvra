@@ -32,20 +32,25 @@ public final class PermissionsSession {
     /// Databases that could not be read in the last load; their grants are not listed.
     public private(set) var unreadableScopes: Set<PermissionGrant.Scope> = []
 
+    /// Whether the privileged helper is installed and answering; grants for all users are revoked through it.
+    public var helperAvailable = false
+
     private let userDatabase: String
     private let systemDatabase: String
     private let runner: any CommandRunning
     private let tccutil: String
+    private let privileged: (any PrivilegedOperations)?
 
     public init(
         userDatabase: String = PermissionsSession.userDatabasePath,
         systemDatabase: String = PermissionsSession.systemDatabasePath, runner: any CommandRunning,
-        tccutil: String = "/usr/bin/tccutil"
+        tccutil: String = "/usr/bin/tccutil", privileged: (any PrivilegedOperations)? = nil
     ) {
         self.userDatabase = userDatabase
         self.systemDatabase = systemDatabase
         self.runner = runner
         self.tccutil = tccutil
+        self.privileged = privileged
     }
 
     public func load() async {
@@ -68,20 +73,44 @@ public final class PermissionsSession {
         grant.clientIsBundleID && !grant.client.isEmpty
     }
 
+    /// Whether a grant for all users goes through the privileged helper (an administrator's password each time).
+    public func revokesThroughHelper(_ grant: PermissionGrant) -> Bool {
+        grant.scope == .system && helperAvailable && privileged != nil
+    }
+
     /// Runs `tccutil reset <service> <bundle ID>`, reloads, and reports success only when the grant is really gone.
     public func revoke(_ grant: PermissionGrant) async -> RevokeResult {
-        guard canRevoke(grant) else { return .failed }
-        let command = Command(
-            executable: tccutil, arguments: ["reset", PermissionService.shortName(grant.service), grant.client],
-            timeout: .seconds(15))
+        await revoke([grant])[grant.id] ?? .failed
+    }
+
+    /// Revokes each grant (the person's own with `tccutil`, all users' through the helper when it is installed),
+    /// reads the databases once, and reports each one: revoked only when it is really gone.
+    public func revoke(_ selection: [PermissionGrant]) async -> [PermissionGrant.ID: RevokeResult] {
+        var reset: Set<PermissionGrant.ID> = []
+        for grant in selection where canRevoke(grant) {
+            if await runReset(grant) { reset.insert(grant.id) }
+        }
+        if !reset.isEmpty { await load() }
+        var results: [PermissionGrant.ID: RevokeResult] = [:]
+        for grant in selection {
+            // A system-wide grant survives a reset run as the user, and tccutil may still exit 0: never claim success.
+            let gone =
+                reset.contains(grant.id) && phase == .ready && !unreadableScopes.contains(grant.scope)
+                && !grants.contains(where: { $0.id == grant.id })
+            results[grant.id] = gone ? .revoked : .failed
+        }
+        return results
+    }
+
+    private func runReset(_ grant: PermissionGrant) async -> Bool {
+        let service = PermissionService.shortName(grant.service)
+        if revokesThroughHelper(grant), let privileged {
+            return (try? await privileged.resetPermission(service: service, bundleID: grant.client)) == .reset
+        }
+        let command = Command(executable: tccutil, arguments: ["reset", service, grant.client], timeout: .seconds(15))
         let result = try? await runner.run(command)
-        guard let result, result.terminationReason == .exited, result.exitStatus == 0 else { return .failed }
-        await load()
-        // A system-wide grant survives a reset run as the user, and tccutil may still exit 0: never claim success.
-        guard phase == .ready, !unreadableScopes.contains(grant.scope),
-            !grants.contains(where: { $0.id == grant.id })
-        else { return .failed }
-        return .revoked
+        guard let result, result.terminationReason == .exited, result.exitStatus == 0 else { return false }
+        return true
     }
 
     @concurrent private static func read(user: String, system: String) async -> (
