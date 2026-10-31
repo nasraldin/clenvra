@@ -57,7 +57,8 @@ struct PrivilegedCleanupTests {
         InProcessHelper(
             service: HelperService(
                 allowlist: HelperAllowlist(systemRoot: system), clientHome: home, clientUID: getuid(),
-                log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"), processPaths: { [] }))
+                log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"), processPaths: { [] },
+                authorize: { _ in true }))
     }
 
     /// The system rules of the real catalog, re-rooted into the fixture.
@@ -227,7 +228,7 @@ struct PrivilegedCleanupTests {
             service: HelperService(
                 allowlist: HelperAllowlist(systemRoot: system), clientHome: home, clientUID: getuid(),
                 log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"),
-                processPaths: { [] }, runner: runner))
+                processPaths: { [] }, runner: runner, authorize: { _ in true }))
         let orphan = try systemDaemon("com.vendor.gone", program: "/Gone/vendord", state: .missing)
         runner.stub("/bin/launchctl", ["bootout", "system", orphan.plistPath])
 

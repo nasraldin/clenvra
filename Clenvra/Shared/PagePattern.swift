@@ -254,7 +254,7 @@ struct ItemInspector<Details: View>: View {
         Form {
             Section {
                 VStack(spacing: 8) {
-                    if let image = icon ?? path.map({ NSWorkspace.shared.icon(forFile: $0) }) {
+                    if let image = icon ?? path.map({ IconCache.shared.icon(forFile: $0) }) {
                         Image(nsImage: image)
                             .resizable()
                             .frame(width: 64, height: 64)
@@ -356,7 +356,7 @@ struct FileNameCell: View {
         // Icon and name side by side rather than one Label: the name's accessibility frame then holds only the text,
         // so a short name is not measured against the colored icon next to it.
         HStack(spacing: 6) {
-            if let image = icon ?? path.map({ NSWorkspace.shared.icon(forFile: $0) }) {
+            if let image = icon ?? path.map({ IconCache.shared.icon(forFile: $0) }) {
                 Image(nsImage: image)
                     .resizable()
                     .frame(width: 16, height: 16)

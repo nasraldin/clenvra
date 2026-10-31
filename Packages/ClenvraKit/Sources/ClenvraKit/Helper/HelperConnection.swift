@@ -10,9 +10,10 @@ import Synchronization
     func perform(_ request: Data, reply: @escaping @Sendable (Data?) -> Void)
     /// A JSON `ActivityRecord` in; `nil` when it was put back, otherwise a JSON `RestoreError`.
     func restore(_ record: Data, reply: @escaping @Sendable (Data?) -> Void)
-    /// A JSON `DeletionItem` for a plist in /Library/LaunchDaemons or /Library/LaunchAgents and an operation ID in;
-    /// a JSON `ActivityRecord.Outcome` out.
-    func removeOrphanedLaunchItem(_ item: Data, operationID: String, reply: @escaping @Sendable (Data?) -> Void)
+    /// A JSON `DeletionItem` for a plist in /Library/LaunchDaemons or /Library/LaunchAgents, an operation ID and an
+    /// `AuthorizationExternalForm` in; a JSON `ActivityRecord.Outcome` out.
+    func removeOrphanedLaunchItem(
+        _ item: Data, operationID: String, authorization: Data, reply: @escaping @Sendable (Data?) -> Void)
     /// A snapshot date in; a `SnapshotDeletion` raw value out.
     func deleteLocalSnapshot(_ date: String, reply: @escaping @Sendable (String?) -> Void)
     /// A JSON `DeletionItem` for a plist in /Library/LaunchDaemons or /Library/LaunchAgents, whether to enable it,
@@ -42,6 +43,18 @@ public struct HelperClient: Sendable {
     }
 
     @concurrent public func perform(_ request: HelperRequest) async throws(HelperClientError) -> HelperResponse {
+        var request = request
+        // Uninstall removes an app's system files for good: the helper asks for the administrator's password.
+        var authorization: (reference: AuthorizationRef, externalForm: Data)?
+        if request.mode == .irreversible, request.items.contains(where: { $0.section == .applications }) {
+            guard let made = HelperRight.makeClientAuthorization() else { throw .unavailable }
+            authorization = made
+            request = HelperRequest(
+                operationID: request.operationID, mode: request.mode, items: request.items,
+                ownerBundlePaths: request.ownerBundlePaths, authorization: made.externalForm)
+        }
+        // The reference must outlive the call: the helper uses it to show the password dialog.
+        defer { if let authorization { AuthorizationFree(authorization.reference, [.destroyRights]) } }
         guard let payload = try? request.encoded() else { throw .badReply }
         let data: Data? = try await call { proxy, finish in proxy.perform(payload) { finish(.success($0)) } }
         guard let data, let response = try? HelperResponse.decode(data),
@@ -65,8 +78,12 @@ public struct HelperClient: Sendable {
     {
         guard let payload = try? JSONEncoder().encode(item) else { throw .badReply }
         let id = operationID.uuidString
+        guard let authorization = HelperRight.makeClientAuthorization() else { throw .unavailable }
+        // The reference must outlive the call: the helper uses it to show the password dialog.
+        defer { AuthorizationFree(authorization.reference, [.destroyRights]) }
+        let form = authorization.externalForm
         let data: Data? = try await call { proxy, finish in
-            proxy.removeOrphanedLaunchItem(payload, operationID: id) { finish(.success($0)) }
+            proxy.removeOrphanedLaunchItem(payload, operationID: id, authorization: form) { finish(.success($0)) }
         }
         guard let data, let outcome = try? JSONDecoder().decode(ActivityRecord.Outcome.self, from: data) else {
             throw .badReply

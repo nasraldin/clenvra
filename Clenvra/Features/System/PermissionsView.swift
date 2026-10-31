@@ -368,7 +368,7 @@ struct PermissionClient {
             if let url {
                 name = FileManager.default.displayName(atPath: url.path(percentEncoded: false))
                     .replacing(/\.app$/, with: "")
-                icon = NSWorkspace.shared.icon(forFile: url.path(percentEncoded: false))
+                icon = IconCache.shared.icon(forFile: url.path(percentEncoded: false))
             } else {
                 name = grant.client
                 icon = NSImage(systemSymbolName: "app.dashed", accessibilityDescription: nil) ?? NSImage()
@@ -379,7 +379,7 @@ struct PermissionClient {
             name = (grant.client as NSString).lastPathComponent
             icon =
                 exists
-                ? NSWorkspace.shared.icon(forFile: grant.client)
+                ? IconCache.shared.icon(forFile: grant.client)
                 : NSImage(systemSymbolName: "terminal", accessibilityDescription: nil) ?? NSImage()
         }
     }

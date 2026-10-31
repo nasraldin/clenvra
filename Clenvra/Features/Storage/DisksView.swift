@@ -199,7 +199,7 @@ private struct DiskTile: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Image(nsImage: NSWorkspace.shared.icon(forFile: disk.volume.id.path(percentEncoded: false)))
+            Image(nsImage: IconCache.shared.icon(forFile: disk.volume.id.path(percentEncoded: false)))
                 .resizable()
                 .frame(width: 64, height: 64)
                 .accessibilityHidden(true)

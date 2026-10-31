@@ -27,11 +27,14 @@ struct HelperSystemTests {
     private var home: String { root + "/home" }
     private var system: String { root + "/system" }
 
-    private var service: HelperService {
+    private var service: HelperService { service(authorized: true) }
+
+    /// `authorized`: whether the fake administrator-password check succeeds.
+    private func service(authorized: Bool) -> HelperService {
         HelperService(
             allowlist: HelperAllowlist(systemRoot: system), clientHome: home, clientUID: uid,
             log: ActivityLog(directory: fixture.url("helper-log")), staging: root + "/staging", processPaths: { [] },
-            runner: runner)
+            runner: runner, authorize: { _ in authorized })
     }
 
     private func writePlist(_ relative: String, _ contents: [String: Any]) throws -> DeletionItem {
@@ -44,6 +47,17 @@ struct HelperSystemTests {
     }
 
     // MARK: - Orphaned launch items (SB-4)
+
+    @Test("removing a Mac-wide startup item needs the administrator's password; without it nothing runs")
+    func removalNeedsPassword() async throws {
+        let item = try writePlist(
+            "Library/LaunchDaemons/com.vendor.old.plist", ["Label": "com.vendor.old", "Program": "/Gone/Vendor/oldd"])
+        let outcome = await service(authorized: false).removeOrphanedLaunchItem(item, operationID: UUID())
+
+        #expect(outcome == .notAttempted)
+        #expect(FileManager.default.fileExists(atPath: item.path))
+        #expect(runner.commands.isEmpty)
+    }
 
     @Test("an orphaned system daemon is unloaded and its plist moved to the user's Trash")
     func removesOrphanedDaemon() async throws {

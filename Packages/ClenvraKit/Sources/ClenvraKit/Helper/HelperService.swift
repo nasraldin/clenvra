@@ -5,7 +5,8 @@ public import Foundation
 public struct HelperRequest: Codable, Sendable, Equatable {
     public enum Mode: String, Codable, Sendable {
         case moveToTrash
-        /// Only for confirmed irreversible actions (rotated system logs).
+        /// Only for confirmed irreversible actions: rotated system logs, and an app's system files on Uninstall when
+        /// `authorization` carries the administrator's password.
         case irreversible
         /// Check everything, change nothing.
         case dryRun
@@ -16,12 +17,18 @@ public struct HelperRequest: Codable, Sendable, Equatable {
     public let items: [DeletionItem]
     /// Owner bundle identifier → its app bundle path, so the helper can check the owner is not running itself.
     public let ownerBundlePaths: [String: String]
+    /// The client's authorization (external form), needed only for an Uninstall's permanent removal.
+    public let authorization: Data?
 
-    public init(operationID: UUID, mode: Mode, items: [DeletionItem], ownerBundlePaths: [String: String]) {
+    public init(
+        operationID: UUID, mode: Mode, items: [DeletionItem], ownerBundlePaths: [String: String],
+        authorization: Data? = nil
+    ) {
         self.operationID = operationID
         self.mode = mode
         self.items = items
         self.ownerBundlePaths = ownerBundlePaths
+        self.authorization = authorization
     }
 
     public func encoded() throws -> Data { try JSONEncoder().encode(self) }
@@ -92,8 +99,17 @@ public struct HelperService: Sendable {
     @concurrent public func perform(_ request: HelperRequest) async -> HelperResponse {
         var outcomes = [ActivityRecord.Outcome?](repeating: nil, count: request.items.count)
         var accepted: [(index: Int, item: DeletionItem)] = []
+        // An app's system files go for good only on Uninstall, and only after the administrator's password (asked
+        // once per request, and only when such an item is in it). Cleanup items never do.
+        let needsPassword =
+            request.mode == .irreversible
+            && request.items.contains { $0.section == .applications && !allowlist.permitsIrreversible($0) }
+        let uninstallAuthorized = needsPassword && authorize(request.authorization)
+        func permitsIrreversible(_ item: DeletionItem) -> Bool {
+            allowlist.permitsIrreversible(item) || (item.section == .applications && uninstallAuthorized)
+        }
         for (index, item) in request.items.enumerated() {
-            if !allowlist.permits(item) || (request.mode == .irreversible && !allowlist.permitsIrreversible(item)) {
+            if !allowlist.permits(item) || (request.mode == .irreversible && !permitsIrreversible(item)) {
                 outcomes[index] = .skipped(.outsideRoot)
             } else if Self.belongsToManagedSoftware(item) {
                 outcomes[index] = .skipped(.protected(.custom))
@@ -212,10 +228,12 @@ public struct HelperService: Sendable {
 
     /// Unloads an orphaned launch daemon or agent and moves its plist to the user's Trash. The label and program
     /// come from the plist itself, and only items whose program no longer exists are touched.
-    @concurrent public func removeOrphanedLaunchItem(_ item: DeletionItem, operationID: UUID) async
-        -> ActivityRecord.Outcome
-    {
+    /// Asks for the administrator's password (`authorization`) each time before changing anything.
+    @concurrent public func removeOrphanedLaunchItem(
+        _ item: DeletionItem, operationID: UUID, authorization: Data? = nil
+    ) async -> ActivityRecord.Outcome {
         guard allowlist.isSystemLaunchItem(item) else { return .skipped(.outsideRoot) }
+        guard authorize(authorization) else { return .notAttempted }
         guard !Self.belongsToManagedSoftware(item),
             let plist = Self.launchPlist(at: item.path), let label = Self.validLabel(plist["Label"]),
             !ManagedAgents.isManaged(identifier: label)

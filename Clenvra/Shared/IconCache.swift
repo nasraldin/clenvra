@@ -28,6 +28,15 @@ final class IconCache {
         return image
     }
 
+    /// The icon of the first path that exists, else `fallback`; which path exists is checked once per list of paths.
+    func icon(firstExistingOf paths: [String], fallback: @autoclosure () -> NSImage) -> NSImage {
+        let key = paths.joined(separator: "\n") as NSString
+        if let cached = icons.object(forKey: key) { return cached }
+        let image = paths.first { FileManager.default.fileExists(atPath: $0) }.map(icon(forFile:)) ?? fallback()
+        icons.setObject(image, forKey: key)
+        return image
+    }
+
     /// An extension's own icon when its bundle has one, else its app's icon; `nil` when neither applies.
     func icon(for item: PluginItem) -> NSImage? {
         item.iconSources(hasOwnIcon: hasOwnIcon).first.map(icon(forFile:))

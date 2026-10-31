@@ -62,7 +62,9 @@ final class HelperEndpoint: NSObject, ClenvraHelperProtocol, Sendable {
         }
     }
 
-    func removeOrphanedLaunchItem(_ item: Data, operationID: String, reply: @escaping @Sendable (Data?) -> Void) {
+    func removeOrphanedLaunchItem(
+        _ item: Data, operationID: String, authorization: Data, reply: @escaping @Sendable (Data?) -> Void
+    ) {
         guard let decoded = try? JSONDecoder().decode(DeletionItem.self, from: item),
             let operation = UUID(uuidString: operationID)
         else {
@@ -72,7 +74,8 @@ final class HelperEndpoint: NSObject, ClenvraHelperProtocol, Sendable {
         idleWatch.begin()
         let service = service
         Task {
-            let outcome = await service.removeOrphanedLaunchItem(decoded, operationID: operation)
+            let outcome = await service.removeOrphanedLaunchItem(
+                decoded, operationID: operation, authorization: authorization)
             reply(try? JSONEncoder().encode(outcome))
             idleWatch.end()
         }

@@ -20,7 +20,7 @@ struct PhotoThumbnail: View {
                     .resizable()
                     .scaledToFill()
             } else if didFail {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+                Image(nsImage: IconCache.shared.icon(forFile: path))
                     .resizable()
                     .scaledToFit()
                     .padding(side / 5)

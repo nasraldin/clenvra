@@ -203,7 +203,7 @@ private struct SimilarPhotosFolders: View {
                 }
                 ForEach(session.roots, id: \.self) { root in
                     HStack {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: root))
+                        Image(nsImage: IconCache.shared.icon(forFile: root))
                             .resizable()
                             .frame(width: 18, height: 18)
                             .accessibilityHidden(true)

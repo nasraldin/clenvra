@@ -532,7 +532,7 @@ struct AppIcon: View {
     let size: CGFloat
 
     var body: some View {
-        Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+        Image(nsImage: IconCache.shared.icon(forFile: path))
             .resizable()
             .interpolation(.high)
             .frame(width: size, height: size)

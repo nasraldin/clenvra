@@ -679,11 +679,9 @@ extension LaunchItem {
 
     /// The owning app's icon, else the program's, else a generic gear.
     fileprivate var icon: NSImage {
-        let candidates = [ownerAppPath, program].compactMap { $0 }
-        if let path = candidates.first(where: { FileManager.default.fileExists(atPath: $0) }) {
-            return NSWorkspace.shared.icon(forFile: path)
-        }
-        return NSImage(systemSymbolName: "gearshape.2", accessibilityDescription: nil) ?? NSImage()
+        IconCache.shared.icon(
+            firstExistingOf: [ownerAppPath, program].compactMap { $0 },
+            fallback: NSImage(systemSymbolName: "gearshape.2", accessibilityDescription: nil) ?? NSImage())
     }
 }
 

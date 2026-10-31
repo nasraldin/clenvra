@@ -33,7 +33,7 @@ struct ReviewInspector: View {
         Form {
             Section {
                 VStack(alignment: .center, spacing: 8) {
-                    Image(nsImage: NSWorkspace.shared.icon(forFile: candidate.path))
+                    Image(nsImage: IconCache.shared.icon(forFile: candidate.path))
                         .resizable()
                         .frame(width: 64, height: 64)
                         .accessibilityHidden(true)

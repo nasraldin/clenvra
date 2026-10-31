@@ -311,7 +311,7 @@ struct SettingsView: View {
                 Label {
                     PathText(path: path)
                 } icon: {
-                    Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+                    Image(nsImage: IconCache.shared.icon(forFile: path))
                         .resizable()
                         .frame(width: 16, height: 16)
                 }

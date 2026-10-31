@@ -1,6 +1,7 @@
 import Darwin
 import Foundation
 import Security
+import Synchronization
 import Testing
 
 @testable import ClenvraKit
@@ -27,20 +28,23 @@ struct HelperTests {
     private var allowlist: HelperAllowlist { HelperAllowlist(systemRoot: system) }
 
     /// A plan item exactly as the app's scanner would produce it now.
-    private func item(_ relative: String, root: String, owner: String? = nil) throws -> DeletionItem {
+    private func item(
+        _ relative: String, root: String, owner: String? = nil, section: ActivityRecord.Section = .cleanup
+    ) throws -> DeletionItem {
         let full = path("system/" + relative)
         return DeletionItem(
             path: full, ruleRoot: system + "/" + root, expected: try SafeWalk.resolve(full).snapshot,
-            ownerBundleID: owner, freedBytes: 10, section: .cleanup)
+            ownerBundleID: owner, freedBytes: 10, section: section)
     }
 
     private func service(
-        protecting ownPaths: [String] = [], processPaths: @escaping @Sendable () -> [String]? = { [] }
+        protecting ownPaths: [String] = [], processPaths: @escaping @Sendable () -> [String]? = { [] },
+        authorize: @escaping @Sendable (Data?) -> Bool = { _ in false }
     ) -> HelperService {
         HelperService(
             allowlist: allowlist, clientHome: home, clientUID: getuid(),
             log: ActivityLog(directory: fixture.url("helper-log")), staging: path("staging"), ownPaths: ownPaths,
-            processPaths: processPaths)
+            processPaths: processPaths, authorize: authorize)
     }
 
     private func request(_ items: [DeletionItem], owners: [String: String] = [:]) -> HelperRequest {
@@ -394,6 +398,36 @@ struct HelperTests {
         #expect(response.outcomes == [.skipped(.outsideRoot), .removedPermanently])
         #expect(FileManager.default.fileExists(atPath: cache.path))
         #expect(!FileManager.default.fileExists(atPath: archive.path))
+    }
+
+    @Test("an app's system files are removed for good only on Uninstall with the administrator's password")
+    func uninstallIrreversibleNeedsPassword() async throws {
+        try fixture.file("system/Library/Application Support/com.vendor.app/state", bytes: 10)
+        try fixture.file("system/Library/Caches/com.vendor.cleanup/blob", bytes: 10)
+        let appData = try item(
+            "Library/Application Support/com.vendor.app", root: "Library/Application Support", section: .applications)
+        let cache = try item("Library/Caches/com.vendor.cleanup", root: "Library/Caches")
+        let asked = Mutex(0)
+        func request(_ auth: Data?) -> HelperRequest {
+            HelperRequest(
+                operationID: UUID(), mode: .irreversible, items: [appData, cache], ownerBundlePaths: [:],
+                authorization: auth)
+        }
+
+        // Without a password nothing outside the log archives goes for good.
+        let refused = await service(authorize: { _ in false }).perform(request(Data([1])))
+        #expect(refused.outcomes == [.skipped(.outsideRoot), .skipped(.outsideRoot)])
+        #expect(FileManager.default.fileExists(atPath: appData.path))
+
+        // With it, only the Uninstall item does; a cleanup item still never does.
+        let allowed = await service(authorize: { _ in
+            asked.withLock { $0 += 1 }
+            return true
+        }).perform(request(Data([1])))
+        #expect(allowed.outcomes == [.removedPermanently, .skipped(.outsideRoot)])
+        #expect(!FileManager.default.fileExists(atPath: appData.path))
+        #expect(FileManager.default.fileExists(atPath: cache.path))
+        #expect(asked.withLock { $0 } == 1)
     }
 
     @Test("only administrators may use the helper")
