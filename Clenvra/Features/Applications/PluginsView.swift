@@ -1,5 +1,6 @@
 import AppKit
 import ClenvraKit
+import ServiceManagement
 import SwiftUI
 
 /// Extensions and plug-ins that add code to macOS or other apps, in collapsible groups. Only the user's own plug-in
@@ -18,6 +19,9 @@ struct PluginsView: View {
     /// Table rows, built when the scan, search or sort changes (never while scrolling: with Apple's items shown
     /// there are hundreds).
     @State private var tableGroups: [PluginTableGroup] = []
+    @Environment(SearchRouter.self) private var searchRouter
+    @State private var isToggling = false
+    @State private var toggleFailed = false
     @State private var itemsByID: [String: PluginItem] = [:]
     /// The open app the Quit confirmation is about.
     @State private var quitTarget: QuitTarget?
@@ -318,11 +322,83 @@ struct PluginsView: View {
                     Text(item.handling.explanation)
                         .font(.callout)
                 }
+                removalGuide(for: item)
             }
         } else if items.count > 1 {
             SelectionTotalsInspector(count: items.count, bytes: items.reduce(0) { $0 + ($1.size ?? 0) })
         } else {
             NoSelectionInspector(description: "Select an extension to see what it is and where it lives.")
+        }
+    }
+
+    /// What can be done with the extension, and how to turn it off or remove it the right way.
+    @ViewBuilder private func removalGuide(for item: PluginItem) -> some View {
+        let app = item.containingApp.flatMap { $0.hasPrefix("/System/") ? nil : $0 }
+        Section {
+            if session.canToggle(item) {
+                Button {
+                    isToggling = true
+                    Task {
+                        toggleFailed = !(await session.setEnabled(item.isEnabled == false, item))
+                        isToggling = false
+                    }
+                } label: {
+                    item.isEnabled == false ? Text("Turn On") : Text("Turn Off")
+                }
+                .disabled(isToggling)
+                if toggleFailed {
+                    Text("macOS did not change this extension.")
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                }
+            }
+            if item.kind == .systemExtension || item.kind == .appExtension, item.handling != .managed {
+                Button {
+                    SMAppService.openSystemSettingsLoginItems()
+                } label: {
+                    Text("Open Login Items & Extensions")
+                }
+            }
+            if let app, item.handling != .managed {
+                Button {
+                    searchRouter.open(.applications, query: item.containingAppName ?? app)
+                } label: {
+                    Text("Uninstall \(item.containingAppName ?? app)…")
+                }
+            }
+        } header: {
+            Text("Turn Off or Remove")
+        } footer: {
+            Text(removalAdvice(for: item, app: app))
+                .font(.callout)
+        }
+        .onChange(of: item.id) { toggleFailed = false }
+    }
+
+    private func removalAdvice(for item: PluginItem, app: String?) -> LocalizedStringResource {
+        if item.isApple {
+            return
+                "Part of macOS, on the protected system volume: it cannot be removed. Some can be turned off in Login Items & Extensions."
+        }
+        if item.handling == .managed {
+            return
+                "Security or management software. Removing it here would weaken that protection: turn it off in its own app, or ask your administrator."
+        }
+        if item.handling == .removable {
+            return "Remove it with the Remove button: it goes to the Trash, so you can put it back."
+        }
+        switch item.kind {
+        case .appExtension:
+            return app == nil
+                ? "Turn it off here or in Login Items & Extensions. It is removed with the app or installer that added it."
+                : "Turn it off here or in Login Items & Extensions; its app keeps working. It is part of its app, so uninstalling the app removes it."
+        case .systemExtension:
+            return
+                "macOS lets only the app that installed it remove it. Turn it off in that app or in Login Items & Extensions; uninstalling the app removes it (macOS asks you to confirm)."
+        default:
+            return app == nil
+                ? "Installed for all users in /Library. Remove it with the app or uninstaller that added it, or use Show in Finder and move it to the Trash (macOS asks for an administrator’s password)."
+                : "Part of its app, so uninstalling the app removes it."
         }
     }
 
@@ -529,7 +605,14 @@ private struct PluginStatus: View {
         switch item.handling {
         case .removable: item.isEnabled == false ? "Off" : "Removable"
         case .managed: "Security software"
-        case .revealOnly: item.isEnabled == false ? "Off" : "Show only"
+        case .revealOnly:
+            if item.isEnabled == false {
+                "Off"
+            } else if item.kind == .appExtension, !item.isApple, item.isEnabled == true {
+                "On"
+            } else {
+                "Show only"
+            }
         }
     }
 
@@ -537,7 +620,9 @@ private struct PluginStatus: View {
         switch item.handling {
         case .removable: item.isEnabled == false ? "pause.circle" : "trash.circle"
         case .managed: "lock.shield"
-        case .revealOnly: item.isEnabled == false ? "pause.circle" : "eye"
+        case .revealOnly:
+            item.isEnabled == false
+                ? "pause.circle" : item.kind == .appExtension && !item.isApple ? "checkmark.circle" : "eye"
         }
     }
 }

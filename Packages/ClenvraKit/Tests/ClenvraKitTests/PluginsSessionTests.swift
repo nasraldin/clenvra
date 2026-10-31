@@ -51,7 +51,11 @@ struct PluginsSessionTests {
             deleter: DeletionExecutor(
                 gate: DeletionGate(policy: policy, ownerState: { _ in .notRunning }),
                 log: ActivityLog(directory: fixture.url("log")), trash: PluginTrash(directory: path(".Trash"))),
-            apps: apps)
+            apps: apps, runner: runner)
+    }
+
+    private func extensionItem(_ identifier: String, in session: PluginsSession) -> PluginItem? {
+        session.groups.flatMap(\.items).first { $0.bundleIdentifier == identifier }
     }
 
     private func item(_ path: String, in session: PluginsSession) -> PluginItem? {
@@ -269,6 +273,63 @@ struct PluginsSessionTests {
             containingApp: "/Applications/Notes Pro.app", handling: .revealOnly)
         #expect(appex.containingAppName == "Notes Pro")
     }
+
+    @Test("a third-party app extension is turned off with pluginkit and the next read shows it off")
+    func turnsAppExtensionOff() async throws {
+        let session = session()
+        await session.scan()
+        let share = try #require(extensionItem("com.example.notes.ShareExtension", in: session))
+        #expect(session.canToggle(share))
+        runner.stub("/usr/bin/pluginkit", ["-e", "ignore", "-i", "com.example.notes.ShareExtension"])
+        runner.stub(
+            "/usr/bin/pluginkit", ["-mAvvv"],
+            stdout: PluginKitSample.output(home: path("home"))
+                .replacingOccurrences(of: "+    com.example.notes", with: "-    com.example.notes"))
+
+        #expect(await session.setEnabled(false, share))
+
+        #expect(extensionItem("com.example.notes.ShareExtension", in: session)?.isEnabled == false)
+    }
+
+    @Test("turning an extension on asks pluginkit to use it")
+    func turnsAppExtensionOn() async throws {
+        let session = session()
+        await session.scan()
+        let blocker = try #require(extensionItem("com.example.blocker.Safari", in: session))
+        runner.stub("/usr/bin/pluginkit", ["-e", "use", "-i", "com.example.blocker.Safari"])
+        runner.stub(
+            "/usr/bin/pluginkit", ["-mAvvv"],
+            stdout: PluginKitSample.output(home: path("home"))
+                .replacingOccurrences(of: "-    com.example.blocker", with: "+    com.example.blocker"))
+
+        #expect(await session.setEnabled(true, blocker))
+
+        #expect(extensionItem("com.example.blocker.Safari", in: session)?.isEnabled == true)
+    }
+
+    @Test("Apple's extensions, system extensions and security software cannot be turned on or off here")
+    func refusesToggleOutsideAppExtensions() async throws {
+        let session = session()
+        session.showsAppleItems = true
+        await session.scan()
+        let apple = try #require(extensionItem("com.apple.reminders.quicklookextension", in: session))
+        let system = try #require(session.groups.first { $0.kind == .systemExtension }?.items.first)
+
+        #expect(!session.canToggle(apple))
+        #expect(!session.canToggle(system))
+        #expect(await session.setEnabled(false, apple) == false)
+        #expect(!runner.commands.contains { $0.arguments.first == "-e" })
+    }
+
+    @Test("when pluginkit fails, the change is reported as not made")
+    func toggleFailure() async throws {
+        let session = session()
+        await session.scan()
+        let share = try #require(extensionItem("com.example.notes.ShareExtension", in: session))
+        runner.stub("/usr/bin/pluginkit", ["-e", "ignore", "-i", "com.example.notes.ShareExtension"], status: 1)
+
+        #expect(await session.setEnabled(false, share) == false)
+    }
 }
 
 /// Running apps and quit requests, recorded instead of touching real apps.
@@ -288,4 +349,5 @@ private final class FakeApps {
                 return force || politeSucceeds
             })
     }
+
 }

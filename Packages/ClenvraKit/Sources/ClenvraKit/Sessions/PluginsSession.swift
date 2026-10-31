@@ -61,16 +61,44 @@ public final class PluginsSession {
     private let deleter: DeletionExecutor
     private let executor: FSExecutor
     private let apps: AppControl
+    private let runner: any CommandRunning
     private var items: [PluginItem] = []
     private var itemsByID: [String: PluginItem] = [:]
 
     public init(
-        reader: PluginReader, deleter: DeletionExecutor, executor: FSExecutor = .shared, apps: AppControl = .none
+        reader: PluginReader, deleter: DeletionExecutor, executor: FSExecutor = .shared, apps: AppControl = .none,
+        runner: any CommandRunning = ProcessCommandRunner()
     ) {
         self.reader = reader
         self.deleter = deleter
         self.executor = executor
         self.apps = apps
+        self.runner = runner
+    }
+
+    // MARK: - Turning app extensions on and off
+
+    /// A third-party app extension that macOS lists: it can be turned off and on again, as in System Settings.
+    /// Never Apple's own, security software, or system extensions (only their app or System Settings can).
+    public func canToggle(_ item: PluginItem) -> Bool {
+        guard item.kind == .appExtension, !item.isApple, item.handling != .managed, item.isEnabled != nil,
+            let identifier = item.bundleIdentifier
+        else { return false }
+        return identifier.wholeMatch(of: /[A-Za-z0-9][A-Za-z0-9.\-_]*/) != nil
+    }
+
+    /// Tells macOS to use or ignore the extension (`pluginkit -e use|ignore`), then reads the list again.
+    /// `true` when the new read shows the change.
+    public func setEnabled(_ enabled: Bool, _ item: PluginItem) async -> Bool {
+        guard canToggle(item), let identifier = item.bundleIdentifier else { return false }
+        let command = Command(
+            executable: "/usr/bin/pluginkit", arguments: ["-e", enabled ? "use" : "ignore", "-i", identifier],
+            timeout: .seconds(15))
+        guard let result = try? await runner.run(command), result.terminationReason == .exited,
+            result.exitStatus == 0
+        else { return false }
+        await scan()
+        return items.first { $0.id == item.id }?.isEnabled == enabled
     }
 
     // MARK: - Scanning
