@@ -1,14 +1,19 @@
 # Project status and handoff
 
-_Last updated: 2026-10-28 (1.0.0 on `main`, plus fixes found while verifying it on the work Mac)._
+_Last updated: 2026-10-31 (release candidate on `main`, ready for team review)._
 
 Read this first when you pick the project up on another Mac. It says where the work stands, how to get running, and what to do next.
 
 ## Where we are
 
-**Version 1.0.0 is feature-complete and merged into `main`** (PR #1, branch `feat/gap-fixes-and-helper`). Every milestone M0–M16 is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). **`scripts/check.sh --ui` passes on the work Mac (2026-10-28):** format, 718 package tests, Release build, 7 UI tests (navigation in English and Arabic × light and dark, accessibility audit in light and dark). The earlier "UI tests passed" claim of 2026-10-27 was made before the menu bar extra landed, and the app froze at launch after that (see below).
+**Version 1.0.0 is a release candidate on `main`, ready for team review.** Every milestone M0–M16 and every owner feedback round (2026-10-28 to 2026-10-31) is built end to end (engine, safety, UI, English and Arabic, tests), except CL-11 (see below). Verified on 2026-10-31:
 
-**Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. A notarised, stapled `.build/release/Clenvra-1.0.0.dmg` was built from `7fadb0a` on 2026-10-29 (local build output, not in git; `stapler validate` and `spctl` both pass). It predates the page-pattern work of the same day, so rebuild with `scripts/release.sh` before publishing.
+- `scripts/check.sh`: format, 899 package tests, Release build (no warnings).
+- `scripts/ui-tests-vm.sh`: every page in English and Arabic × light and dark, the accessibility audit in light and dark, search on every page, the sidebar and the permissions guide.
+- `scripts/e2e-helper.sh`: the notarised app in a throwaway VM installs and approves the helper, disables a Mac-wide startup daemon, and uninstalls a `.pkg` app completely (root files and installer record), one administrator password per action.
+- GitHub CI is green.
+
+**Not yet released.** There is no `v1.0.0` tag or GitHub Release yet. Build the DMG with `scripts/release.sh` from the reviewed commit.
 
 **CI** runs `scripts/check.sh` on GitHub's `xcode-27` runner (macOS 27, Xcode 27). UI tests run only locally: hosted runners have no GUI session with Accessibility permission.
 
@@ -46,12 +51,12 @@ Plan: [`superpowers/specs/2026-10-28-ui-redesign-design.md`](superpowers/specs/2
 
 - **Sidebar:** Developer (Junk · Tools) and **Clutter** (Large & Old · Downloads · Duplicates · Similar Photos) are one row each, with a switcher in the toolbar centre; the row reopens the tab used last. The sidebar button shrinks the sidebar to an icon strip; View › Hide Sidebar still hides it.
 - **Toolbar:** icon-only buttons everywhere (`ToolbarLabel`), with Settings › General › Toolbar › Show names with icons. Expand All / Collapse All on every grouped page; Scan and Stop are one button (`ScanButton`).
-- **No toolbar reloads:** replacing a page's list (Scan prompt → progress → results) made SwiftUI rebuild the whole toolbar 2–3 times per scan (measured with the debug `-ClenvraUIDiagnostics <file>` log). Every list page now keeps its list and draws those states over it (`pageState`). Similar Photos is the exception (see its comment).
+- **No toolbar reloads:** replacing a page's list (Scan prompt → progress → results) made SwiftUI rebuild the whole toolbar 2–3 times per scan. Every list page now keeps its list and draws those states over it (`pageState`). Similar Photos is the exception (see its comment).
 - **Details panel:** drawn by the page (`detailsPanel`), not `.inspector`: on macOS 27 the system inspector inside the split view's detail column collapses the sidebar for a moment every time it opens (seen in screen recordings on the owner's Mac; the macOS 26 VM does not show it). ⌃⌘I toggles it.
 - **Applications** is a full-width table; the app's review opens in the details panel when an app is chosen.
 - **Disk bars** only on Space Map; Large & Old has a Scan Location menu in the toolbar.
 - **Security links** use the current System Settings pane IDs (`SystemSettingsPane`, tested against the installed panes). macOS has no link to the Firewall page, so that button opens Network and says to choose Firewall.
-- **Debugging UI on macOS 27:** `UIDiagnosticsProbeUITests` (opt-in, `CLENVRA_PROBE=1`) fails on purpose so Xcode keeps a screen recording; run it on a macOS 27 Mac when a visual bug does not show in the VM. `CLENVRA_AUDIT_SECTIONS=a,b` limits the accessibility audit to some pages.
+- **Accessibility audit of some pages only:** `CLENVRA_AUDIT_SECTIONS=a,b`.
 
 ### Gap features (2026-10-30)
 
@@ -76,6 +81,15 @@ Six features from `docs/product/feature-gaps.md`, built by six OpenCode agents i
   folders and fakes, and `scripts/e2e-gap-features.sh`, which seeds a throwaway clone of the UI-test VM
   (trashed app, second drive, generated photos) and checks the files on disk afterwards.
 
+### Owner feedback rounds (2026-10-31)
+
+- **Applications:** multi-select and batch Uninstall; Uninstall is permanent and complete (root files through the helper, Homebrew `--zap`, installer records forgotten), with an optional backup first; backups of the whole app or its settings only, restored per item.
+- **Grouped lists:** Large & Old (by kind), Leftovers (by app), Developer Tools (by category), with collapse and expand.
+- **Startup Items:** Disable and Enable (Mac-wide items through the helper), Remove for own agents and orphaned Mac-wide items; when the helper is missing or out of date the page asks to install or update it. Apple and managed items explain why they cannot be changed.
+- **Extensions:** third-party app extensions can be turned off and on (`pluginkit -e`); the details panel explains how to turn off or remove each kind.
+- **Permissions:** Revoke for any app; **Similar Photos:** pre-selected suggestions and a side-by-side comparison; **Processes:** icons and details; **search** on every page and app-wide on Overview.
+- **Sidebar:** the sidebar button brings back a sidebar hidden with View › Hide Sidebar.
+
 ### Fixed on 2026-10-28 (work Mac verification)
 
 - **Launch freeze (serious, also hit real users):** `MenuBarExtra(isInserted:)` was bound to `@AppStorage`. MenuBarExtra writes the binding back on every scene update, so the App body re-ran forever: main thread at 100%, memory over 1 GB, beach ball, UI tests failing with "has not loaded accessibility". It happened on most launches, not all. Fixed in `1024588`; found by bisecting to `55ec750`. **Rule: never bind `MenuBarExtra(isInserted:)` without dropping no-op writes, and never put `.task` or state writes in menu-style menu bar content.**
@@ -96,8 +110,8 @@ Six features from `docs/product/feature-gaps.md`, built by six OpenCode agents i
 
 ## Next steps, in order
 
-0. **Unlocked Mac:** run `scripts/check.sh --ui`, then `scripts/release.sh`. Confirm `xcrun stapler validate .build/release/Clenvra-1.0.0.dmg` and `spctl -a -t open --context context:primary-signature -v` on the DMG both pass.
-1. **Helper end to end on a real Mac:** install the DMG into /Applications, Settings › System Helper › Install, approve in System Settings › General › Login Items, press Check. Then try Cleanup › System Caches (one item), Put Back from Activity, and System › Snapshots.
+0. **Team review** of `main`, then `scripts/release.sh`. Confirm `xcrun stapler validate .build/release/Clenvra-1.0.0.dmg` and `spctl -a -t open --context context:primary-signature -v` on the DMG both pass.
+1. **Owner test on a real Mac:** install the DMG, Overview › Update Helper (or Settings › System Helper › Install), then try Uninstall, Startup Items and Extensions on items the owner chooses.
 2. **People, not code:** a VoiceOver pass and a native Arabic review of the strings.
 3. **Other Macs:** a run on a managed (MDM) Mac, a Mac without developer tools, and macOS 26 in a VM; a Release-build benchmark (see `testing/benchmarks.md`).
 4. **Publish:** tag `v1.0.0` on `main`, attach the notarised DMG to a GitHub Release (ask the owner first; it is public).
