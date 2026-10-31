@@ -5,15 +5,20 @@ public enum LargeFileGrouping: Sendable, Hashable, CaseIterable {
     case kind, folder, age
 }
 
-/// What a large file is, by its extension.
+/// What a large file is: by its extension, else by where it is (developer folders, caches).
 public enum LargeFileKind: Sendable, Hashable, CaseIterable {
-    case video, image, archive, diskImage, app, document, other
+    case video, image, audio, archive, diskImage, app, document, developer, cache, other
 
     private static let extensions: [LargeFileKind: Set<String>] = [
         .video: ["mov", "mp4", "m4v", "avi", "mkv", "webm", "mpg", "mpeg", "wmv", "flv", "mts", "m2ts", "3gp"],
         .image: [
             "png", "jpg", "jpeg", "heic", "heif", "gif", "tif", "tiff", "webp", "bmp", "svg", "raw", "dng", "cr2",
             "cr3", "nef", "arw", "psd", "exr",
+        ],
+        .audio: ["mp3", "m4a", "aac", "wav", "aiff", "aif", "flac", "alac", "ogg", "opus", "caf", "logicx"],
+        .developer: [
+            "dylib", "a", "o", "so", "jar", "aar", "war", "class", "pack", "idx", "wasm", "node", "dex", "pdb",
+            "xcarchive", "dsym",
         ],
         .archive: ["zip", "tar", "gz", "tgz", "bz2", "tbz", "xz", "txz", "rar", "7z", "zst", "lz", "lzma", "cpio"],
         .diskImage: ["dmg", "iso", "img", "sparseimage", "sparsebundle", "vmdk", "vdi", "qcow2", "vhd", "vhdx"],
@@ -24,10 +29,26 @@ public enum LargeFileKind: Sendable, Hashable, CaseIterable {
         ],
     ]
 
+    /// Folders whose files are build output, dependencies or debug data.
+    private static let developerFolders = [
+        "/.git/", "/node_modules/", "/Library/Developer/", ".dSYM/", "/DerivedData/", "/.gradle/", "/Pods/",
+        "/.build/", "/target/debug/", "/target/release/",
+    ]
+    private static let cacheFolders = ["/Library/Caches/", "/.cache/", "/Caches/"]
+
     public static func classify(name: String) -> LargeFileKind {
         let ext = (name as NSString).pathExtension.lowercased()
         guard !ext.isEmpty else { return .other }
         return allCases.first { extensions[$0]?.contains(ext) == true } ?? .other
+    }
+
+    /// The extension decides first; a file it does not place is a developer file or a cache by its folder.
+    public static func classify(path: String) -> LargeFileKind {
+        let byName = classify(name: (path as NSString).lastPathComponent)
+        guard byName == .other else { return byName }
+        if developerFolders.contains(where: path.contains) { return .developer }
+        if cacheFolders.contains(where: path.contains) { return .cache }
+        return .other
     }
 }
 
@@ -117,7 +138,7 @@ public enum LargeFileGroups {
         of file: StorageItem, by grouping: LargeFileGrouping, root: String, now: Date
     ) -> LargeFileGroup.Key {
         switch grouping {
-        case .kind: .kind(LargeFileKind.classify(name: file.name))
+        case .kind: .kind(LargeFileKind.classify(path: file.path))
         case .age: .age(LargeFileAgeBucket.of(file.modificationDate, now: now))
         case .folder: .folder(topFolder(of: file.path, root: root))
         }

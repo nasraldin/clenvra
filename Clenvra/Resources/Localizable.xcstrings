@@ -3214,6 +3214,16 @@
         }
       }
     },
+    "Caches": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذاكرة المؤقتة"
+          }
+        }
+      }
+    },
     "Caches shared by all users, outside your home folder. Removed through the System Helper, into your Trash.": {
       "localizations": {
         "ar": {
@@ -4323,6 +4333,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أدوات المطوّر"
+          }
+        }
+      }
+    },
+    "Developer Files": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملفات المطوّرين"
           }
         }
       }

@@ -321,10 +321,13 @@ extension LargeFileKind {
         switch self {
         case .video: "Videos"
         case .image: "Images"
+        case .audio: "Audio"
         case .archive: "Archives"
         case .diskImage: "Disk Images"
         case .app: "Apps"
         case .document: "Documents"
+        case .developer: "Developer Files"
+        case .cache: "Caches"
         case .other: "Other"
         }
     }
@@ -333,10 +336,13 @@ extension LargeFileKind {
         switch self {
         case .video: "film"
         case .image: "photo"
+        case .audio: "music.note"
         case .archive: "archivebox"
         case .diskImage: "opticaldiscdrive"
         case .app: "app"
         case .document: "doc.text"
+        case .developer: "hammer"
+        case .cache: "clock.arrow.circlepath"
         case .other: "doc"
         }
     }

@@ -88,4 +88,22 @@ struct LargeFileGroupsTests {
         #expect(LargeFileKind.classify(name: "backup.tar.gz") == .archive)
         #expect(LargeFileKind.classify(name: "noextension") == .other)
     }
+
+    @Test("developer files, caches and audio get their own kind, by name and by where they are")
+    func kindByLocation() {
+        let home = "/Users/me"
+        #expect(LargeFileKind.classify(path: home + "/sdk/lib/libclang.dylib") == .developer)
+        #expect(LargeFileKind.classify(path: home + "/flutter/bin/cache/artifacts/flutter.jar") == .developer)
+        #expect(LargeFileKind.classify(path: home + "/repo/.git/objects/pack/pack-1a2b.pack") == .developer)
+        #expect(
+            LargeFileKind.classify(path: home + "/x/App.app.dSYM/Contents/Resources/DWARF/App") == .developer)
+        #expect(LargeFileKind.classify(path: home + "/web/node_modules/esbuild/bin/esbuild") == .developer)
+        #expect(LargeFileKind.classify(path: home + "/Library/Developer/Xcode/DerivedData/a/b.o") == .developer)
+        #expect(LargeFileKind.classify(path: home + "/Library/Caches/Homebrew/downloads/abc--claude") == .cache)
+        #expect(LargeFileKind.classify(path: home + "/.cache/huggingface/model.bin") == .cache)
+        #expect(LargeFileKind.classify(path: home + "/Music/song.FLAC") == .audio)
+        // The file's own kind wins over where it is: a video in a cache folder is still a video.
+        #expect(LargeFileKind.classify(path: home + "/Library/Caches/x/clip.mp4") == .video)
+        #expect(LargeFileKind.classify(path: home + "/Downloads/noextension") == .other)
+    }
 }
