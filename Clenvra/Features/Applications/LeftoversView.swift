@@ -2,19 +2,22 @@ import AppKit
 import ClenvraKit
 import SwiftUI
 
-/// Files left behind by apps that are no longer installed: a table with a checkbox per item, details and evidence in
-/// the inspector, and one Move to Trash action. Nothing here is ever selected automatically.
+/// Files left behind by apps that are no longer installed, grouped by the app they belonged to: a table of collapsible
+/// groups with a checkbox per item and per group, details and evidence in the inspector, and one Move to Trash action.
+/// Nothing here is ever selected automatically.
 struct LeftoversView: View {
     let session: AppsSession
 
-    @State private var highlighted: Set<OwnedItem.ID> = []
-    @State private var sortOrder = [KeyPathComparator(\OwnedItem.reclaimableSize, order: .reverse)]
+    @State private var highlighted: Set<LeftoverRow.ID> = []
+    @State private var sortOrder = [KeyPathComparator(\LeftoverRow.size, order: .reverse)]
     @State private var searchText = ""
     private var query: String { AppSearch.normalized(searchText) }
     @State private var showsInspector = false
     @State private var isConfirming = false
     @State private var shownSummary: ShownLeftoverSummary?
     @State private var scanned: Date?
+    /// Groups the person closed, remembered across launches.
+    private let groups = ExpandedGroups("leftovers")
 
     var body: some View {
         content
@@ -63,7 +66,7 @@ struct LeftoversView: View {
         table
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(AppSection.leftovers.title))
-            .pageState(isShown: rows.isEmpty) { state }
+            .pageState(isShown: visibleGroups.isEmpty) { state }
     }
 
     @ViewBuilder private var state: some View {
@@ -104,48 +107,64 @@ struct LeftoversView: View {
     }
 
     private var table: some View {
-        Table(rows, selection: $highlighted, sortOrder: $sortOrder) {
-            TableColumn(Text("Name"), value: \.name) { item in
+        Table(of: LeftoverRow.self, selection: $highlighted, sortOrder: $sortOrder) {
+            TableColumn(Text("Name"), value: \.name) { row in
                 HStack(spacing: 6) {
-                    Toggle(isOn: checkedBinding(item)) {
-                        Text("Include \(item.name)")
+                    checkbox(for: row)
+                    if let item = row.item {
+                        FileNameCell(name: item.name, path: item.path)
+                    } else {
+                        LeftoverGroupNameCell(row: row)
                     }
-                    .toggleStyle(.checkbox)
-                    .labelsHidden()
-                    .disabled(!session.isSelectable(item))
-                    FileNameCell(name: item.name, path: item.path)
                 }
             }
             .width(min: 220, ideal: 320)
 
-            TableColumn(Text("Kind")) { item in
-                Text(item.kind.title)
-                    .foregroundStyle(.secondary)
+            TableColumn(Text("Kind")) { row in
+                if let item = row.item {
+                    Text(item.kind.title)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("\(row.itemCount) items")
+                        .foregroundStyle(.secondary)
+                }
             }
             .width(min: 90, ideal: 130)
 
-            TableColumn(Text("Size"), value: \.reclaimableSize) { item in
-                SizeText(bytes: item.reclaimableSize)
+            TableColumn(Text("Size"), value: \.size) { row in
+                SizeText(bytes: row.size)
+                    .fontWeight(row.item == nil ? .semibold : .regular)
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .width(min: 70, ideal: 90)
 
-            TableColumn(Text("Modified"), value: \.modifiedSort) { item in
-                DateCell(date: item.modificationDate)
+            TableColumn(Text("Modified"), value: \.modifiedSort) { row in
+                DateCell(date: row.modifiedSort)
             }
             .width(min: 90, ideal: 110)
+        } rows: {
+            ForEach(visibleGroups) { group in
+                DisclosureTableRow(LeftoverRow(group: group), isExpanded: expandedBinding(group.id)) {
+                    ForEach(group.items.map(LeftoverRow.init(item:)).sorted(using: sortOrder)) { row in
+                        TableRow(row)
+                    }
+                }
+            }
         }
-        .contextMenu(forSelectionType: OwnedItem.ID.self) { ids in
-            FileActionsMenu(paths: ids.sorted()) {
+        // Group rows already separate the list; grey stripes under short names fall below readable contrast.
+        .alternatingRowBackgrounds(.disabled)
+        .contextMenu(forSelectionType: LeftoverRow.ID.self) { ids in
+            let items = items(for: ids)
+            FileActionsMenu(paths: items.map(\.path)) {
                 highlighted = ids
                 showsInspector = true
             }
-            let items = session.leftovers.filter { ids.contains($0.id) && session.isSelectable($0) }
-            if !items.isEmpty {
+            let selectable = items.filter { session.isSelectable($0) }
+            if !selectable.isEmpty {
                 Divider()
-                let allChecked = items.allSatisfy { session.leftoverSelection.contains($0.path) }
+                let allChecked = selectable.allSatisfy { session.leftoverSelection.contains($0.path) }
                 Button {
-                    for item in items where session.leftoverSelection.contains(item.path) == allChecked {
+                    for item in selectable where session.leftoverSelection.contains(item.path) == allChecked {
                         session.toggleLeftover(item.path)
                     }
                 } label: {
@@ -159,8 +178,28 @@ struct LeftoversView: View {
         .disabled(session.isWorking)
     }
 
+    @ViewBuilder private func checkbox(for row: LeftoverRow) -> some View {
+        if let item = row.item {
+            Toggle(isOn: checkedBinding(item)) {
+                Text("Include \(item.name)")
+            }
+            .toggleStyle(.checkbox)
+            .labelsHidden()
+            .disabled(!session.isSelectable(item))
+        } else {
+            // Only the items of this group the search shows, and only those that can be removed.
+            let bindings = row.children.filter { session.isSelectable($0) }.map(checkedBinding)
+            Toggle(sources: bindings, isOn: \.self) {
+                Text("Include all \(row.title)")
+            }
+            .toggleStyle(.checkbox)
+            .labelsHidden()
+            .disabled(bindings.isEmpty)
+        }
+    }
+
     @ViewBuilder private var inspector: some View {
-        let items = session.leftovers.filter { highlighted.contains($0.id) }
+        let items = items(for: highlighted)
         if items.count == 1, let item = items.first {
             ItemInspector(name: item.name, path: item.path) {
                 Section {
@@ -221,6 +260,9 @@ struct LeftoversView: View {
             .help(Text("Look for leftovers again (⌘R)"))
             .disabled(isBusy)
 
+            ExpandAllButton(allExpanded: groups.allBinding(allGroups.map(\.id)))
+                .disabled(session.leftovers.isEmpty)
+
             Menu {
                 Button {
                     Task {
@@ -253,14 +295,32 @@ struct LeftoversView: View {
 
     // MARK: - Data
 
-    private var rows: [OwnedItem] {
-        let matching =
-            query.isEmpty
-            ? session.leftovers
-            : session.leftovers.filter {
+    /// Every leftover, grouped by the app it belonged to.
+    private var allGroups: [LeftoverGroup] { LeftoverGroups.groups(session.leftovers) }
+
+    /// Groups with at least one item matching the search, holding only those items. A search for the app's own name
+    /// shows its whole group.
+    private var visibleGroups: [LeftoverGroup] {
+        let all = allGroups
+        guard !query.isEmpty else { return all }
+        return all.compactMap { group in
+            if let name = group.name, AppSearch.matches(query, name) { return group }
+            let items = group.items.filter {
                 AppSearch.matches(query, any: [$0.name, $0.path, String(localized: $0.kind.title)])
             }
-        return matching.sorted(using: sortOrder)
+            return items.isEmpty ? nil : LeftoverGroup(owner: group.owner, name: group.name, items: items)
+        }
+    }
+
+    /// The leftovers behind highlighted rows; a group row stands for the items it shows.
+    private func items(for ids: Set<LeftoverRow.ID>) -> [OwnedItem] {
+        let groupItems = visibleGroups.filter { ids.contains(LeftoverRow.groupID($0)) }.flatMap(\.items)
+        let paths = Set(groupItems.map(\.path))
+        return groupItems + session.leftovers.filter { ids.contains($0.id) && !paths.contains($0.path) }
+    }
+
+    private func expandedBinding(_ id: String) -> Binding<Bool> {
+        groups.binding(id) { allGroups.map(\.id) }
     }
 
     private func checkedBinding(_ item: OwnedItem) -> Binding<Bool> {
@@ -269,6 +329,69 @@ struct LeftoversView: View {
             set: { checked in
                 if session.leftoverSelection.contains(item.path) != checked { session.toggleLeftover(item.path) }
             })
+    }
+}
+
+/// One table row: an app's group (with its leftovers as children) or one leftover. Plain data, not tied to the main
+/// actor, so the table can sort by its key paths.
+nonisolated struct LeftoverRow: Identifiable, Sendable {
+    let id: String
+    let item: OwnedItem?
+    /// The group's items the search shows; empty for an item row.
+    let children: [OwnedItem]
+    /// The app's name or bundle identifier; `nil` for an item row or the unknown-app group.
+    let groupName: String?
+    let name: String
+    let size: Int64
+    let modifiedSort: Date
+    let itemCount: Int
+
+    static func groupID(_ group: LeftoverGroup) -> String { "group:" + group.id }
+
+    init(group: LeftoverGroup) {
+        id = Self.groupID(group)
+        item = nil
+        children = group.items
+        groupName = group.name
+        name = group.name ?? ""  // Group rows are not sorted.
+        size = group.totalBytes
+        modifiedSort = group.items.compactMap(\.modificationDate).max() ?? .distantPast
+        itemCount = group.items.count
+    }
+
+    init(item: OwnedItem) {
+        id = item.id
+        self.item = item
+        children = []
+        groupName = nil
+        name = item.name
+        size = item.reclaimableSize
+        modifiedSort = item.modifiedSort
+        itemCount = 1
+    }
+}
+
+extension LeftoverRow {
+    /// The group's title: the app, or "Unknown app".
+    @MainActor var title: Text {
+        if let groupName { Text(verbatim: groupName) } else { Text("Unknown app") }
+    }
+}
+
+/// The app a group of leftovers belonged to.
+private struct LeftoverGroupNameCell: View {
+    let row: LeftoverRow
+
+    var body: some View {
+        Label {
+            row.title
+                .fontWeight(.semibold)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        } icon: {
+            Image(systemName: row.groupName == nil ? "questionmark.app.dashed" : "app.dashed")
+        }
+        .help(Text(verbatim: row.groupName ?? ""))
     }
 }
 
