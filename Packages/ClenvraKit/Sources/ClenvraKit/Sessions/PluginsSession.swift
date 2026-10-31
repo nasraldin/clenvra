@@ -14,7 +14,7 @@ public final class PluginsSession {
     }
 
     /// Items of one kind, by name; only kinds with visible items are present.
-    public struct Group: Sendable, Identifiable {
+    public struct Group: Sendable, Identifiable, Equatable {
         public var id: PluginItem.Kind { kind }
         public let kind: PluginItem.Kind
         public let items: [PluginItem]
@@ -32,16 +32,45 @@ public final class PluginsSession {
         didSet { regroup() }
     }
 
+    /// Which apps are open and how to quit one, so an extension's app can be closed before the user removes it.
+    /// The app passes `NSWorkspace` / `NSRunningApplication`; tests pass fakes.
+    public struct AppControl: Sendable {
+        /// Bundle paths of the apps running now.
+        public var runningAppPaths: @MainActor @Sendable () -> Set<String>
+        /// Asks the app at the bundle path to quit (`force`: terminate at once); `true` when the request was accepted.
+        public var quit: @MainActor @Sendable (_ appPath: String, _ force: Bool) -> Bool
+
+        public init(
+            runningAppPaths: @escaping @MainActor @Sendable () -> Set<String>,
+            quit: @escaping @MainActor @Sendable (_ appPath: String, _ force: Bool) -> Bool
+        ) {
+            self.runningAppPaths = runningAppPaths
+            self.quit = quit
+        }
+
+        /// Never reports a running app and never quits anything.
+        public static let none = AppControl(runningAppPaths: { [] }, quit: { _, _ in false })
+    }
+
+    /// Bundle paths (no trailing slash) of the apps open at the last scan or refresh.
+    public private(set) var runningApps: Set<String> = []
+    /// Apps whose polite quit request was refused, so the UI offers Force Quit next.
+    public private(set) var failedPoliteQuits: Set<String> = []
+
     private let reader: PluginReader
     private let deleter: DeletionExecutor
     private let executor: FSExecutor
+    private let apps: AppControl
     private var items: [PluginItem] = []
     private var itemsByID: [String: PluginItem] = [:]
 
-    public init(reader: PluginReader, deleter: DeletionExecutor, executor: FSExecutor = .shared) {
+    public init(
+        reader: PluginReader, deleter: DeletionExecutor, executor: FSExecutor = .shared, apps: AppControl = .none
+    ) {
         self.reader = reader
         self.deleter = deleter
         self.executor = executor
+        self.apps = apps
     }
 
     // MARK: - Scanning
@@ -54,7 +83,55 @@ public final class PluginsSession {
         itemsByID = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         selection = selection.filter { itemsByID[$0]?.handling == .removable }
         regroup()
+        refreshRunningApps()
         phase = .ready
+    }
+
+    // MARK: - Containing apps
+
+    /// Re-reads which apps are open (call when an app launches or quits).
+    public func refreshRunningApps() {
+        let running = Set(apps.runningAppPaths().map(Self.normalized))
+        if running != runningApps { runningApps = running }
+        let stillFailed = failedPoliteQuits.intersection(running)
+        if stillFailed != failedPoliteQuits { failedPoliteQuits = stillFailed }
+    }
+
+    /// The open app the item ships in, when it may be quit here: never for security or management software, nor
+    /// for apps that are part of macOS (`/System`).
+    public func runningApp(for item: PluginItem) -> String? {
+        guard item.handling != .managed, let app = item.containingApp.map(Self.normalized),
+            Self.isQuittable(app), runningApps.contains(app)
+        else { return nil }
+        return app
+    }
+
+    /// Whether the last polite quit of the app was refused, so Force Quit is the next step.
+    public func needsForceQuit(_ appPath: String) -> Bool {
+        failedPoliteQuits.contains(Self.normalized(appPath))
+    }
+
+    /// Asks an open app to quit (`force`: terminate it at once, unsaved work is lost). Only apps that are running and
+    /// not part of macOS are asked. Returns whether the request was accepted; the app may take a moment to exit.
+    @discardableResult
+    public func quitApp(_ appPath: String, force: Bool) -> Bool {
+        let app = Self.normalized(appPath)
+        refreshRunningApps()
+        guard Self.isQuittable(app), runningApps.contains(app) else { return false }
+        let accepted = apps.quit(app, force)
+        if !force, !accepted { failedPoliteQuits.insert(app) }
+        if accepted { failedPoliteQuits.remove(app) }
+        return accepted
+    }
+
+    private static func isQuittable(_ appPath: String) -> Bool {
+        appPath.hasSuffix(".app") && !appPath.hasPrefix("/System/")
+    }
+
+    private static func normalized(_ path: String) -> String {
+        var path = path
+        while path.count > 1, path.hasSuffix("/") { path.removeLast() }
+        return path
     }
 
     private func regroup() {

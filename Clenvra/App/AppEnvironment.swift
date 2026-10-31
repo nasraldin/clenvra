@@ -48,7 +48,7 @@ final class AppEnvironment {
         forceTerminator: { pid in NSRunningApplication(processIdentifier: pid)?.forceTerminate() ?? false })
     /// Plug-in bundles are not apps, so no owner check applies; the gate still checks identity and protection.
     @ObservationIgnored private(set) lazy var pluginsSession = PluginsSession(
-        reader: PluginReader(home: home), deleter: makeDeleter { _ in .notRunning })
+        reader: PluginReader(home: home), deleter: makeDeleter { _ in .notRunning }, apps: .live)
     @ObservationIgnored private(set) lazy var activitySession = ActivitySession(
         activityLog: activityLog, reenabler: LaunchAgentReenabler(runner: ProcessCommandRunner()), privileged: helper)
     @ObservationIgnored private(set) lazy var startupSession = StartupSession(
