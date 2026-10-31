@@ -25,12 +25,6 @@ public struct LeftoverGroup: Sendable, Hashable, Identifiable {
 
     public var totalBytes: Int64 { items.reduce(0) { $0 + $1.reclaimableSize } }
 
-    /// Paths of this group's items that may be selected, in list order. The caller passes the items it shows
-    /// (after search) through `isSelectable`, so a group checkbox selects only visible, removable items.
-    public func selectablePaths(_ isSelectable: (OwnedItem) -> Bool) -> [String] {
-        items.filter(isSelectable).map(\.path)
-    }
-
     public init(owner: Owner, name: String?, items: [OwnedItem]) {
         self.owner = owner
         self.name = name

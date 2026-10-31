@@ -81,7 +81,6 @@ struct ClenvraApp: App {
     /// Debug builds only.
     private static func placeOnMainDisplayForUITests() {
         #if DEBUG
-            UIDiagnostics.start()
             guard UserDefaults.standard.bool(forKey: "ClenvraUITestMainDisplay"),
                 let screen = NSScreen.screens.first
             else { return }

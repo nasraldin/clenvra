@@ -299,8 +299,6 @@ struct AppInventoryTests {
         try #require(codesign.terminationStatus == 0)
 
         #expect(AppInventory.applicationGroups(of: bundle) == ["ABCDE12345.com.example.shared"])
-        let resolved = try #require(app("A/Signed.app")).withApplicationGroups()
-        #expect(resolved.applicationGroups == ["ABCDE12345.com.example.shared"])
     }
 
     @Test("last used date is nil for a bundle Spotlight has never seen opened")

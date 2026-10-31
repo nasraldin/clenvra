@@ -60,7 +60,6 @@ struct BrowserDataSessionTests {
         #expect(session.selection == [path(root + "/History"), path(root + "/Cookies")])
         session.setSelected(false, browser: .chrome, dataType: .history)
         #expect(session.selection == [path(root + "/Cookies")])
-        #expect(session.selectedWarnings.allSatisfy { $0.contains("sign") })
     }
 
     @Test("dry run and cleaning use the deletion executor and preserve unselected data")

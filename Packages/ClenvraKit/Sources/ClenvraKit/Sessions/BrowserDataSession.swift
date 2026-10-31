@@ -29,15 +29,6 @@ public final class BrowserDataSession {
         selection.reduce(0) { $0 + (itemsByPath[$1]?.candidate.reclaimableSize ?? 0) }
     }
 
-    /// Warnings for the selected types, for the confirmation sheet to show before any Trash operation.
-    public var selectedWarnings: [String] {
-        var seen: Set<String> = []
-        return selection.sorted().compactMap { path in
-            guard let warning = itemsByPath[path]?.warning, seen.insert(warning).inserted else { return nil }
-            return warning
-        }
-    }
-
     public init(
         home: String, policy: ProtectionPolicy, ownerState: @escaping @Sendable (String) -> OwnerState,
         deleter: DeletionExecutor, executor: FSExecutor = .shared

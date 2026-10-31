@@ -59,14 +59,4 @@ struct LeftoverGroupsTests {
         #expect(groups.last?.items.count == 2)
         #expect(groups.last?.name == nil)
     }
-
-    @Test func groupSelectionIncludesOnlyGivenRemovableItems() {
-        let removable = item("/L/Caches/com.a.App", size: 1, evidence: [.exactBundleIdentifierPath("com.a.App")])
-        let system = item(
-            "/Library/Caches/com.a.App", size: 2, evidence: [.exactBundleIdentifierPath("com.a.App")],
-            handling: .revealOnly)
-        let group = LeftoverGroups.groups([removable, system])[0]
-
-        #expect(group.selectablePaths { $0.handling == .removable } == [removable.path])
-    }
 }

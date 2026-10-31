@@ -51,20 +51,4 @@ public struct InstalledApp: Sendable, Hashable, Identifiable {
         self.embeddedBundleIdentifiers = embeddedBundleIdentifiers
         self.applicationGroups = applicationGroups
     }
-
-    /// A copy with `applicationGroups` read from the signature, for callers that need group containers.
-    public func withApplicationGroups() -> InstalledApp {
-        InstalledApp(
-            id: id,
-            url: url,
-            bundleIdentifier: bundleIdentifier,
-            name: name,
-            version: version,
-            build: build,
-            source: source,
-            isProtected: isProtected,
-            embeddedBundleIdentifiers: embeddedBundleIdentifiers,
-            applicationGroups: AppInventory.applicationGroups(of: id)
-        )
-    }
 }
