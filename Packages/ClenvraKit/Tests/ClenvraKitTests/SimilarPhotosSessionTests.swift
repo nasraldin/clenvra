@@ -78,7 +78,8 @@ struct SimilarPhotosSessionTests {
         FileManager.default.fileExists(atPath: path(relative))
     }
 
-    /// Keep-one rule: every group keeps at least one image, and nothing outside the groups is marked.
+    /// Keep-one rule: every group keeps at least one image, its keeper is never marked, and nothing that is not
+    /// shown is marked.
     private func expectEveryGroupKeepsAnImage(
         _ session: SimilarPhotosSession, sourceLocation: SourceLocation = #_sourceLocation
     ) {
@@ -86,8 +87,9 @@ struct SimilarPhotosSessionTests {
             #expect(
                 group.photos.contains { !session.isMarked($0.path) }, "group \(group.id) has every image marked",
                 sourceLocation: sourceLocation)
+            #expect(!session.isMarked(session.keeper(of: group)), sourceLocation: sourceLocation)
         }
-        let shown = Set(session.groups.flatMap { $0.photos.map(\.path) })
+        let shown = Set(session.groups.flatMap { $0.photos.map(\.path) } + session.lowQualityPhotos.map(\.path))
         #expect(session.marked.isSubset(of: shown), sourceLocation: sourceLocation)
     }
 
@@ -117,8 +119,13 @@ struct SimilarPhotosSessionTests {
 
     // MARK: - Scanning
 
-    @Test("scanning groups similar pictures, suggests a keeper and marks nothing")
-    func scanMarksNothing() async throws {
+    /// Every image except each group's suggested keeper.
+    private var suggestedMarks: Set<String> {
+        [path("Desktop/landscape.jpg"), path("Downloads/landscape.jpg"), path("Pictures/board.png")]
+    }
+
+    @Test("scanning groups similar pictures, suggests a keeper and selects every other photo")
+    func scanPreselectsAllButKeepers() async throws {
         let session = await scanned()
 
         #expect(session.phase == .ready)
@@ -129,10 +136,30 @@ struct SimilarPhotosSessionTests {
         let board = try #require(group(session, containing: "Pictures/board.png"))
         // Same pixel count: the newer image is suggested.
         #expect(board.suggestedKeeper == path("Documents/board.jpg"))
-        #expect(session.marked.isEmpty)
-        #expect(session.markedCount == 0)
-        #expect(session.markedBytes == 0)
+        #expect(session.keeper(of: landscape) == landscape.suggestedKeeper)
+        #expect(session.keeper(of: board) == board.suggestedKeeper)
+        #expect(session.marked == suggestedMarks)
+        #expect(!session.isMarked(landscape.suggestedKeeper) && !session.isMarked(board.suggestedKeeper))
+        #expect(session.markedBytes == session.groups.reduce(0) { $0 + $1.reclaimableIfOthersRemoved })
         #expect(session.scannedRoots == ["Pictures", "Desktop", "Downloads", "Documents"].map(path))
+        expectEveryGroupKeepsAnImage(session)
+    }
+
+    @Test("blurry or dark photos are pre-selected too, except one that is a group's keeper")
+    func lowQualityPreselected() async throws {
+        let session = await scanned()
+        let frames = try rated("Pictures/frames.png", score: -0.4)
+        let board = try #require(group(session, containing: "Pictures/board.png"))
+        let keeper = try #require(board.photos.first { $0.path == board.suggestedKeeper })
+
+        session.apply(
+            SimilarPhotoScanResult(
+                groups: session.groups, lowQuality: [frames, keeper], skipped: [:], isComplete: true),
+            roots: session.scannedRoots)
+
+        #expect(session.marked == suggestedMarks.union([frames.path]))
+        #expect(!session.isMarked(keeper.path))
+        expectEveryGroupKeepsAnImage(session)
     }
 
     @Test("the distance threshold is passed to the scan")
@@ -190,52 +217,97 @@ struct SimilarPhotosSessionTests {
 
     // MARK: - Marking
 
-    @Test("opting in marks every image except each group's suggested keeper")
-    func markAllButSuggested() async {
+    @Test("Clear Selection keeps every photo; Select Suggested selects every photo but each keeper again")
+    func clearAndSelectSuggested() async throws {
         let session = await scanned()
+        let frames = try rated("Pictures/frames.png", score: -0.4)
+        session.apply(
+            SimilarPhotoScanResult(groups: session.groups, lowQuality: [frames], skipped: [:], isComplete: true),
+            roots: session.scannedRoots)
 
-        session.markAllButSuggested()
+        session.clearSelection()
+        #expect(session.marked.isEmpty)
+        #expect(session.markedBytes == 0)
 
-        #expect(
-            session.marked == [
-                path("Desktop/landscape.jpg"), path("Downloads/landscape.jpg"), path("Pictures/board.png"),
-            ])
-        #expect(session.markedBytes == session.groups.reduce(0) { $0 + $1.reclaimableIfOthersRemoved })
+        session.selectSuggested()
+        #expect(session.marked == suggestedMarks.union([frames.path]))
         expectEveryGroupKeepsAnImage(session)
     }
 
-    @Test("the last kept image of a group cannot be marked")
+    @Test("Select Suggested follows the keeper the person chose")
+    func selectSuggestedUsesChosenKeeper() async throws {
+        let session = await scanned()
+        #expect(session.setKeeper(path("Downloads/landscape.jpg")))
+        session.clearSelection()
+
+        session.selectSuggested()
+
+        #expect(
+            session.marked == [
+                path("Pictures/landscape.png"), path("Desktop/landscape.jpg"), path("Pictures/board.png"),
+            ])
+        expectEveryGroupKeepsAnImage(session)
+    }
+
+    @Test("changing a group's keeper moves the selection with it and leaves other groups alone")
+    func changingKeeperMovesSelection() async throws {
+        let session = await scanned()
+        session.setMarked(false, path: path("Desktop/landscape.jpg"))
+
+        #expect(session.setKeeper(path("Downloads/landscape.jpg")))
+
+        let landscape = try #require(group(session, containing: "Pictures/landscape.png"))
+        #expect(session.keeper(of: landscape) == path("Downloads/landscape.jpg"))
+        #expect(session.isKeeper(path("Downloads/landscape.jpg")))
+        #expect(!session.isKeeper(path("Pictures/landscape.png")))
+        #expect(
+            session.marked == [
+                path("Pictures/landscape.png"), path("Desktop/landscape.jpg"), path("Pictures/board.png"),
+            ])
+        #expect(session.photosKeeperFirst(in: landscape).first?.path == path("Downloads/landscape.jpg"))
+        #expect(
+            session.keeperPhoto(comparedWith: path("Pictures/landscape.png"))?.path == path("Downloads/landscape.jpg"))
+        #expect(!session.setKeeper(path("Pictures/frames.png")))
+        expectEveryGroupKeepsAnImage(session)
+    }
+
+    @Test("the keeper and the last kept image of a group cannot be marked")
     func keepOne() async {
         let session = await scanned()
+        session.clearSelection()
 
-        #expect(session.setMarked(true, path: path("Pictures/board.png")))
+        // The keeper is never marked: choose another keeper to remove it.
         #expect(!session.canMark(path("Documents/board.jpg")))
         #expect(!session.setMarked(true, path: path("Documents/board.jpg")))
+        #expect(session.setMarked(true, path: path("Pictures/board.png")))
         #expect(session.canMark(path("Pictures/board.png")))
         #expect(session.setMarked(false, path: path("Pictures/board.png")))
         #expect(!session.setMarked(true, path: path("Pictures/frames.png")))
         expectEveryGroupKeepsAnImage(session)
     }
 
-    @Test("keep only one image marks the rest of its group and leaves other groups alone")
+    @Test("keep only one image makes it the keeper and marks the rest of its group")
     func keepOnly() async {
         let session = await scanned()
+        session.clearSelection()
 
         #expect(session.keepOnly(path("Downloads/landscape.jpg")))
 
         #expect(session.marked == [path("Pictures/landscape.png"), path("Desktop/landscape.jpg")])
+        #expect(session.isKeeper(path("Downloads/landscape.jpg")))
         session.unmarkAll()
         #expect(session.marked.isEmpty)
     }
 
-    @Test("a rescan starts with nothing marked")
-    func rescanClearsMarks() async {
+    @Test("a rescan starts again from the suggested keepers")
+    func rescanResetsSelection() async {
         let session = await scanned()
-        session.markAllButSuggested()
+        session.setKeeper(path("Downloads/landscape.jpg"))
 
         await session.scan()
 
-        #expect(session.marked.isEmpty)
+        #expect(session.marked == suggestedMarks)
+        #expect(session.isKeeper(path("Pictures/landscape.png")))
     }
 
     @Test("marks are refused while not ready")
@@ -243,7 +315,8 @@ struct SimilarPhotosSessionTests {
         let session = session()
 
         #expect(!session.setMarked(true, path: path("Desktop/landscape.jpg")))
-        session.markAllButSuggested()
+        #expect(!session.setKeeper(path("Desktop/landscape.jpg")))
+        session.selectSuggested()
         #expect(session.marked.isEmpty)
     }
 
@@ -262,7 +335,6 @@ struct SimilarPhotosSessionTests {
     @Test("marked images move to the Trash; the keeper stays and emptied groups disappear")
     func moveToTrash() async throws {
         let session = await scanned()
-        session.markAllButSuggested()
 
         let summary = await session.moveMarkedToTrash()
 
@@ -279,6 +351,7 @@ struct SimilarPhotosSessionTests {
     @Test("a group shrinks but stays while two or more images are left")
     func partialRemoval() async throws {
         let session = await scanned()
+        session.clearSelection()
         session.setMarked(true, path: path("Downloads/landscape.jpg"))
 
         await session.moveMarkedToTrash()
@@ -288,10 +361,25 @@ struct SimilarPhotosSessionTests {
         #expect(session.groups.count == 2)
     }
 
+    @Test("a chosen keeper stays the keeper after other photos of its group are removed")
+    func chosenKeeperSurvivesRemoval() async throws {
+        let session = await scanned()
+        session.setKeeper(path("Downloads/landscape.jpg"))
+        session.setMarked(false, path: path("Desktop/landscape.jpg"))
+
+        await session.moveMarkedToTrash()
+
+        #expect(exists("Downloads/landscape.jpg") && exists("Desktop/landscape.jpg"))
+        #expect(!exists("Pictures/landscape.png"))
+        let landscape = try #require(group(session, containing: "Downloads/landscape.jpg"))
+        #expect(session.keeper(of: landscape) == path("Downloads/landscape.jpg"))
+        #expect(session.photosKeeperFirst(in: landscape).first?.path == path("Downloads/landscape.jpg"))
+        expectEveryGroupKeepsAnImage(session)
+    }
+
     @Test("nothing in a group is removed when its kept image changed on disk since the scan")
     func keptImageChanged() async throws {
         let session = await scanned()
-        session.markAllButSuggested()
         try FileManager.default.removeItem(atPath: path("Documents/board.jpg"))
 
         let summary = await session.moveMarkedToTrash()
@@ -320,7 +408,8 @@ struct SimilarPhotosSessionTests {
         #expect(session.lowQualityPhotos.allSatisfy { $0.quality?.isLow == true })
         let scores = session.lowQualityPhotos.compactMap { $0.quality?.score }
         #expect(scores == scores.sorted())
-        #expect(!session.lowQualityPhotos.contains { session.isMarked($0.path) })
+        // Pre-selected, except a photo that is its group's keeper.
+        #expect(session.lowQualityPhotos.allSatisfy { session.isMarked($0.path) != session.isKeeper($0.path) })
     }
 
     @Test("a blurry or dark photo in no group can be marked on its own and moved to the Trash")
@@ -332,18 +421,12 @@ struct SimilarPhotosSessionTests {
             roots: session.scannedRoots)
 
         #expect(session.lowQualityPhotos == [frames])
-        #expect(session.marked.isEmpty)
+        #expect(session.isMarked(frames.path))
+        session.clearSelection()
         #expect(session.canMark(frames.path))
         #expect(session.setMarked(true, path: frames.path))
         #expect(session.markedCount == 1)
         #expect(session.markedBytes == frames.reclaimable)
-
-        session.unmarkAll()
-        session.markAllButSuggested()
-        #expect(!session.isMarked(frames.path))
-
-        session.unmarkAll()
-        session.setMarked(true, path: frames.path)
         let summary = await session.moveMarkedToTrash()
 
         #expect(summary.movedToTrashCount == 1)
@@ -367,6 +450,7 @@ struct SimilarPhotosSessionTests {
         session.apply(
             SimilarPhotoScanResult(groups: session.groups, lowQuality: low, skipped: [:], isComplete: true),
             roots: session.scannedRoots)
+        session.clearSelection()
 
         #expect(session.setMarked(true, path: path("Pictures/board.png")))
         #expect(!session.canMark(path("Documents/board.jpg")))

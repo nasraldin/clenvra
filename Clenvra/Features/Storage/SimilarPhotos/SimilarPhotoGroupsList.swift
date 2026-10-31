@@ -2,12 +2,14 @@ import AppKit
 import ClenvraKit
 import SwiftUI
 
-/// Every group of similar photos as thumbnails. Nothing is marked by the scan; one photo per group is always kept
-/// (enforced by the session).
+/// Every group of similar photos as thumbnails, its keeper first with a Keep badge and the photos selected to go with
+/// a Remove badge. The session pre-selects every photo but each keeper and never marks a keeper.
 struct SimilarPhotoGroupsList: View {
     let session: SimilarPhotosSession
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
+    /// Clicking a photo opens the comparison with its group's keeper.
+    @Binding var showsInspector: Bool
     /// Whether a group is open; the page owns the state so its toolbar can open or close them all.
     let isExpanded: (String) -> Binding<Bool>
     /// Shows only the groups with a photo whose file name matches (already trimmed); empty shows everything. A
@@ -52,14 +54,14 @@ struct SimilarPhotoGroupsList: View {
                 if !session.lowQualityPhotos.isEmpty, Self.matches(session.lowQualityPhotos, query) {
                     LowQualityPhotosSection(
                         session: session, focusedPath: $focusedPath, previewURL: $previewURL,
-                        isExpanded: isExpanded(SimilarPhotoGroupsList.lowQualityID))
+                        showsInspector: $showsInspector, isExpanded: isExpanded(SimilarPhotoGroupsList.lowQualityID))
                     Divider()
                         .padding(.horizontal, 16)
                 }
                 ForEach(visibleGroups) { group in
                     SimilarPhotoGroupSection(
                         group: group, session: session, focusedPath: $focusedPath, previewURL: $previewURL,
-                        isExpanded: isExpanded(group.id))
+                        showsInspector: $showsInspector, isExpanded: isExpanded(group.id))
                     Divider()
                         .padding(.horizontal, 16)
                 }
@@ -115,20 +117,24 @@ private struct SimilarPhotoGroupSection: View {
     let session: SimilarPhotosSession
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
+    @Binding var showsInspector: Bool
     @Binding var isExpanded: Bool
 
     private static let thumbnailSide: CGFloat = 132
 
     var body: some View {
+        let keeper = session.keeper(of: group)
         DisclosureGroup(isExpanded: $isExpanded) {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: Self.thumbnailSide, maximum: Self.thumbnailSide), spacing: 14)],
                 alignment: .leading, spacing: 14
             ) {
-                ForEach(group.photos, id: \.path) { photo in
+                ForEach(session.photosKeeperFirst(in: group), id: \.path) { photo in
                     SimilarPhotoCell(
-                        photo: photo, isSuggestedKeeper: photo.path == group.suggestedKeeper, session: session,
-                        side: Self.thumbnailSide, focusedPath: $focusedPath, previewURL: $previewURL)
+                        photo: photo, isKeeper: photo.path == keeper,
+                        isSuggested: photo.path == group.suggestedKeeper, session: session,
+                        side: Self.thumbnailSide, focusedPath: $focusedPath, previewURL: $previewURL,
+                        showsInspector: $showsInspector)
                 }
             }
             .padding(.top, 10)
@@ -139,16 +145,18 @@ private struct SimilarPhotoGroupSection: View {
         .padding(.vertical, 14)
     }
 
+    private var keeperName: String { (session.keeper(of: group) as NSString).lastPathComponent }
+
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(group.photos.count) similar photos")
                     .font(.headline)
-                Text(
-                    "Keeping only the best frees about \(group.reclaimableIfOthersRemoved.formatted(.byteCount(style: .file)))"
-                )
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                Text("Keeping \(keeperName)")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
             Spacer()
             Text("Frees about \(session.markedBytes(in: group).formatted(.byteCount(style: .file)))")
@@ -162,22 +170,23 @@ private struct SimilarPhotoGroupSection: View {
             }
             .disabled(!group.photos.contains { session.isMarked($0.path) })
             Button {
-                session.keepOnly(group.suggestedKeeper)
+                session.setKeeper(session.keeper(of: group))
             } label: {
-                Text("Mark All but the Best")
+                Text("Select All but the Kept Photo")
             }
-            .help(Text("Marks every photo in this group except the one suggested to keep."))
+            .help(Text("Selects every photo in this group except the one marked Keep."))
         }
         .controlSize(.small)
     }
 }
 
-/// Photos macOS image analysis rates as blurry, dark or otherwise failed. Nothing here is marked for you; a photo that
-/// is also in a group keeps that group's rule.
+/// Photos macOS image analysis rates as blurry, dark or otherwise failed. All are pre-selected except a group's
+/// keeper; a photo that is also in a group keeps that group's rule.
 private struct LowQualityPhotosSection: View {
     let session: SimilarPhotosSession
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
+    @Binding var showsInspector: Bool
     @Binding var isExpanded: Bool
 
     private static let thumbnailSide: CGFloat = 132
@@ -195,8 +204,9 @@ private struct LowQualityPhotosSection: View {
                 ) {
                     ForEach(session.lowQualityPhotos, id: \.path) { photo in
                         SimilarPhotoCell(
-                            photo: photo, isSuggestedKeeper: false, session: session, side: Self.thumbnailSide,
-                            focusedPath: $focusedPath, previewURL: $previewURL, isInGroupSection: false)
+                            photo: photo, isKeeper: session.isKeeper(photo.path), isSuggested: false,
+                            session: session, side: Self.thumbnailSide, focusedPath: $focusedPath,
+                            previewURL: $previewURL, showsInspector: $showsInspector)
                     }
                 }
                 Text("Rated by macOS image analysis. Check each photo before moving it to the Trash.")
@@ -242,13 +252,15 @@ private struct LowQualityPhotosSection: View {
 
 private struct SimilarPhotoCell: View {
     let photo: SimilarPhoto
-    let isSuggestedKeeper: Bool
+    /// The photo its group keeps; never marked.
+    let isKeeper: Bool
+    /// The photo Clenvra suggested keeping (the most pixels, then the newest).
+    let isSuggested: Bool
     let session: SimilarPhotosSession
     let side: CGFloat
     @Binding var focusedPath: String?
     @Binding var previewURL: URL?
-    /// `false` in the "Blurry or Dark Photos" section, which has no keep-one actions of its own.
-    var isInGroupSection = true
+    @Binding var showsInspector: Bool
 
     private var name: String { (photo.path as NSString).lastPathComponent }
     private var dimensions: String { "\(photo.pixelWidth.formatted()) × \(photo.pixelHeight.formatted())" }
@@ -267,7 +279,11 @@ private struct SimilarPhotoCell: View {
             }
             .toggleStyle(.checkbox)
             .disabled(!session.canMark(photo.path))
-            .help(Text("One photo in every group is always kept."))
+            .help(
+                isKeeper
+                    ? Text("This photo is kept. To remove it, choose Keep This Instead on another photo of its group.")
+                    : Text("One photo in every group is always kept.")
+            )
             .accessibilityLabel(Text("Move \(name) to the Trash"))
             .accessibilityIdentifier("similarPhotos.mark")
             Text(verbatim: name)
@@ -299,7 +315,7 @@ private struct SimilarPhotoCell: View {
                         lineWidth: focusedPath == photo.path ? 3 : 0.5)
             }
             .overlay(alignment: .topLeading) {
-                if isSuggestedKeeper {
+                if isKeeper {
                     badge {
                         Label {
                             Text("Keep")
@@ -307,20 +323,21 @@ private struct SimilarPhotoCell: View {
                             Image(systemName: "star.fill")
                         }
                     }
-                    .help(Text("Suggested to keep: the most pixels, then the newest."))
-                }
-            }
-            .overlay(alignment: .bottomTrailing) {
-                if isMarked {
+                    .foregroundStyle(Color.accentColor)
+                    .help(
+                        isSuggested
+                            ? Text("Suggested to keep: the most pixels, then the newest.")
+                            : Text("You chose to keep this photo."))
+                } else if isMarked {
                     badge {
                         Label {
-                            Text("Move to Trash")
+                            Text("Remove")
                         } icon: {
                             Image(systemName: "trash")
                         }
-                        .labelStyle(.iconOnly)
                     }
-                    .accessibilityHidden(true)
+                    .foregroundStyle(.red)
+                    .help(Text("Selected to move to the Trash. Click the photo to compare it with the one kept."))
                 }
             }
             .contentShape(Rectangle())
@@ -330,6 +347,7 @@ private struct SimilarPhotoCell: View {
             }
             .onTapGesture {
                 focusedPath = photo.path
+                showsInspector = true
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(Text(verbatim: name))
@@ -344,7 +362,7 @@ private struct SimilarPhotoCell: View {
 
     private func accessibilityValue(isMarked: Bool) -> Text {
         let details = Text(verbatim: "\(dimensions), \(photo.size.formatted(.byteCount(style: .file)))")
-        if isSuggestedKeeper { return Text("Suggested to keep, \(details)") }
+        if isKeeper { return Text("Kept, \(details)") }
         if isMarked { return Text("Marked for the Trash, \(details)") }
         return details
     }
@@ -364,11 +382,25 @@ private struct SimilarPhotoCell: View {
         } label: {
             Text("Quick Look")
         }
-        if isInGroupSection {
+        Button {
+            focusedPath = photo.path
+            showsInspector = true
+        } label: {
+            Text("Show Details")
+        }
+        // Also offered in the blurry or dark section for a photo that is in a group.
+        if !isKeeper, session.keeperPhoto(comparedWith: photo.path) != nil {
             Button {
-                session.keepOnly(photo.path)
+                session.setKeeper(photo.path)
             } label: {
-                Text("Keep Only This Photo")
+                Text("Keep This Instead")
+            }
+        }
+        if !isKeeper, session.isMarked(photo.path) {
+            Button {
+                session.setMarked(false, path: photo.path)
+            } label: {
+                Text("Don't Remove")
             }
         }
         Divider()

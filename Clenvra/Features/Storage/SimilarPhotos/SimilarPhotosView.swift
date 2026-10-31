@@ -3,8 +3,9 @@ import ClenvraKit
 import QuickLook
 import SwiftUI
 
-/// Storage › Similar Photos: choose folders → scan → review groups (one photo always kept, nothing marked for you)
-/// → confirm → move the marked photos to the Trash.
+/// Storage › Similar Photos: choose folders → scan → review groups (each group's keeper always kept, every other
+/// photo pre-selected) → confirm → move the selected photos to the Trash. Clicking a photo compares it with its
+/// group's keeper in the details panel.
 struct SimilarPhotosView: View {
     let session: SimilarPhotosSession
 
@@ -13,6 +14,7 @@ struct SimilarPhotosView: View {
     @State private var shownSummary: StorageShownSummary?
     @State private var previewURL: URL?
     @State private var focusedPath: String?
+    @State private var showsInspector = false
     @State private var searchText = ""
 
     /// Groups the person closed, remembered across launches (F4).
@@ -25,6 +27,9 @@ struct SimilarPhotosView: View {
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if hasResults { statusBar }
+            }
+            .detailsPanel(isPresented: $showsInspector, width: 360) {
+                SimilarPhotoComparison(session: session, path: focusedPath)
             }
             .sheet(isPresented: $isConfirming) {
                 ConfirmCleanupSheet(count: session.markedCount, bytes: session.markedBytes) {
@@ -46,7 +51,7 @@ struct SimilarPhotosView: View {
             state
         } else {
             SimilarPhotoGroupsList(
-                session: session, focusedPath: $focusedPath, previewURL: $previewURL,
+                session: session, focusedPath: $focusedPath, previewURL: $previewURL, showsInspector: $showsInspector,
                 isExpanded: { id in expansion.binding(id) { sectionIDs } }, query: AppSearch.normalized(searchText)
             )
             .accessibilityIdentifier("review.results")
@@ -112,20 +117,24 @@ struct SimilarPhotosView: View {
 
             Menu {
                 Button {
-                    session.markAllButSuggested()
+                    session.selectSuggested()
                 } label: {
-                    Text("Mark All but the Best in Every Group")
+                    Text("Select Suggested")
                 }
-                .disabled(session.groups.isEmpty)
+                .help(Text("Select every photo except the one kept in each group, and every blurry or dark photo."))
+                .accessibilityIdentifier("similarPhotos.selectSuggested")
                 Divider()
                 Button {
-                    session.unmarkAll()
+                    session.clearSelection()
                 } label: {
-                    Text("Unmark All")
+                    Text("Clear Selection")
                 }
+                .disabled(session.markedCount == 0)
+                .accessibilityIdentifier("similarPhotos.clearSelection")
             } label: {
                 ToolbarLabel(title: "Choose Photos", symbol: "checklist")
             }
+            .help(Text("Select the suggested photos or clear the selection"))
             .disabled(session.phase != .ready || !hasResults)
 
             Button {
@@ -146,11 +155,15 @@ struct SimilarPhotosView: View {
 
         ToolbarItem {
             PrimaryActionButton(
-                help: "Review and move the marked photos to the Trash (⌘⌫)",
+                help: "Review and move the selected photos to the Trash (⌘⌫)",
                 isDisabled: session.phase != .ready || session.markedCount == 0
             ) {
                 isConfirming = true
             }
+        }
+
+        ToolbarItem {
+            InspectorToggle(isPresented: $showsInspector)
         }
     }
 
@@ -259,7 +272,7 @@ private struct SimilarPhotosStartView: View {
         VStack(spacing: 0) {
             SimilarPhotosFolders(session: session)
             HStack {
-                Text("Nothing is marked for you. One photo in every group is always kept.")
+                Text("The best photo in every group is kept; the others are selected for you to review.")
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button(action: start) {
