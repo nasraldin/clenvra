@@ -4,11 +4,12 @@ public import Observation
 
 /// The find-review-remove workflow for similar photos (Storage → Similar Photos).
 ///
-/// Similar is not identical, so nothing is marked by a scan: the user opts in per image, per group (`keepOnly`) or
-/// for all groups (`markAllButSuggested`). The keep-one rule lives here, not in the UI: no call can leave every image
-/// of a group marked, and the deletion plan re-checks it per group (and that a kept image is still on disk)
-/// immediately before moving anything to the Trash. Photos rated blurry or dark (`lowQualityPhotos`) are listed too;
-/// one in no group can be marked on its own, one in a group keeps that group's rule, and none is marked for you.
+/// Every group has a keeper (the suggested one until the person picks another with `setKeeper`), which is never
+/// marked. A scan pre-selects the suggestion (`selectSuggested`): every image except each group's keeper, and every
+/// blurry or dark photo (`lowQualityPhotos`) that is not a keeper. The person can clear it (`clearSelection`) and
+/// opt in again. Changing a group's keeper marks the group's other images. The keep-one rule lives here, not in the
+/// UI: no call can mark a keeper or leave every image of a group marked, and the deletion plan re-checks it per group
+/// (and that a kept image is still on disk) immediately before moving anything to the Trash.
 @MainActor
 @Observable
 public final class SimilarPhotosSession {
@@ -31,11 +32,13 @@ public final class SimilarPhotosSession {
     public private(set) var scannedRoots: [String] = []
     /// Groups, largest reclaimable space first; each shrinks as images are moved to the Trash.
     public private(set) var groups: [SimilarPhotoGroup] = []
-    /// Photos rated blurry or dark, lowest score first. Never marked for you; one that is also in a group follows
-    /// that group's keep-one rule.
+    /// Photos rated blurry or dark, lowest score first. Pre-selected unless one is its group's keeper; one that is
+    /// also in a group follows that group's keep-one rule.
     public private(set) var lowQualityPhotos: [SimilarPhoto] = []
-    /// Paths marked to be moved to the Trash. Never contains every image of a group.
+    /// Paths marked to be moved to the Trash. Never contains a keeper or every image of a group.
     public internal(set) var marked: Set<String> = []
+    /// Keepers the person chose, by group id; a group not listed keeps its suggested keeper.
+    private var chosenKeepers: [String: String] = [:]
     /// `false` when the last scan was cancelled, so there are no results.
     public private(set) var lastScanWasComplete = true
     /// Folders and images the last scan left out, each with its reason.
@@ -92,6 +95,7 @@ public final class SimilarPhotosSession {
         groups = []
         lowQualityPhotos = []
         marked = []
+        chosenKeepers = [:]
 
         let (updates, continuation) = AsyncStream.makeStream(
             of: SimilarPhotoScanProgress.self, bufferingPolicy: .bufferingNewest(1))
@@ -126,7 +130,7 @@ public final class SimilarPhotosSession {
         apply(outcome.result, roots: outcome.roots)
     }
 
-    /// Shows a scan's results from canonical `roots`, with nothing marked.
+    /// Shows a scan's results from canonical `roots`, with the suggested keepers and everything else selected.
     func apply(_ result: SimilarPhotoScanResult, roots: [String]) {
         scannedRoots = roots
         lastScanWasComplete = result.isComplete
@@ -134,7 +138,9 @@ public final class SimilarPhotosSession {
         groups = result.groups
         lowQualityPhotos = result.lowQuality
         marked = []
+        chosenKeepers = [:]
         phase = .ready
+        selectSuggested()
     }
 
     /// Stops a running scan.
@@ -169,13 +175,53 @@ public final class SimilarPhotosSession {
         looseLowQualityPhotos.reduce(0) { $0 + (marked.contains($1.path) ? $1.reclaimable : 0) }
     }
 
-    /// Whether `path` can be marked now: a photo in a group only while another image of its group stays kept; a
-    /// blurry or dark photo in no group always.
+    /// Whether `path` can be marked now: a photo in a group only when it is not the group's keeper and another image
+    /// of its group stays kept; a blurry or dark photo in no group always.
     public func canMark(_ path: String) -> Bool {
         guard phase == .ready else { return false }
         guard let group = group(containing: path) else { return isLowQuality(path) }
         if marked.contains(path) { return true }
+        guard path != keeper(of: group) else { return false }
         return group.photos.contains { $0.path != path && !marked.contains($0.path) }
+    }
+
+    // MARK: - Keepers
+
+    /// The image `group` keeps: the one the person chose, else the suggested keeper.
+    public func keeper(of group: SimilarPhotoGroup) -> String {
+        if let chosen = chosenKeepers[group.id], group.photos.contains(where: { $0.path == chosen }) { return chosen }
+        return group.suggestedKeeper
+    }
+
+    /// Whether `path` is the keeper of the group it is in.
+    public func isKeeper(_ path: String) -> Bool {
+        guard let group = group(containing: path) else { return false }
+        return keeper(of: group) == path
+    }
+
+    /// The group's images, its keeper first, the rest in the group's order.
+    public func photosKeeperFirst(in group: SimilarPhotoGroup) -> [SimilarPhoto] {
+        let keeper = keeper(of: group)
+        return group.photos.filter { $0.path == keeper } + group.photos.filter { $0.path != keeper }
+    }
+
+    /// The keeper to compare `path` with: its group's keeper photo, or `nil` for a photo in no group.
+    public func keeperPhoto(comparedWith path: String) -> SimilarPhoto? {
+        guard let group = group(containing: path) else { return nil }
+        let keeper = keeper(of: group)
+        return group.photos.first { $0.path == keeper }
+    }
+
+    /// Makes `path` its group's keeper and selects every other image of the group. Returns `false` (and changes
+    /// nothing) for a photo in no group, or while not ready.
+    @discardableResult
+    public func setKeeper(_ path: String) -> Bool {
+        guard phase == .ready, let group = group(containing: path) else { return false }
+        chosenKeepers[group.id] = path
+        for photo in group.photos {
+            if photo.path == path { marked.remove(photo.path) } else { marked.insert(photo.path) }
+        }
+        return true
     }
 
     /// Marks or unmarks one image. Returns `false` (and changes nothing) when marking would remove every image.
@@ -191,39 +237,48 @@ public final class SimilarPhotosSession {
         return true
     }
 
-    /// Keeps exactly this image and marks the other images of its group.
+    /// Keeps exactly this image (it becomes the keeper) and marks the other images of its group.
     @discardableResult
     public func keepOnly(_ path: String) -> Bool {
-        guard phase == .ready, let group = group(containing: path) else { return false }
-        for photo in group.photos {
-            if photo.path == path { marked.remove(photo.path) } else { marked.insert(photo.path) }
-        }
-        return true
+        setKeeper(path)
     }
 
-    /// The user's explicit opt-in: in every group, marks every image except the suggested keeper. Blurry or dark
-    /// photos in no group are left as they are: they are never marked for you.
-    public func markAllButSuggested() {
+    /// The suggestion, also applied after every scan: in every group, marks every image except its keeper (the one
+    /// the person chose, else the suggested one), and marks every blurry or dark photo that is not a keeper.
+    public func selectSuggested() {
         guard phase == .ready else { return }
+        var keepers = Set<String>()
         for group in groups {
+            let keeper = keeper(of: group)
+            keepers.insert(keeper)
             for photo in group.photos {
-                if photo.path == group.suggestedKeeper { marked.remove(photo.path) } else { marked.insert(photo.path) }
+                if photo.path == keeper { marked.remove(photo.path) } else { marked.insert(photo.path) }
             }
         }
+        for photo in lowQualityPhotos where !keepers.contains(photo.path) {
+            marked.insert(photo.path)
+        }
     }
 
-    /// Keeps every image.
-    public func unmarkAll() {
+    /// Keeps every image (Clear Selection). Keepers stay as chosen.
+    public func clearSelection() {
         guard phase == .ready else { return }
         marked = []
     }
 
-    /// Removes marks for images not shown, and unmarks the suggested keeper of any group with every image marked.
+    /// Same as `clearSelection()`.
+    public func unmarkAll() {
+        clearSelection()
+    }
+
+    /// Removes marks for images not shown, forgets keepers no longer shown, and unmarks every group's keeper.
     private func enforceKeepRule() {
         let shown = Set(groups.flatMap { $0.photos.map(\.path) } + lowQualityPhotos.map(\.path))
         marked.formIntersection(shown)
-        for group in groups where group.photos.allSatisfy({ marked.contains($0.path) }) {
-            marked.remove(group.suggestedKeeper)
+        let groupIDs = Set(groups.map(\.id))
+        chosenKeepers = chosenKeepers.filter { groupIDs.contains($0.key) && shown.contains($0.value) }
+        for group in groups {
+            marked.remove(keeper(of: group))
         }
     }
 
@@ -301,6 +356,7 @@ public final class SimilarPhotosSession {
         let gone = Set(
             results.filter { $0.outcome.isMovedToTrash || $0.outcome == .skipped(.notFound) }.map(\.item.path))
 
+        // Chosen keepers are kept by group id (`chosenKeepers`), so they survive the groups being rebuilt.
         groups = groups.compactMap { group in
             let photos = group.photos.filter { !gone.contains($0.path) }
             guard photos.count >= 2 else { return nil }
