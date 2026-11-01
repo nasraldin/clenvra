@@ -1,93 +1,180 @@
 {
-  "Add": { "ar": "إضافة" },
-  "Add at least one folder to search.": { "ar": "أضف مجلدًا واحدًا على الأقل للبحث فيه." },
-  "Add Folder…": { "ar": "إضافة مجلد…" },
-  "At least one copy is always kept.": { "ar": "يتم الاحتفاظ دائمًا بنسخة واحدة على الأقل." },
-  "Choose Copies": { "ar": "اختيار النسخ" },
-  "Comparing file sizes…": { "ar": "جارٍ مقارنة أحجام الملفات…" },
-  "Copy Path": { "ar": "نسخ المسار" },
-  "Find Duplicates": { "ar": "البحث عن الملفات المكررة" },
-  "Folders to Search": { "ar": "المجلدات المراد البحث فيها" },
-  "Frees about %@": { "ar": "يحرر حوالي %@" },
-  "Hidden files, apps and photo libraries are not searched.": { "ar": "لا يتم البحث في الملفات المخفية والتطبيقات ومكتبات الصور." },
-  "Ignore files smaller than": { "ar": "تجاهل الملفات الأصغر من" },
-  "Keep": { "ar": "الاحتفاظ" },
-  "Keep Copies in Folder": { "ar": "الاحتفاظ بالنسخ الموجودة في مجلد" },
-  "Keep Newest in Each Group": { "ar": "الاحتفاظ بالأحدث في كل مجموعة" },
-  "Keep Oldest in Each Group": { "ar": "الاحتفاظ بالأقدم في كل مجموعة" },
-  "Keep only this copy": { "ar": "الاحتفاظ بهذه النسخة فقط" },
-  "Looking for files…": { "ar": "جارٍ البحث عن الملفات…" },
-  "Modified %@": { "ar": "آخر تعديل: %@" },
-  "Move to Trash": { "ar": "نقل إلى سلة المهملات" },
-  "Moving to the Trash…": { "ar": "جارٍ النقل إلى سلة المهملات…" },
-  "No duplicates found": { "ar": "لم يتم العثور على ملفات مكررة" },
-  "No identical files were found in the folders you chose.": { "ar": "لم يتم العثور على ملفات متطابقة في المجلدات التي اخترتها." },
-  "One copy of every file is always kept.": { "ar": "يتم الاحتفاظ دائمًا بنسخة واحدة من كل ملف." },
-  "Quick Look": { "ar": "نظرة سريعة" },
-  "Reading possible duplicates…": { "ar": "جارٍ قراءة الملفات التي قد تكون مكررة…" },
-  "Remove": { "ar": "إزالة" },
-  "Scan": { "ar": "فحص" },
-  "Search Options": { "ar": "خيارات البحث" },
-  "Show in Finder": { "ar": "إظهار في Finder" },
-  "Stop": { "ar": "إيقاف" },
-  "The scan was stopped before it finished.": { "ar": "تم إيقاف الفحص قبل اكتماله." },
-  "The scan was stopped. Results may be incomplete.": { "ar": "تم إيقاف الفحص. قد تكون النتائج غير مكتملة." },
-  "These copies share storage; removing them frees almost nothing.": { "ar": "تتشارك هذه النسخ مساحة التخزين نفسها، لذا لن تؤدي إزالتها إلى تحرير مساحة تُذكر." },
-  "Unmark All": { "ar": "إلغاء تحديد الكل" },
-  "Verifying identical files…": { "ar": "جارٍ التحقق من الملفات المتطابقة…" },
-  "%lld copies marked": {
-    "en_plural": { "one": "%lld copy marked", "other": "%lld copies marked" },
-    "ar_plural": {
-      "zero": "لم يتم تحديد أي نسخة",
-      "one": "تم تحديد نسخة واحدة",
-      "two": "تم تحديد نسختين",
-      "few": "تم تحديد %lld نسخ",
-      "many": "تم تحديد %lld نسخة",
-      "other": "تم تحديد %lld نسخة"
-    }
-  },
-  "%lld copies · %@ each": {
-    "en_plural": { "one": "%lld copy · %@ each", "other": "%lld copies · %@ each" },
-    "ar_plural": {
-      "zero": "لا توجد نسخ · %@ لكل نسخة",
-      "one": "نسخة واحدة · %@",
-      "two": "نسختان · %@ لكل نسخة",
-      "few": "%lld نسخ · %@ لكل نسخة",
-      "many": "%lld نسخة · %@ لكل نسخة",
-      "other": "%lld نسخة · %@ لكل نسخة"
-    }
-  },
-  "%lld files could not be read.": {
-    "en_plural": { "one": "%lld file could not be read.", "other": "%lld files could not be read." },
-    "ar_plural": {
-      "zero": "لم يتعذر قراءة أي ملف.",
-      "one": "تعذرت قراءة ملف واحد.",
-      "two": "تعذرت قراءة ملفين.",
-      "few": "تعذرت قراءة %lld ملفات.",
-      "many": "تعذرت قراءة %lld ملفًا.",
-      "other": "تعذرت قراءة %lld ملف."
-    }
-  },
-  "%lld files found": {
-    "en_plural": { "one": "%lld file found", "other": "%lld files found" },
-    "ar_plural": {
-      "zero": "لم يتم العثور على أي ملف",
-      "one": "تم العثور على ملف واحد",
-      "two": "تم العثور على ملفين",
-      "few": "تم العثور على %lld ملفات",
-      "many": "تم العثور على %lld ملفًا",
-      "other": "تم العثور على %lld ملف"
-    }
-  },
-  "%lld files to compare · %@ read": {
-    "en_plural": { "one": "%lld file to compare · %@ read", "other": "%lld files to compare · %@ read" },
-    "ar_plural": {
-      "zero": "لا توجد ملفات للمقارنة · تمت قراءة %@",
-      "one": "ملف واحد للمقارنة · تمت قراءة %@",
-      "two": "ملفان للمقارنة · تمت قراءة %@",
-      "few": "%lld ملفات للمقارنة · تمت قراءة %@",
-      "many": "%lld ملفًا للمقارنة · تمت قراءة %@",
-      "other": "%lld ملف للمقارنة · تمت قراءة %@"
-    }
-  }
+"Add": {
+"ar": "إضافة"
+},
+"Add at least one folder to search.": {
+"ar": "أضف مجلدًا واحدًا على الأقل للبحث فيه."
+},
+"Add Folder…": {
+"ar": "إضافة مجلد…"
+},
+"At least one copy is always kept.": {
+"ar": "يتم الاحتفاظ دائمًا بنسخة واحدة على الأقل."
+},
+"Choose Copies": {
+"ar": "اختيار النسخ"
+},
+"Comparing file sizes…": {
+"ar": "جارٍ مقارنة أحجام الملفات…"
+},
+"Copy Path": {
+"ar": "نسخ المسار"
+},
+"Find Duplicates": {
+"ar": "البحث عن الملفات المكررة"
+},
+"Folders to Search": {
+"ar": "المجلدات المراد البحث فيها"
+},
+"Frees about %@": {
+"ar": "يحرر حوالي %@"
+},
+"Hidden files, apps and photo libraries are not searched.": {
+"ar": "لا يتم البحث في الملفات المخفية والتطبيقات ومكتبات الصور."
+},
+"Ignore files smaller than": {
+"ar": "تجاهل الملفات الأصغر من"
+},
+"Keep": {
+"ar": "الاحتفاظ"
+},
+"Keep Copies in Folder": {
+"ar": "الاحتفاظ بالنسخ الموجودة في مجلد"
+},
+"Keep Newest in Each Group": {
+"ar": "الاحتفاظ بالأحدث في كل مجموعة"
+},
+"Keep Oldest in Each Group": {
+"ar": "الاحتفاظ بالأقدم في كل مجموعة"
+},
+"Keep only this copy": {
+"ar": "الاحتفاظ بهذه النسخة فقط"
+},
+"Looking for files…": {
+"ar": "جارٍ البحث عن الملفات…"
+},
+"Modified %@": {
+"ar": "آخر تعديل: %@"
+},
+"Move to Trash": {
+"ar": "نقل إلى سلة المهملات"
+},
+"Moving to the Trash…": {
+"ar": "جارٍ النقل إلى سلة المهملات…"
+},
+"No duplicates found": {
+"ar": "لم يتم العثور على ملفات مكررة"
+},
+"No identical files were found in the folders you chose.": {
+"ar": "لم يتم العثور على ملفات متطابقة في المجلدات التي اخترتها."
+},
+"One copy of every file is always kept.": {
+"ar": "يتم الاحتفاظ دائمًا بنسخة واحدة من كل ملف."
+},
+"Quick Look": {
+"ar": "نظرة سريعة"
+},
+"Reading possible duplicates…": {
+"ar": "جارٍ قراءة الملفات التي قد تكون مكررة…"
+},
+"Remove": {
+"ar": "إزالة"
+},
+"Scan": {
+"ar": "فحص"
+},
+"Search Options": {
+"ar": "خيارات البحث"
+},
+"Show in Finder": {
+"ar": "إظهار في Finder"
+},
+"Stop": {
+"ar": "إيقاف"
+},
+"The scan was stopped before it finished.": {
+"ar": "تم إيقاف الفحص قبل اكتماله."
+},
+"The scan was stopped. Results may be incomplete.": {
+"ar": "تم إيقاف الفحص. قد تكون النتائج غير مكتملة."
+},
+"These copies share storage; removing them frees almost nothing.": {
+"ar": "تتشارك هذه النسخ مساحة التخزين نفسها، لذا لن تؤدي إزالتها إلى تحرير مساحة تُذكر."
+},
+"Unmark All": {
+"ar": "إلغاء تحديد الكل"
+},
+"Verifying identical files…": {
+"ar": "جارٍ التحقق من الملفات المتطابقة…"
+},
+"%lld copies marked": {
+"en_plural": {
+"one": "%lld copy marked",
+"other": "%lld copies marked"
+},
+"ar_plural": {
+"zero": "لم يتم تحديد أي نسخة",
+"one": "تم تحديد نسخة واحدة",
+"two": "تم تحديد نسختين",
+"few": "تم تحديد %lld نسخ",
+"many": "تم تحديد %lld نسخة",
+"other": "تم تحديد %lld نسخة"
+}
+},
+"%lld copies · %@ each": {
+"en_plural": {
+"one": "%lld copy · %@ each",
+"other": "%lld copies · %@ each"
+},
+"ar_plural": {
+"zero": "لا توجد نسخ · %2$@ لكل نسخة",
+"one": "نسخة واحدة · %2$@",
+"two": "نسختان · %2$@ لكل نسخة",
+"few": "%lld نسخ · %@ لكل نسخة",
+"many": "%lld نسخة · %@ لكل نسخة",
+"other": "%lld نسخة · %@ لكل نسخة"
+}
+},
+"%lld files could not be read.": {
+"en_plural": {
+"one": "%lld file could not be read.",
+"other": "%lld files could not be read."
+},
+"ar_plural": {
+"zero": "لم يتعذر قراءة أي ملف.",
+"one": "تعذرت قراءة ملف واحد.",
+"two": "تعذرت قراءة ملفين.",
+"few": "تعذرت قراءة %lld ملفات.",
+"many": "تعذرت قراءة %lld ملفًا.",
+"other": "تعذرت قراءة %lld ملف."
+}
+},
+"%lld files found": {
+"en_plural": {
+"one": "%lld file found",
+"other": "%lld files found"
+},
+"ar_plural": {
+"zero": "لم يتم العثور على أي ملف",
+"one": "تم العثور على ملف واحد",
+"two": "تم العثور على ملفين",
+"few": "تم العثور على %lld ملفات",
+"many": "تم العثور على %lld ملفًا",
+"other": "تم العثور على %lld ملف"
+}
+},
+"%lld files to compare · %@ read": {
+"en_plural": {
+"one": "%lld file to compare · %@ read",
+"other": "%lld files to compare · %@ read"
+},
+"ar_plural": {
+"zero": "لا توجد ملفات للمقارنة · تمت قراءة %2$@",
+"one": "ملف واحد للمقارنة · تمت قراءة %2$@",
+"two": "ملفان للمقارنة · تمت قراءة %2$@",
+"few": "%lld ملفات للمقارنة · تمت قراءة %@",
+"many": "%lld ملفًا للمقارنة · تمت قراءة %@",
+"other": "%lld ملف للمقارنة · تمت قراءة %@"
+}
+}
 }

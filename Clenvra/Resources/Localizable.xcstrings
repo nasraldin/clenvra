@@ -260,7 +260,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "نسخة واحدة · %@"
+                  "value": "نسخة واحدة · %2$@"
                 }
               },
               "other": {
@@ -272,13 +272,13 @@
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "نسختان · %@ لكل نسخة"
+                  "value": "نسختان · %2$@ لكل نسخة"
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "لا توجد نسخ · %@ لكل نسخة"
+                  "value": "لا توجد نسخ · %2$@ لكل نسخة"
                 }
               }
             }
@@ -670,7 +670,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ملف واحد للمقارنة · تمت قراءة %@"
+                  "value": "ملف واحد للمقارنة · تمت قراءة %2$@"
                 }
               },
               "other": {
@@ -682,13 +682,13 @@
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ملفان للمقارنة · تمت قراءة %@"
+                  "value": "ملفان للمقارنة · تمت قراءة %2$@"
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "لا توجد ملفات للمقارنة · تمت قراءة %@"
+                  "value": "لا توجد ملفات للمقارنة · تمت قراءة %2$@"
                 }
               }
             }
@@ -734,7 +734,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ملف واحد · تم العثور على %@"
+                  "value": "ملف واحد · تم العثور على %2$@"
                 }
               },
               "other": {
@@ -746,13 +746,13 @@
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ملفان · تم العثور على %@"
+                  "value": "ملفان · تم العثور على %2$@"
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "لا ملفات · تم العثور على %@"
+                  "value": "لا ملفات · تم العثور على %2$@"
                 }
               }
             }
@@ -1192,7 +1192,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "حُذف عنصر واحد نهائيًا، وتحرّر نحو %@."
+                  "value": "حُذف عنصر واحد نهائيًا، وتحرّر نحو %2$@."
                 }
               },
               "other": {
@@ -1204,13 +1204,13 @@
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "حُذف عنصران نهائيًا، وتحرّر نحو %@."
+                  "value": "حُذف عنصران نهائيًا، وتحرّر نحو %2$@."
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "حُذف 0 عناصر نهائيًا، وتحرّر نحو %@."
+                  "value": "حُذف 0 عناصر نهائيًا، وتحرّر نحو %2$@."
                 }
               }
             }
@@ -1692,7 +1692,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "عنصر آمن واحد، %@"
+                  "value": "عنصر آمن واحد، %2$@"
                 }
               },
               "other": {
@@ -1704,13 +1704,13 @@
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "عنصران آمنان، %@"
+                  "value": "عنصران آمنان، %2$@"
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "لا عناصر آمنة، %@"
+                  "value": "لا عناصر آمنة، %2$@"
                 }
               }
             }
@@ -7269,7 +7269,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الماك"
+            "value": "جهاز Mac"
           }
         }
       }

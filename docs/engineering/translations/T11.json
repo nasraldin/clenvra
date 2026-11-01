@@ -1,76 +1,228 @@
 {
-  "%lld files": {
-    "en_plural": { "one": "%lld file", "other": "%lld files" },
-    "ar_plural": { "zero": "لا ملفات", "one": "ملف واحد", "two": "ملفان", "few": "%lld ملفات", "many": "%lld ملفًا", "other": "%lld ملف" }
-  },
-  "%lld files · %@ found": {
-    "en_plural": { "one": "%lld file · %@ found", "other": "%lld files · %@ found" },
-    "ar_plural": { "zero": "لا ملفات · تم العثور على %@", "one": "ملف واحد · تم العثور على %@", "two": "ملفان · تم العثور على %@", "few": "%lld ملفات · تم العثور على %@", "many": "%lld ملفًا · تم العثور على %@", "other": "%lld ملف · تم العثور على %@" }
-  },
-  "%@ (whole disk)": { "ar": "%@ (القرص بالكامل)" },
-  "%@ available of %@": { "ar": "%@ متاح من %@" },
-  "Used %@": { "ar": "مستخدم %@" },
-  "Purgeable ≈ %@": { "ar": "قابل للإزالة تلقائيًا ≈ %@" },
-  "Free %@": { "ar": "متاح %@" },
-  "Scan": { "ar": "فحص" },
-  "Scan Again": { "ar": "فحص مرة أخرى" },
-  "Scan to see what uses space.": { "ar": "قم بالفحص لمعرفة ما يشغل المساحة." },
-  "Stop Scan": { "ar": "إيقاف الفحص" },
-  "Home folder": { "ar": "مجلد الصفحة الرئيسية" },
-  "View": { "ar": "العرض" },
-  "Browser": { "ar": "المستعرض" },
-  "Large & Old": { "ar": "الكبيرة والقديمة" },
-  "Downloads & Screenshots": { "ar": "التنزيلات ولقطات الشاشة" },
-  "Not scanned yet": { "ar": "لم يتم الفحص بعد" },
-  "Could not read this location": { "ar": "تعذرت قراءة هذا الموقع" },
-  "Check that the disk is connected and that Clenvra has Full Disk Access.": { "ar": "تحقق من أن القرص متصل وأن Clenvra لديه وصول كامل إلى القرص." },
-  "Try Again": { "ar": "إعادة المحاولة" },
-  "Partial results: the scan was stopped before it finished, so sizes may be too small.": { "ar": "نتائج جزئية: تم إيقاف الفحص قبل اكتماله، لذا قد تكون الأحجام أصغر من الحقيقية." },
-  "Updating sizes after the cleanup…": { "ar": "جارٍ تحديث الأحجام بعد التنظيف…" },
-  "Back": { "ar": "رجوع" },
-  "Open": { "ar": "فتح" },
-  "This folder is empty": { "ar": "هذا المجلد فارغ" },
-  "Name": { "ar": "الاسم" },
-  "Size": { "ar": "الحجم" },
-  "Frees ≈": { "ar": "يحرر ≈" },
-  "Items": { "ar": "العناصر" },
-  "Modified": { "ar": "تاريخ التعديل" },
-  "Space map": { "ar": "خريطة المساحة" },
-  "Quick Look": { "ar": "نظرة سريعة" },
-  "macOS": { "ar": "macOS" },
-  "Keys & passwords": { "ar": "المفاتيح وكلمات السر" },
-  "Personal data": { "ar": "بيانات شخصية" },
-  "Excluded": { "ar": "مستثنى" },
-  "Part of macOS. Clenvra never removes it.": { "ar": "جزء من macOS. لا يزيله Clenvra أبدًا." },
-  "A main folder of your home folder. Open it to review what is inside.": { "ar": "مجلد رئيسي في مجلد الصفحة الرئيسية. افتحه لمراجعة محتوياته." },
-  "Holds keys, certificates or passwords. Clenvra never removes it.": { "ar": "يحتوي على مفاتيح أو شهادات أو كلمات سر. لا يزيله Clenvra أبدًا." },
-  "Holds mail, messages, photos or cloud files. Clenvra never removes it.": { "ar": "يحتوي على البريد أو الرسائل أو الصور أو ملفات السحابة. لا يزيله Clenvra أبدًا." },
-  "Protected by Clenvra.": { "ar": "محمي بواسطة Clenvra." },
-  "You excluded this folder in Settings.": { "ar": "لقد استثنيت هذا المجلد في الإعدادات." },
-  "No files match": { "ar": "لا توجد ملفات مطابقة" },
-  "Try a smaller size or a shorter time.": { "ar": "جرّب حجمًا أصغر أو مدة أقصر." },
-  "At least": { "ar": "على الأقل" },
-  "Not modified in": { "ar": "لم يُعدَّل منذ" },
-  "Any time": { "ar": "أي وقت" },
-  "6 months": { "ar": "ستة أشهر" },
-  "1 year": { "ar": "سنة واحدة" },
-  "2 years": { "ar": "سنتين" },
-  "Group by": { "ar": "التجميع حسب" },
-  "Kind": { "ar": "النوع" },
-  "Age": { "ar": "العمر" },
-  "Screenshots folder:": { "ar": "مجلد لقطات الشاشة:" },
-  "Nothing to review": { "ar": "لا يوجد ما يحتاج إلى مراجعة" },
-  "Downloads is empty and there are no screenshots.": { "ar": "مجلد التنزيلات فارغ ولا توجد لقطات شاشة." },
-  "Screenshots": { "ar": "لقطات الشاشة" },
-  "Screen Recordings": { "ar": "تسجيلات الشاشة" },
-  "Archives": { "ar": "الأرشيفات" },
-  "Images": { "ar": "الصور" },
-  "Videos": { "ar": "الفيديوهات" },
-  "Audio": { "ar": "الصوت" },
-  "Documents": { "ar": "المستندات" },
-  "Other Files": { "ar": "ملفات أخرى" },
-  "Last 7 Days": { "ar": "آخر سبعة أيام" },
-  "Last 30 Days": { "ar": "آخر ثلاثين يومًا" },
-  "Last 12 Months": { "ar": "آخر اثني عشر شهرًا" },
-  "Older": { "ar": "أقدم" }
+"%lld files": {
+"en_plural": {
+"one": "%lld file",
+"other": "%lld files"
+},
+"ar_plural": {
+"zero": "لا ملفات",
+"one": "ملف واحد",
+"two": "ملفان",
+"few": "%lld ملفات",
+"many": "%lld ملفًا",
+"other": "%lld ملف"
+}
+},
+"%lld files · %@ found": {
+"en_plural": {
+"one": "%lld file · %@ found",
+"other": "%lld files · %@ found"
+},
+"ar_plural": {
+"zero": "لا ملفات · تم العثور على %2$@",
+"one": "ملف واحد · تم العثور على %2$@",
+"two": "ملفان · تم العثور على %2$@",
+"few": "%lld ملفات · تم العثور على %@",
+"many": "%lld ملفًا · تم العثور على %@",
+"other": "%lld ملف · تم العثور على %@"
+}
+},
+"%@ (whole disk)": {
+"ar": "%@ (القرص بالكامل)"
+},
+"%@ available of %@": {
+"ar": "%@ متاح من %@"
+},
+"Used %@": {
+"ar": "مستخدم %@"
+},
+"Purgeable ≈ %@": {
+"ar": "قابل للإزالة تلقائيًا ≈ %@"
+},
+"Free %@": {
+"ar": "متاح %@"
+},
+"Scan": {
+"ar": "فحص"
+},
+"Scan Again": {
+"ar": "فحص مرة أخرى"
+},
+"Scan to see what uses space.": {
+"ar": "قم بالفحص لمعرفة ما يشغل المساحة."
+},
+"Stop Scan": {
+"ar": "إيقاف الفحص"
+},
+"Home folder": {
+"ar": "مجلد الصفحة الرئيسية"
+},
+"View": {
+"ar": "العرض"
+},
+"Browser": {
+"ar": "المستعرض"
+},
+"Large & Old": {
+"ar": "الكبيرة والقديمة"
+},
+"Downloads & Screenshots": {
+"ar": "التنزيلات ولقطات الشاشة"
+},
+"Not scanned yet": {
+"ar": "لم يتم الفحص بعد"
+},
+"Could not read this location": {
+"ar": "تعذرت قراءة هذا الموقع"
+},
+"Check that the disk is connected and that Clenvra has Full Disk Access.": {
+"ar": "تحقق من أن القرص متصل وأن Clenvra لديه وصول كامل إلى القرص."
+},
+"Try Again": {
+"ar": "إعادة المحاولة"
+},
+"Partial results: the scan was stopped before it finished, so sizes may be too small.": {
+"ar": "نتائج جزئية: تم إيقاف الفحص قبل اكتماله، لذا قد تكون الأحجام أصغر من الحقيقية."
+},
+"Updating sizes after the cleanup…": {
+"ar": "جارٍ تحديث الأحجام بعد التنظيف…"
+},
+"Back": {
+"ar": "رجوع"
+},
+"Open": {
+"ar": "فتح"
+},
+"This folder is empty": {
+"ar": "هذا المجلد فارغ"
+},
+"Name": {
+"ar": "الاسم"
+},
+"Size": {
+"ar": "الحجم"
+},
+"Frees ≈": {
+"ar": "يحرر ≈"
+},
+"Items": {
+"ar": "العناصر"
+},
+"Modified": {
+"ar": "تاريخ التعديل"
+},
+"Space map": {
+"ar": "خريطة المساحة"
+},
+"Quick Look": {
+"ar": "نظرة سريعة"
+},
+"macOS": {
+"ar": "macOS"
+},
+"Keys & passwords": {
+"ar": "المفاتيح وكلمات السر"
+},
+"Personal data": {
+"ar": "بيانات شخصية"
+},
+"Excluded": {
+"ar": "مستثنى"
+},
+"Part of macOS. Clenvra never removes it.": {
+"ar": "جزء من macOS. لا يزيله Clenvra أبدًا."
+},
+"A main folder of your home folder. Open it to review what is inside.": {
+"ar": "مجلد رئيسي في مجلد الصفحة الرئيسية. افتحه لمراجعة محتوياته."
+},
+"Holds keys, certificates or passwords. Clenvra never removes it.": {
+"ar": "يحتوي على مفاتيح أو شهادات أو كلمات سر. لا يزيله Clenvra أبدًا."
+},
+"Holds mail, messages, photos or cloud files. Clenvra never removes it.": {
+"ar": "يحتوي على البريد أو الرسائل أو الصور أو ملفات السحابة. لا يزيله Clenvra أبدًا."
+},
+"Protected by Clenvra.": {
+"ar": "محمي بواسطة Clenvra."
+},
+"You excluded this folder in Settings.": {
+"ar": "لقد استثنيت هذا المجلد في الإعدادات."
+},
+"No files match": {
+"ar": "لا توجد ملفات مطابقة"
+},
+"Try a smaller size or a shorter time.": {
+"ar": "جرّب حجمًا أصغر أو مدة أقصر."
+},
+"At least": {
+"ar": "على الأقل"
+},
+"Not modified in": {
+"ar": "لم يُعدَّل منذ"
+},
+"Any time": {
+"ar": "أي وقت"
+},
+"6 months": {
+"ar": "ستة أشهر"
+},
+"1 year": {
+"ar": "سنة واحدة"
+},
+"2 years": {
+"ar": "سنتين"
+},
+"Group by": {
+"ar": "التجميع حسب"
+},
+"Kind": {
+"ar": "النوع"
+},
+"Age": {
+"ar": "العمر"
+},
+"Screenshots folder:": {
+"ar": "مجلد لقطات الشاشة:"
+},
+"Nothing to review": {
+"ar": "لا يوجد ما يحتاج إلى مراجعة"
+},
+"Downloads is empty and there are no screenshots.": {
+"ar": "مجلد التنزيلات فارغ ولا توجد لقطات شاشة."
+},
+"Screenshots": {
+"ar": "لقطات الشاشة"
+},
+"Screen Recordings": {
+"ar": "تسجيلات الشاشة"
+},
+"Archives": {
+"ar": "الأرشيفات"
+},
+"Images": {
+"ar": "الصور"
+},
+"Videos": {
+"ar": "الفيديوهات"
+},
+"Audio": {
+"ar": "الصوت"
+},
+"Documents": {
+"ar": "المستندات"
+},
+"Other Files": {
+"ar": "ملفات أخرى"
+},
+"Last 7 Days": {
+"ar": "آخر سبعة أيام"
+},
+"Last 30 Days": {
+"ar": "آخر ثلاثين يومًا"
+},
+"Last 12 Months": {
+"ar": "آخر اثني عشر شهرًا"
+},
+"Older": {
+"ar": "أقدم"
+}
 }

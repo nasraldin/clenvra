@@ -1,248 +1,248 @@
 {
-  "Cleanup": {
-    "ar": "التنظيف"
-  },
-  "Developer": {
-    "ar": "المطوّر"
-  },
-  "Developer tools": {
-    "ar": "أدوات المطوّرين"
-  },
-  "Startup": {
-    "ar": "عناصر بدء التشغيل"
-  },
-  "Security": {
-    "ar": "الأمان"
-  },
-  "Show %@": {
-    "ar": "عرض %@"
-  },
-  "Show in %@": {
-    "ar": "عرض في %@"
-  },
-  "Done": {
-    "ar": "تم"
-  },
-  "Not scanned yet": {
-    "ar": "لم يُفحص بعد"
-  },
-  "Looking for developer tools…": {
-    "ar": "جارٍ البحث عن أدوات المطوّرين…"
-  },
-  "Scanning…": {
-    "ar": "جارٍ الفحص…"
-  },
-  "No developer tool data found": {
-    "ar": "لم يُعثر على بيانات لأدوات المطوّرين"
-  },
-  "No issues found": {
-    "ar": "لم يُعثر على مشكلات"
-  },
-  "Nothing to clean": {
-    "ar": "لا شيء لتنظيفه"
-  },
-  "%lld tool stores found": {
-    "en_plural": {
-      "one": "%lld tool store found",
-      "other": "%lld tool stores found"
-    },
-    "ar_plural": {
-      "zero": "لم يُعثر على مخازن أدوات",
-      "one": "عُثر على مخزن أداة واحد",
-      "two": "عُثر على مخزنَي أدوات",
-      "few": "عُثر على %lld مخازن أدوات",
-      "many": "عُثر على %lld مخزن أدوات",
-      "other": "عُثر على %lld مخزن أدوات"
-    }
-  },
-  "%lld items left behind by removed apps": {
-    "en_plural": {
-      "one": "%lld item left behind by removed apps",
-      "other": "%lld items left behind by removed apps"
-    },
-    "ar_plural": {
-      "zero": "لا عناصر متبقية من تطبيقات محذوفة",
-      "one": "عنصر واحد متبقٍّ من تطبيقات محذوفة",
-      "two": "عنصران متبقيان من تطبيقات محذوفة",
-      "few": "%lld عناصر متبقية من تطبيقات محذوفة",
-      "many": "%lld عنصرًا متبقيًا من تطبيقات محذوفة",
-      "other": "%lld عنصر متبقٍّ من تطبيقات محذوفة"
-    }
-  },
-  "%lld startup items, none left behind": {
-    "en_plural": {
-      "one": "%lld startup item, none left behind",
-      "other": "%lld startup items, none left behind"
-    },
-    "ar_plural": {
-      "zero": "لا عناصر بدء تشغيل",
-      "one": "عنصر بدء تشغيل واحد، ولا شيء متبقٍّ",
-      "two": "عنصرا بدء تشغيل، ولا شيء متبقٍّ",
-      "few": "%lld عناصر بدء تشغيل، ولا شيء متبقٍّ",
-      "many": "%lld عنصر بدء تشغيل، ولا شيء متبقٍّ",
-      "other": "%lld عنصر بدء تشغيل، ولا شيء متبقٍّ"
-    }
-  },
-  "%lld settings need attention": {
-    "en_plural": {
-      "one": "%lld setting needs attention",
-      "other": "%lld settings need attention"
-    },
-    "ar_plural": {
-      "zero": "لا إعدادات تحتاج إلى انتباه",
-      "one": "إعداد واحد يحتاج إلى انتباه",
-      "two": "إعدادان يحتاجان إلى انتباه",
-      "few": "%lld إعدادات تحتاج إلى انتباه",
-      "many": "%lld إعدادًا يحتاج إلى انتباه",
-      "other": "%lld إعداد يحتاج إلى انتباه"
-    }
-  },
-  "%lld safe items, %@": {
-    "en_plural": {
-      "one": "%lld safe item, %@",
-      "other": "%lld safe items, %@"
-    },
-    "ar_plural": {
-      "zero": "لا عناصر آمنة، %@",
-      "one": "عنصر آمن واحد، %@",
-      "two": "عنصران آمنان، %@",
-      "few": "%lld عناصر آمنة، %@",
-      "many": "%lld عنصرًا آمنًا، %@",
-      "other": "%lld عنصر آمن، %@"
-    }
-  },
-  "Rescan": {
-    "ar": "إعادة الفحص"
-  },
-  "Scan Everything": {
-    "ar": "فحص كل شيء"
-  },
-  "Looks through caches, developer data, startup items and security settings. It only reads: nothing is deleted until you review it in its section.": {
-    "ar": "يفحص ذاكرة التخزين المؤقت وبيانات المطوّرين وعناصر بدء التشغيل وإعدادات الأمان. يقرأ فقط: لا يُحذف أي شيء قبل أن تراجعه في قسمه."
-  },
-  "Recommendations": {
-    "ar": "توصيات"
-  },
-  "Nothing needs your attention right now.": {
-    "ar": "لا شيء يحتاج إلى انتباهك الآن."
-  },
-  "Full Disk Access is off": {
-    "ar": "الوصول الكامل إلى القرص غير مفعّل"
-  },
-  "Without it, scans skip some protected folders, such as Safari and Mail data. Clenvra only reads them, and nothing is deleted without your review.": {
-    "ar": "من دونه، يتخطى الفحص بعض المجلدات المحمية، مثل بيانات Safari والبريد. يكتفي Clenvra بقراءتها، ولا يُحذف أي شيء دون مراجعتك."
-  },
-  "Open Privacy & Security Settings…": {
-    "ar": "فتح إعدادات الخصوصية والأمن…"
-  },
-  "free of %@": {
-    "ar": "متاح من %@"
-  },
-  "%@ free of %@": {
-    "ar": "%@ متاح من %@"
-  },
-  "Used %@, purgeable %@, free %@": {
-    "ar": "مستخدم %@، قابل للتفريغ %@، متاح %@"
-  },
-  "Startup disk is almost full": {
-    "ar": "قرص بدء التشغيل ممتلئ تقريبًا"
-  },
-  "Caches, logs and other junk": {
-    "ar": "ذاكرة التخزين المؤقت والسجلات والملفات غير الضرورية"
-  },
-  "Developer build data": {
-    "ar": "بيانات البناء الخاصة بالمطوّرين"
-  },
-  "Large item to review": {
-    "ar": "عنصر كبير يحتاج إلى مراجعة"
-  },
-  "Startup items left behind": {
-    "ar": "عناصر بدء تشغيل متبقية"
-  },
-  "Security setting needs attention": {
-    "ar": "إعداد أمان يحتاج إلى انتباه"
-  },
-  "Only %@ is free. See what uses the most space.": {
-    "ar": "المساحة المتاحة %@ فقط. اعرف ما الذي يشغل أكبر مساحة."
-  },
-  "%lld safe items that apps recreate when needed.": {
-    "en_plural": {
-      "one": "%lld safe item that apps recreate when needed.",
-      "other": "%lld safe items that apps recreate when needed."
-    },
-    "ar_plural": {
-      "zero": "لا عناصر آمنة",
-      "one": "عنصر آمن واحد تعيد التطبيقات إنشاءه عند الحاجة.",
-      "two": "عنصران آمنان تعيد التطبيقات إنشاءهما عند الحاجة.",
-      "few": "%lld عناصر آمنة تعيد التطبيقات إنشاءها عند الحاجة.",
-      "many": "%lld عنصرًا آمنًا تعيد التطبيقات إنشاءها عند الحاجة.",
-      "other": "%lld عنصر آمن تعيد التطبيقات إنشاءها عند الحاجة."
-    }
-  },
-  "%lld safe items that your tools rebuild when needed.": {
-    "en_plural": {
-      "one": "%lld safe item that your tools rebuild when needed.",
-      "other": "%lld safe items that your tools rebuild when needed."
-    },
-    "ar_plural": {
-      "zero": "لا عناصر آمنة",
-      "one": "عنصر آمن واحد تعيد أدواتك بناءه عند الحاجة.",
-      "two": "عنصران آمنان تعيد أدواتك بناءهما عند الحاجة.",
-      "few": "%lld عناصر آمنة تعيد أدواتك بناءها عند الحاجة.",
-      "many": "%lld عنصرًا آمنًا تعيد أدواتك بناءها عند الحاجة.",
-      "other": "%lld عنصر آمن تعيد أدواتك بناءها عند الحاجة."
-    }
-  },
-  "The tool’s own command can shrink it: ⁦%@⁩": {
-    "ar": "يمكن للأمر الخاص بالأداة تقليصه: ⁦%@⁩"
-  },
-  "⁨%@⁩ is not selected automatically. Check whether you still need it.": {
-    "ar": "لم يُحدَّد ⁨%@⁩ تلقائيًا. تحقّق مما إذا كنت لا تزال بحاجة إليه."
-  },
-  "%lld startup items belong to apps that were removed.": {
-    "en_plural": {
-      "one": "%lld startup item belongs to an app that was removed.",
-      "other": "%lld startup items belong to apps that were removed."
-    },
-    "ar_plural": {
-      "zero": "لا عناصر بدء تشغيل لتطبيقات محذوفة.",
-      "one": "عنصر بدء تشغيل واحد يعود إلى تطبيق محذوف.",
-      "two": "عنصرا بدء تشغيل يعودان إلى تطبيقات محذوفة.",
-      "few": "%lld عناصر بدء تشغيل تعود إلى تطبيقات محذوفة.",
-      "many": "%lld عنصرًا من عناصر بدء التشغيل يعود إلى تطبيقات محذوفة.",
-      "other": "%lld عنصر بدء تشغيل يعود إلى تطبيقات محذوفة."
-    }
-  },
-  "%lld security settings are off or need review.": {
-    "en_plural": {
-      "one": "%lld security setting is off or needs review.",
-      "other": "%lld security settings are off or need review."
-    },
-    "ar_plural": {
-      "zero": "لا إعدادات أمان متوقفة أو تحتاج إلى مراجعة.",
-      "one": "إعداد أمان واحد متوقف أو يحتاج إلى مراجعة.",
-      "two": "إعدادا أمان متوقفان أو يحتاجان إلى مراجعة.",
-      "few": "%lld إعدادات أمان متوقفة أو تحتاج إلى مراجعة.",
-      "many": "%lld إعدادًا أمنيًا متوقفًا أو يحتاج إلى مراجعة.",
-      "other": "%lld إعداد أمان متوقف أو يحتاج إلى مراجعة."
-    }
-  },
-  "Memory pressure: %@": {
-    "ar": "ضغط الذاكرة: %@"
-  },
-  "%@ of disk free": {
-    "ar": "%@ من القرص متاح"
-  },
-  "Battery: %@": {
-    "ar": "البطارية: %@"
-  },
-  "Normal": {
-    "ar": "عادي"
-  },
-  "Warning": {
-    "ar": "تحذير"
-  },
-  "Critical": {
-    "ar": "حرج"
-  }
+"Cleanup": {
+"ar": "التنظيف"
+},
+"Developer": {
+"ar": "المطوّر"
+},
+"Developer tools": {
+"ar": "أدوات المطوّرين"
+},
+"Startup": {
+"ar": "عناصر بدء التشغيل"
+},
+"Security": {
+"ar": "الأمان"
+},
+"Show %@": {
+"ar": "عرض %@"
+},
+"Show in %@": {
+"ar": "عرض في %@"
+},
+"Done": {
+"ar": "تم"
+},
+"Not scanned yet": {
+"ar": "لم يُفحص بعد"
+},
+"Looking for developer tools…": {
+"ar": "جارٍ البحث عن أدوات المطوّرين…"
+},
+"Scanning…": {
+"ar": "جارٍ الفحص…"
+},
+"No developer tool data found": {
+"ar": "لم يُعثر على بيانات لأدوات المطوّرين"
+},
+"No issues found": {
+"ar": "لم يُعثر على مشكلات"
+},
+"Nothing to clean": {
+"ar": "لا شيء لتنظيفه"
+},
+"%lld tool stores found": {
+"en_plural": {
+"one": "%lld tool store found",
+"other": "%lld tool stores found"
+},
+"ar_plural": {
+"zero": "لم يُعثر على مخازن أدوات",
+"one": "عُثر على مخزن أداة واحد",
+"two": "عُثر على مخزنَي أدوات",
+"few": "عُثر على %lld مخازن أدوات",
+"many": "عُثر على %lld مخزن أدوات",
+"other": "عُثر على %lld مخزن أدوات"
+}
+},
+"%lld items left behind by removed apps": {
+"en_plural": {
+"one": "%lld item left behind by removed apps",
+"other": "%lld items left behind by removed apps"
+},
+"ar_plural": {
+"zero": "لا عناصر متبقية من تطبيقات محذوفة",
+"one": "عنصر واحد متبقٍّ من تطبيقات محذوفة",
+"two": "عنصران متبقيان من تطبيقات محذوفة",
+"few": "%lld عناصر متبقية من تطبيقات محذوفة",
+"many": "%lld عنصرًا متبقيًا من تطبيقات محذوفة",
+"other": "%lld عنصر متبقٍّ من تطبيقات محذوفة"
+}
+},
+"%lld startup items, none left behind": {
+"en_plural": {
+"one": "%lld startup item, none left behind",
+"other": "%lld startup items, none left behind"
+},
+"ar_plural": {
+"zero": "لا عناصر بدء تشغيل",
+"one": "عنصر بدء تشغيل واحد، ولا شيء متبقٍّ",
+"two": "عنصرا بدء تشغيل، ولا شيء متبقٍّ",
+"few": "%lld عناصر بدء تشغيل، ولا شيء متبقٍّ",
+"many": "%lld عنصر بدء تشغيل، ولا شيء متبقٍّ",
+"other": "%lld عنصر بدء تشغيل، ولا شيء متبقٍّ"
+}
+},
+"%lld settings need attention": {
+"en_plural": {
+"one": "%lld setting needs attention",
+"other": "%lld settings need attention"
+},
+"ar_plural": {
+"zero": "لا إعدادات تحتاج إلى انتباه",
+"one": "إعداد واحد يحتاج إلى انتباه",
+"two": "إعدادان يحتاجان إلى انتباه",
+"few": "%lld إعدادات تحتاج إلى انتباه",
+"many": "%lld إعدادًا يحتاج إلى انتباه",
+"other": "%lld إعداد يحتاج إلى انتباه"
+}
+},
+"%lld safe items, %@": {
+"en_plural": {
+"one": "%lld safe item, %@",
+"other": "%lld safe items, %@"
+},
+"ar_plural": {
+"zero": "لا عناصر آمنة، %2$@",
+"one": "عنصر آمن واحد، %2$@",
+"two": "عنصران آمنان، %2$@",
+"few": "%lld عناصر آمنة، %@",
+"many": "%lld عنصرًا آمنًا، %@",
+"other": "%lld عنصر آمن، %@"
+}
+},
+"Rescan": {
+"ar": "إعادة الفحص"
+},
+"Scan Everything": {
+"ar": "فحص كل شيء"
+},
+"Looks through caches, developer data, startup items and security settings. It only reads: nothing is deleted until you review it in its section.": {
+"ar": "يفحص ذاكرة التخزين المؤقت وبيانات المطوّرين وعناصر بدء التشغيل وإعدادات الأمان. يقرأ فقط: لا يُحذف أي شيء قبل أن تراجعه في قسمه."
+},
+"Recommendations": {
+"ar": "توصيات"
+},
+"Nothing needs your attention right now.": {
+"ar": "لا شيء يحتاج إلى انتباهك الآن."
+},
+"Full Disk Access is off": {
+"ar": "الوصول الكامل إلى القرص غير مفعّل"
+},
+"Without it, scans skip some protected folders, such as Safari and Mail data. Clenvra only reads them, and nothing is deleted without your review.": {
+"ar": "من دونه، يتخطى الفحص بعض المجلدات المحمية، مثل بيانات Safari والبريد. يكتفي Clenvra بقراءتها، ولا يُحذف أي شيء دون مراجعتك."
+},
+"Open Privacy & Security Settings…": {
+"ar": "فتح إعدادات الخصوصية والأمن…"
+},
+"free of %@": {
+"ar": "متاح من %@"
+},
+"%@ free of %@": {
+"ar": "%@ متاح من %@"
+},
+"Used %@, purgeable %@, free %@": {
+"ar": "مستخدم %@، قابل للتفريغ %@، متاح %@"
+},
+"Startup disk is almost full": {
+"ar": "قرص بدء التشغيل ممتلئ تقريبًا"
+},
+"Caches, logs and other junk": {
+"ar": "ذاكرة التخزين المؤقت والسجلات والملفات غير الضرورية"
+},
+"Developer build data": {
+"ar": "بيانات البناء الخاصة بالمطوّرين"
+},
+"Large item to review": {
+"ar": "عنصر كبير يحتاج إلى مراجعة"
+},
+"Startup items left behind": {
+"ar": "عناصر بدء تشغيل متبقية"
+},
+"Security setting needs attention": {
+"ar": "إعداد أمان يحتاج إلى انتباه"
+},
+"Only %@ is free. See what uses the most space.": {
+"ar": "المساحة المتاحة %@ فقط. اعرف ما الذي يشغل أكبر مساحة."
+},
+"%lld safe items that apps recreate when needed.": {
+"en_plural": {
+"one": "%lld safe item that apps recreate when needed.",
+"other": "%lld safe items that apps recreate when needed."
+},
+"ar_plural": {
+"zero": "لا عناصر آمنة",
+"one": "عنصر آمن واحد تعيد التطبيقات إنشاءه عند الحاجة.",
+"two": "عنصران آمنان تعيد التطبيقات إنشاءهما عند الحاجة.",
+"few": "%lld عناصر آمنة تعيد التطبيقات إنشاءها عند الحاجة.",
+"many": "%lld عنصرًا آمنًا تعيد التطبيقات إنشاءها عند الحاجة.",
+"other": "%lld عنصر آمن تعيد التطبيقات إنشاءها عند الحاجة."
+}
+},
+"%lld safe items that your tools rebuild when needed.": {
+"en_plural": {
+"one": "%lld safe item that your tools rebuild when needed.",
+"other": "%lld safe items that your tools rebuild when needed."
+},
+"ar_plural": {
+"zero": "لا عناصر آمنة",
+"one": "عنصر آمن واحد تعيد أدواتك بناءه عند الحاجة.",
+"two": "عنصران آمنان تعيد أدواتك بناءهما عند الحاجة.",
+"few": "%lld عناصر آمنة تعيد أدواتك بناءها عند الحاجة.",
+"many": "%lld عنصرًا آمنًا تعيد أدواتك بناءها عند الحاجة.",
+"other": "%lld عنصر آمن تعيد أدواتك بناءها عند الحاجة."
+}
+},
+"The tool’s own command can shrink it: ⁦%@⁩": {
+"ar": "يمكن للأمر الخاص بالأداة تقليصه: ⁦%@⁩"
+},
+"⁨%@⁩ is not selected automatically. Check whether you still need it.": {
+"ar": "لم يُحدَّد ⁨%@⁩ تلقائيًا. تحقّق مما إذا كنت لا تزال بحاجة إليه."
+},
+"%lld startup items belong to apps that were removed.": {
+"en_plural": {
+"one": "%lld startup item belongs to an app that was removed.",
+"other": "%lld startup items belong to apps that were removed."
+},
+"ar_plural": {
+"zero": "لا عناصر بدء تشغيل لتطبيقات محذوفة.",
+"one": "عنصر بدء تشغيل واحد يعود إلى تطبيق محذوف.",
+"two": "عنصرا بدء تشغيل يعودان إلى تطبيقات محذوفة.",
+"few": "%lld عناصر بدء تشغيل تعود إلى تطبيقات محذوفة.",
+"many": "%lld عنصرًا من عناصر بدء التشغيل يعود إلى تطبيقات محذوفة.",
+"other": "%lld عنصر بدء تشغيل يعود إلى تطبيقات محذوفة."
+}
+},
+"%lld security settings are off or need review.": {
+"en_plural": {
+"one": "%lld security setting is off or needs review.",
+"other": "%lld security settings are off or need review."
+},
+"ar_plural": {
+"zero": "لا إعدادات أمان متوقفة أو تحتاج إلى مراجعة.",
+"one": "إعداد أمان واحد متوقف أو يحتاج إلى مراجعة.",
+"two": "إعدادا أمان متوقفان أو يحتاجان إلى مراجعة.",
+"few": "%lld إعدادات أمان متوقفة أو تحتاج إلى مراجعة.",
+"many": "%lld إعدادًا أمنيًا متوقفًا أو يحتاج إلى مراجعة.",
+"other": "%lld إعداد أمان متوقف أو يحتاج إلى مراجعة."
+}
+},
+"Memory pressure: %@": {
+"ar": "ضغط الذاكرة: %@"
+},
+"%@ of disk free": {
+"ar": "%@ من القرص متاح"
+},
+"Battery: %@": {
+"ar": "البطارية: %@"
+},
+"Normal": {
+"ar": "عادي"
+},
+"Warning": {
+"ar": "تحذير"
+},
+"Critical": {
+"ar": "حرج"
+}
 }

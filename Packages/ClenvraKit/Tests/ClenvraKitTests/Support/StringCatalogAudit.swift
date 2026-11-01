@@ -33,6 +33,60 @@ enum StringCatalogAudit {
         }.sorted()
     }
 
+    /// Returns `"<key> (<language> <form>)"` for every translation in which a placeholder reads an argument as
+    /// another type than the key does, which crashes at run time (a count read as `%@`). Translations may leave
+    /// an argument out (an Arabic "one" form without the number), but a later one must then name its position (`%2$@`).
+    static func mismatchedPlaceholders(in catalog: Data) throws -> [String] {
+        guard let root = try JSONSerialization.jsonObject(with: catalog) as? [String: Any],
+            let strings = root["strings"] as? [String: Any]
+        else { throw MalformedCatalog() }
+        var mismatched: [String] = []
+        for key in strings.keys.sorted() {
+            let expected = placeholders(in: key).map(\.kind)
+            let localizations = (strings[key] as? [String: Any])?["localizations"] as? [String: Any] ?? [:]
+            for language in localizations.keys.sorted() {
+                for (form, value) in values(of: localizations[language]) {
+                    var next = 0
+                    let wrong = placeholders(in: value).contains { placeholder in
+                        let index = placeholder.position.map { $0 - 1 } ?? next
+                        next = index + 1
+                        return index >= expected.count || expected[index] != placeholder.kind
+                    }
+                    if wrong { mismatched.append("\(key) (\(language) \(form))") }
+                }
+            }
+        }
+        return mismatched
+    }
+
+    private enum ArgumentKind { case object, integer, double }
+
+    /// The format placeholders of a string in order: their explicit position (`%2$@`), if any, and argument kind.
+    private static func placeholders(in string: String) -> [(position: Int?, kind: ArgumentKind)] {
+        let pattern = /%(?:(\d+)\$)?[-+ #0]*\d*(?:\.\d+)?(?:hh|h|ll|l|q|z|t|j)?([@dDiuUxXoOfFeEgGaAcCsSp%])/
+        return string.matches(of: pattern).compactMap { match in
+            let kind: ArgumentKind
+            switch match.output.2 {
+            case "%": return nil
+            case "@", "s", "S", "p", "c", "C": kind = .object
+            case "f", "F", "e", "E", "g", "G", "a", "A": kind = .double
+            default: kind = .integer
+            }
+            return (match.output.1.flatMap { Int($0) }, kind)
+        }
+    }
+
+    /// Each string of a localization: its unit (`"unit"`) and every variant, named by its form.
+    private static func values(of node: Any?) -> [(form: String, value: String)] {
+        guard let node = node as? [String: Any] else { return [] }
+        if let value = (node["stringUnit"] as? [String: Any])?["value"] as? String { return [("unit", value)] }
+        let variations = node["variations"] as? [String: Any] ?? [:]
+        return variations.values.flatMap { kind -> [(form: String, value: String)] in
+            let variants = kind as? [String: Any] ?? [:]
+            return variants.keys.sorted().flatMap { form in values(of: variants[form]).map { (form, $0.value) } }
+        }
+    }
+
     /// A localization is translated when its string unit is, or when every leaf of its variations is.
     private static func isTranslated(_ node: Any?) -> Bool {
         guard let node = node as? [String: Any] else { return false }

@@ -1,583 +1,583 @@
 {
- "%lld current items could not be moved to the Trash, so they were kept": {
-  "en_plural": {
-   "one": "%lld current item could not be moved to the Trash, so it was kept",
-   "other": "%lld current items could not be moved to the Trash, so they were kept"
-  },
-  "ar_plural": {
-   "zero": "تعذّر نقل 0 عناصر من العناصر الحالية إلى سلة المهملات، فتُركت",
-   "one": "تعذّر نقل عنصر واحد من العناصر الحالية إلى سلة المهملات، فتُركت",
-   "two": "تعذّر نقل عنصرين من العناصر الحالية إلى سلة المهملات، فتُركت",
-   "few": "تعذّر نقل %lld عناصر من العناصر الحالية إلى سلة المهملات، فتُركت",
-   "many": "تعذّر نقل %lld عنصرًا من العناصر الحالية إلى سلة المهملات، فتُركت",
-   "other": "تعذّر نقل %lld عنصرًا من العناصر الحالية إلى سلة المهملات، فتُركت"
-  }
- },
- "%lld current items were moved to the Trash first": {
-  "en_plural": {
-   "one": "%lld current item was moved to the Trash first",
-   "other": "%lld current items were moved to the Trash first"
-  },
-  "ar_plural": {
-   "zero": "نُقل أولًا 0 عناصر من العناصر الحالية إلى سلة المهملات",
-   "one": "نُقل أولًا عنصر واحد من العناصر الحالية إلى سلة المهملات",
-   "two": "نُقل أولًا عنصران من العناصر الحالية إلى سلة المهملات",
-   "few": "نُقل أولًا %lld عناصر من العناصر الحالية إلى سلة المهملات",
-   "many": "نُقل أولًا %lld عنصرًا من العناصر الحالية إلى سلة المهملات",
-   "other": "نُقل أولًا %lld عنصرًا من العناصر الحالية إلى سلة المهملات"
-  }
- },
- "%lld items stay: they are shared with another app, protected, or need the helper.": {
-  "en_plural": {
-   "one": "%lld item stays: it is shared with another app, protected, or needs the helper.",
-   "other": "%lld items stay: they are shared with another app, protected, or need the helper."
-  },
-  "ar_plural": {
-   "zero": "يبقى 0 عناصر: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
-   "one": "يبقى عنصر واحد: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
-   "two": "يبقى عنصران: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
-   "few": "يبقى %lld عناصر: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
-   "many": "يبقى %lld عنصرًا: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
-   "other": "يبقى %lld عنصرًا: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد."
-  }
- },
- "%lld items were deleted for good, freeing about %@.": {
-  "en_plural": {
-   "one": "%lld item was deleted for good, freeing about %@.",
-   "other": "%lld items were deleted for good, freeing about %@."
-  },
-  "ar_plural": {
-   "zero": "حُذف 0 عناصر نهائيًا، وتحرّر نحو %@.",
-   "one": "حُذف عنصر واحد نهائيًا، وتحرّر نحو %@.",
-   "two": "حُذف عنصران نهائيًا، وتحرّر نحو %@.",
-   "few": "حُذف %lld عناصر نهائيًا، وتحرّر نحو %@.",
-   "many": "حُذف %lld عنصرًا نهائيًا، وتحرّر نحو %@.",
-   "other": "حُذف %lld عنصرًا نهائيًا، وتحرّر نحو %@."
-  }
- },
- "%lld items were stopped and moved to the Trash.": {
-  "en_plural": {
-   "one": "%lld item was stopped and moved to the Trash.",
-   "other": "%lld items were stopped and moved to the Trash."
-  },
-  "ar_plural": {
-   "zero": "أُوقف 0 عناصر ونُقل إلى سلة المهملات.",
-   "one": "أُوقف عنصر واحد ونُقل إلى سلة المهملات.",
-   "two": "أُوقف عنصران ونُقل إلى سلة المهملات.",
-   "few": "أُوقف %lld عناصر ونُقل إلى سلة المهملات.",
-   "many": "أُوقف %lld عنصرًا ونُقل إلى سلة المهملات.",
-   "other": "أُوقف %lld عنصرًا ونُقل إلى سلة المهملات."
-  }
- },
- "Back up %lld apps": {
-  "en_plural": {
-   "one": "Back up %lld app",
-   "other": "Back up %lld apps"
-  },
-  "ar_plural": {
-   "zero": "نسخ 0 تطبيقات احتياطيًا",
-   "one": "نسخ تطبيقًا واحدًا احتياطيًا",
-   "two": "نسخ تطبيقين احتياطيًا",
-   "few": "نسخ %lld تطبيقات احتياطيًا",
-   "many": "نسخ %lld تطبيقًا احتياطيًا",
-   "other": "نسخ %lld تطبيقًا احتياطيًا"
-  }
- },
- "Could not revoke %lld permissions": {
-  "en_plural": {
-   "one": "Could not revoke %lld permission",
-   "other": "Could not revoke %lld permissions"
-  },
-  "ar_plural": {
-   "zero": "تعذّر إلغاء 0 أذونات",
-   "one": "تعذّر إلغاء إذن واحد",
-   "two": "تعذّر إلغاء إذنين",
-   "few": "تعذّر إلغاء %lld أذونات",
-   "many": "تعذّر إلغاء %lld إذنًا",
-   "other": "تعذّر إلغاء %lld إذنًا"
-  }
- },
- "Disable %lld Items": {
-  "en_plural": {
-   "one": "Disable %lld Item",
-   "other": "Disable %lld Items"
-  },
-  "ar_plural": {
-   "zero": "تعطيل 0 عناصر",
-   "one": "تعطيل عنصر واحد",
-   "two": "تعطيل عنصرين",
-   "few": "تعطيل %lld عناصر",
-   "many": "تعطيل %lld عنصرًا",
-   "other": "تعطيل %lld عنصرًا"
-  }
- },
- "Enable %lld Items": {
-  "en_plural": {
-   "one": "Enable %lld Item",
-   "other": "Enable %lld Items"
-  },
-  "ar_plural": {
-   "zero": "تمكين 0 عناصر",
-   "one": "تمكين عنصر واحد",
-   "two": "تمكين عنصرين",
-   "few": "تمكين %lld عناصر",
-   "many": "تمكين %lld عنصرًا",
-   "other": "تمكين %lld عنصرًا"
-  }
- },
- "Move %lld apps to the Trash?": {
-  "en_plural": {
-   "one": "Move %lld app to the Trash?",
-   "other": "Move %lld apps to the Trash?"
-  },
-  "ar_plural": {
-   "zero": "هل تريد نقل 0 تطبيقات إلى سلة المهملات؟",
-   "one": "هل تريد نقل تطبيق واحد إلى سلة المهملات؟",
-   "two": "هل تريد نقل تطبيقين إلى سلة المهملات؟",
-   "few": "هل تريد نقل %lld تطبيقات إلى سلة المهملات؟",
-   "many": "هل تريد نقل %lld تطبيقًا إلى سلة المهملات؟",
-   "other": "هل تريد نقل %lld تطبيقًا إلى سلة المهملات؟"
-  }
- },
- "Move %lld backups to the Trash?": {
-  "en_plural": {
-   "one": "Move %lld backup to the Trash?",
-   "other": "Move %lld backups to the Trash?"
-  },
-  "ar_plural": {
-   "zero": "هل تريد نقل 0 نسخ احتياطية إلى سلة المهملات؟",
-   "one": "هل تريد نقل نسخة احتياطية واحدة إلى سلة المهملات؟",
-   "two": "هل تريد نقل نسختين احتياطيتين إلى سلة المهملات؟",
-   "few": "هل تريد نقل %lld نسخ احتياطية إلى سلة المهملات؟",
-   "many": "هل تريد نقل %lld نسخة احتياطية إلى سلة المهملات؟",
-   "other": "هل تريد نقل %lld نسخة احتياطية إلى سلة المهملات؟"
-  }
- },
- "Remove %lld Items…": {
-  "en_plural": {
-   "one": "Remove %lld Item…",
-   "other": "Remove %lld Items…"
-  },
-  "ar_plural": {
-   "zero": "إزالة 0 عناصر…",
-   "one": "إزالة عنصر واحد…",
-   "two": "إزالة عنصرين…",
-   "few": "إزالة %lld عناصر…",
-   "many": "إزالة %lld عنصرًا…",
-   "other": "إزالة %lld عنصرًا…"
-  }
- },
- "Remove %lld startup items?": {
-  "en_plural": {
-   "one": "Remove %lld startup item?",
-   "other": "Remove %lld startup items?"
-  },
-  "ar_plural": {
-   "zero": "هل تريد إزالة 0 عناصر من عناصر بدء التشغيل؟",
-   "one": "هل تريد إزالة عنصر واحد من عناصر بدء التشغيل؟",
-   "two": "هل تريد إزالة عنصرين من عناصر بدء التشغيل؟",
-   "few": "هل تريد إزالة %lld عناصر من عناصر بدء التشغيل؟",
-   "many": "هل تريد إزالة %lld عنصرًا من عناصر بدء التشغيل؟",
-   "other": "هل تريد إزالة %lld عنصرًا من عناصر بدء التشغيل؟"
-  }
- },
- "Restore %lld Items": {
-  "en_plural": {
-   "one": "Restore %lld Item",
-   "other": "Restore %lld Items"
-  },
-  "ar_plural": {
-   "zero": "استعادة 0 عناصر",
-   "one": "استعادة عنصر واحد",
-   "two": "استعادة عنصرين",
-   "few": "استعادة %lld عناصر",
-   "many": "استعادة %lld عنصرًا",
-   "other": "استعادة %lld عنصرًا"
-  }
- },
- "Restored %lld items": {
-  "en_plural": {
-   "one": "Restored %lld item",
-   "other": "Restored %lld items"
-  },
-  "ar_plural": {
-   "zero": "استُعيد 0 عناصر",
-   "one": "استُعيد عنصر واحد",
-   "two": "استُعيد عنصران",
-   "few": "استُعيد %lld عناصر",
-   "many": "استُعيد %lld عنصرًا",
-   "other": "استُعيد %lld عنصرًا"
-  }
- },
- "Revoke %lld Permissions…": {
-  "en_plural": {
-   "one": "Revoke %lld Permission…",
-   "other": "Revoke %lld Permissions…"
-  },
-  "ar_plural": {
-   "zero": "إلغاء 0 أذونات…",
-   "one": "إلغاء إذن واحد…",
-   "two": "إلغاء إذنين…",
-   "few": "إلغاء %lld أذونات…",
-   "many": "إلغاء %lld إذنًا…",
-   "other": "إلغاء %lld إذنًا…"
-  }
- },
- "Revoke %lld permissions?": {
-  "en_plural": {
-   "one": "Revoke %lld permission?",
-   "other": "Revoke %lld permissions?"
-  },
-  "ar_plural": {
-   "zero": "هل تريد إلغاء 0 أذونات؟",
-   "one": "هل تريد إلغاء إذن واحد؟",
-   "two": "هل تريد إلغاء إذنين؟",
-   "few": "هل تريد إلغاء %lld أذونات؟",
-   "many": "هل تريد إلغاء %lld إذنًا؟",
-   "other": "هل تريد إلغاء %lld إذنًا؟"
-  }
- },
- "Uninstall %lld apps completely?": {
-  "en_plural": {
-   "one": "Uninstall %lld app completely?",
-   "other": "Uninstall %lld apps completely?"
-  },
-  "ar_plural": {
-   "zero": "هل تريد إلغاء تثبيت 0 تطبيقات بالكامل؟",
-   "one": "هل تريد إلغاء تثبيت تطبيق واحد بالكامل؟",
-   "two": "هل تريد إلغاء تثبيت تطبيقين بالكامل؟",
-   "few": "هل تريد إلغاء تثبيت %lld تطبيقات بالكامل؟",
-   "many": "هل تريد إلغاء تثبيت %lld تطبيقًا بالكامل؟",
-   "other": "هل تريد إلغاء تثبيت %lld تطبيقًا بالكامل؟"
-  }
- },
- "Uninstalled %lld apps": {
-  "en_plural": {
-   "one": "Uninstalled %lld app",
-   "other": "Uninstalled %lld apps"
-  },
-  "ar_plural": {
-   "zero": "أُلغي تثبيت 0 تطبيقات",
-   "one": "أُلغي تثبيت تطبيق واحد",
-   "two": "أُلغي تثبيت تطبيقان",
-   "few": "أُلغي تثبيت %lld تطبيقات",
-   "many": "أُلغي تثبيت %lld تطبيقًا",
-   "other": "أُلغي تثبيت %lld تطبيقًا"
-  }
- },
- "%@ is open. Quit it first, then remove this extension together with its app.": {
-  "ar": "%@ مفتوح. أنهِه أولًا، ثم أزل هذا الامتداد مع تطبيقه."
- },
- "%@ will lose access to %@ for all users. macOS asks for an administrator’s password first.": {
-  "ar": "سيفقد %@ الوصول إلى %@ لجميع المستخدمين. يطلب macOS كلمة سر المسؤول أولًا."
- },
- "1 to 2 Years": {
-  "ar": "من سنة إلى سنتين"
- },
- "6 to 12 Months": {
-  "ar": "من 6 إلى 12 شهرًا"
- },
- "A backup could not be moved to the Trash.": {
-  "ar": "تعذّر نقل نسخة احتياطية إلى سلة المهملات."
- },
- "Allow the selected disabled items to start again": {
-  "ar": "اسمح للعناصر المعطّلة المحددة بالتشغيل مرة أخرى"
- },
- "Apps": {
-  "ar": "التطبيقات"
- },
- "Back Up": {
-  "ar": "نسخ احتياطي"
- },
- "Back Up…": {
-  "ar": "نسخ احتياطي…"
- },
- "Back up": {
-  "ar": "نسخ احتياطي"
- },
- "Back up apps with Back Up…, or before removing them; the backups appear here.": {
-  "ar": "انسخ التطبيقات احتياطيًا بالأمر «نسخ احتياطي…» أو قبل إزالتها؛ تظهر النسخ هنا."
- },
- "Back up first": {
-  "ar": "نسخ احتياطي أولًا"
- },
- "Back up the checked apps (or the selected app): the whole app or only its settings. Nothing is removed.": {
-  "ar": "انسخ التطبيقات المحددة (أو التطبيق المختار) احتياطيًا: التطبيق كاملًا أو إعداداته فقط. لا يُزال أي شيء."
- },
- "Blurry or Dark": {
-  "ar": "ضبابية أو مظلمة"
- },
- "Choose backups": {
-  "ar": "اختر النسخ الاحتياطية"
- },
- "Choose one or more backups to see what they hold and what to restore.": {
-  "ar": "اختر نسخة احتياطية أو أكثر لترى محتواها وما تريد استعادته."
- },
- "Clear Selection": {
-  "ar": "مسح التحديد"
- },
- "Click a photo to compare it with the one kept in its group.": {
-  "ar": "انقر صورة لمقارنتها بالصورة المحفوظة في مجموعتها."
- },
- "Compared with the photo kept in its group.": {
-  "ar": "مقارنة بالصورة المحفوظة في مجموعتها."
- },
- "Delete the checked apps (or the selected app) and everything they installed for good, as if never installed. Not to the Trash.": {
-  "ar": "احذف التطبيقات المحددة (أو التطبيق المختار) وكل ما ثبّتته نهائيًا، كأنها لم تُثبَّت قط. لا تذهب إلى سلة المهملات."
- },
- "Deleted for good": {
-  "ar": "حُذف نهائيًا"
- },
- "Dimensions": {
-  "ar": "الأبعاد"
- },
- "Disable": {
-  "ar": "تعطيل"
- },
- "Disable stops it and keeps it from starting again; its file stays. Enable undoes it.": {
-  "ar": "التعطيل يوقفه ويمنعه من التشغيل مجددًا، ويبقى ملفه. التمكين يلغي ذلك."
- },
- "Disabled": {
-  "ar": "معطّل"
- },
- "Disabled. It was stopped and will not start again until you enable it.": {
-  "ar": "معطّل. أُوقف ولن يعمل مجددًا حتى تمكّنه."
- },
- "Don't Remove": {
-  "ar": "لا تُزِل"
- },
- "Each app and everything listed below are deleted for good, as if the app had never been installed. They do not go to the Trash and can't be put back, except from a backup.": {
-  "ar": "يُحذف كل تطبيق وكل ما هو مدرج أدناه نهائيًا، كأن التطبيق لم يُثبَّت قط. لا تذهب إلى سلة المهملات ولا يمكن إرجاعها إلا من نسخة احتياطية."
- },
- "Enable": {
-  "ar": "تمكين"
- },
- "Enabled. It can start again, and was started now if macOS allowed it.": {
-  "ar": "ممكَّن. يمكنه العمل مجددًا، وقد شُغّل الآن إن سمح macOS بذلك."
- },
- "Finding everything the apps installed…": {
-  "ar": "جارٍ البحث عن كل ما ثبّتته التطبيقات…"
- },
- "Folder": {
-  "ar": "المجلد"
- },
- "Force Quit %@…": {
-  "ar": "فرض إنهاء %@…"
- },
- "From the App Store. You can download it again from your purchases.": {
-  "ar": "من App Store. يمكنك تنزيله مرة أخرى من مشترياتك."
- },
- "Homebrew cask %@: removed with “brew uninstall --cask --zap” first.": {
-  "ar": "حزمة Homebrew %@: تُزال أولًا بالأمر «brew uninstall --cask --zap»."
- },
- "Homebrew formula %@: removed with “brew uninstall” first.": {
-  "ar": "صيغة Homebrew %@: تُزال أولًا بالأمر «brew uninstall»."
- },
- "If an app's backup fails, that app is kept.": {
-  "ar": "إذا فشل النسخ الاحتياطي لتطبيق، يُترك ذلك التطبيق."
- },
- "Installed by a package (%@). Its installer record stays.": {
-  "ar": "ثُبّت بحزمة (%@). يبقى سجل التثبيت."
- },
- "Items for all users are changed with Clenvra’s helper. Install it in Settings, or use Login Items Settings.": {
-  "ar": "تُغيَّر العناصر الخاصة بجميع المستخدمين عبر مساعد Clenvra. ثبّته من الإعدادات، أو استخدم إعدادات عناصر تسجيل الدخول."
- },
- "Keep This Instead": {
-  "ar": "احتفظ بهذه بدلًا منها"
- },
- "Keep this photo and select the other photos of its group to move to the Trash.": {
-  "ar": "احتفظ بهذه الصورة وحدد صور مجموعتها الأخرى لنقلها إلى سلة المهملات."
- },
- "Keeping %@": {
-  "ar": "الاحتفاظ بـ %@"
- },
- "Kept, %@": {
-  "ar": "محفوظة، %@"
- },
- "Kept: Homebrew could not remove it (%@).": {
-  "ar": "تُرك: تعذّر على Homebrew إزالته (%@)."
- },
- "Less than 6 Months": {
-  "ar": "أقل من 6 أشهر"
- },
- "Manage in Login Items Settings": {
-  "ar": "الإدارة في إعدادات عناصر تسجيل الدخول"
- },
- "Move %@ to the Trash?": {
-  "ar": "هل تريد نقل %@ إلى سلة المهملات؟"
- },
- "Move Backups to Trash": {
-  "ar": "نقل النسخ الاحتياطية إلى سلة المهملات"
- },
- "Move the checked apps (or the selected app) and their files to the Trash. You can put them back from Activity (⌘⌫)": {
-  "ar": "انقل التطبيقات المحددة (أو التطبيق المختار) وملفاتها إلى سلة المهملات. يمكنك إرجاعها من السجل (⌘⌫)"
- },
- "More than 2 Years": {
-  "ar": "أكثر من سنتين"
- },
- "Needs your administrator password": {
-  "ar": "يحتاج إلى كلمة سر المسؤول"
- },
- "Not Rated": {
-  "ar": "غير مقيّمة"
- },
- "Not Removed": {
-  "ar": "لن تُزال"
- },
- "Nothing was changed: an administrator’s password is needed for items for all users.": {
-  "ar": "لم يتغير شيء: يلزم كلمة سر المسؤول للعناصر الخاصة بجميع المستخدمين."
- },
- "Nothing was replaced. Turn on “Replace the current version” to swap in the backup's copy.": {
-  "ar": "لم يُستبدل شيء. فعّل «استبدال الإصدار الحالي» لوضع نسخة النسخة الاحتياطية مكانه."
- },
- "Only the app's settings and data: preferences, Application Support, containers, saved state and cookies. Not the app itself, its caches or logs.": {
-  "ar": "إعدادات التطبيق وبياناته فقط: التفضيلات وApplication Support والحاويات والحالة المحفوظة وملفات تعريف الارتباط. ليس التطبيق نفسه ولا ذاكرته المؤقتة أو سجلاته."
- },
- "Programs listed by path, not as an app, can only be changed in System Settings.": {
-  "ar": "البرامج المدرجة بمسارها لا كتطبيق لا يمكن تغييرها إلا من إعدادات النظام."
- },
- "Put the checked items of the chosen backups back where they were": {
-  "ar": "أرجع العناصر المحددة من النسخ الاحتياطية المختارة إلى أماكنها"
- },
- "Quality": {
-  "ar": "الجودة"
- },
- "Quit %@…": {
-  "ar": "إنهاء %@…"
- },
- "Quit the app this extension belongs to, so you can remove it": {
-  "ar": "أنهِ التطبيق الذي ينتمي إليه هذا الامتداد لتتمكن من إزالته"
- },
- "Rated blurry or dark. It is in no group, so nothing else is kept in its place.": {
-  "ar": "مقيّمة كضبابية أو مظلمة. ليست في أي مجموعة، لذا لا يُحتفظ بغيرها مكانها."
- },
- "Remove the selected permissions. macOS asks again the next time the app needs them.": {
-  "ar": "أزل الأذونات المحددة. يطلبها macOS مرة أخرى عندما يحتاجها التطبيق."
- },
- "Replace the current version": {
-  "ar": "استبدال الإصدار الحالي"
- },
- "Review and move the selected photos to the Trash (⌘⌫)": {
-  "ar": "راجع الصور المحددة وانقلها إلى سلة المهملات (⌘⌫)"
- },
- "Screenshot or Document": {
-  "ar": "لقطة شاشة أو مستند"
- },
- "Select All but the Kept Photo": {
-  "ar": "تحديد الكل عدا الصورة المحفوظة"
- },
- "Select Suggested": {
-  "ar": "تحديد المقترح"
- },
- "Select all %@": {
-  "ar": "تحديد كل %@"
- },
- "Select every photo except the one kept in each group, and every blurry or dark photo.": {
-  "ar": "حدد كل صورة عدا المحفوظة في كل مجموعة، وكل صورة ضبابية أو مظلمة."
- },
- "Select the suggested photos or clear the selection": {
-  "ar": "حدد الصور المقترحة أو امسح التحديد"
- },
- "Selected to move to the Trash. Click the photo to compare it with the one kept.": {
-  "ar": "محددة للنقل إلى سلة المهملات. انقر الصورة لمقارنتها بالمحفوظة."
- },
- "Selects every photo in this group except the one marked Keep.": {
-  "ar": "يحدد كل صورة في هذه المجموعة عدا المعلّمة بالاحتفاظ."
- },
- "Settings only": {
-  "ar": "الإعدادات فقط"
- },
- "Show the app backups and restore all or part of them": {
-  "ar": "اعرض نسخ التطبيقات الاحتياطية واستعدها كلها أو جزءًا منها"
- },
- "Some items were changed. Others were not: %@": {
-  "ar": "تغيّر بعض العناصر. ولم يتغير غيرها: %@"
- },
- "Some items were moved to the Trash. Others were kept: %@": {
-  "ar": "نُقل بعض العناصر إلى سلة المهملات. وتُرك غيرها: %@"
- },
- "Stop the selected items and keep them from starting again. Enable undoes it.": {
-  "ar": "أوقف العناصر المحددة وامنعها من التشغيل مجددًا. التمكين يلغي ذلك."
- },
- "Stop the selected items and move their files to the Trash": {
-  "ar": "أوقف العناصر المحددة وانقل ملفاتها إلى سلة المهملات"
- },
- "Stopped now, they will not start again. Their files go to the Trash, so you can put them back.": {
-  "ar": "تُوقف الآن ولن تعمل مجددًا. تذهب ملفاتها إلى سلة المهملات، فيمكنك إرجاعها."
- },
- "The app and every file it owns, so you can go back to this exact state later, for example after an upgrade.": {
-  "ar": "التطبيق وكل ملف يملكه، لتعود إلى هذه الحالة نفسها لاحقًا، مثلًا بعد تحديث."
- },
- "The best photo in every group is kept; the others are selected for you to review.": {
-  "ar": "يُحتفظ بأفضل صورة في كل مجموعة، والبقية محددة لتراجعها."
- },
- "These apps still have access. Change them in System Settings.": {
-  "ar": "ما زال لهذه التطبيقات وصول. غيّرها من إعدادات النظام."
- },
- "These apps will lose these permissions. Permissions for all users ask for an administrator’s password.": {
-  "ar": "ستفقد هذه التطبيقات هذه الأذونات. أذونات جميع المستخدمين تطلب كلمة سر المسؤول."
- },
- "These apps will lose these permissions. macOS asks again the next time they need them.": {
-  "ar": "ستفقد هذه التطبيقات هذه الأذونات. يطلبها macOS مرة أخرى عندما تحتاجها."
- },
- "These backups can no longer be restored once the Trash is emptied.": {
-  "ar": "لا يمكن استعادة هذه النسخ الاحتياطية بعد إفراغ سلة المهملات."
- },
- "This item cannot be changed here. Login Items Settings shows what macOS allows.": {
-  "ar": "لا يمكن تغيير هذا العنصر هنا. تعرض إعدادات عناصر تسجيل الدخول ما يسمح به macOS."
- },
- "This item cannot be changed here. Use Login Items Settings.": {
-  "ar": "لا يمكن تغيير هذا العنصر هنا. استخدم إعدادات عناصر تسجيل الدخول."
- },
- "This item changed since it was listed, so nothing was done. Refresh and try again.": {
-  "ar": "تغيّر هذا العنصر بعد إدراجه، فلم يُفعل شيء. حدّث وحاول مرة أخرى."
- },
- "This item is for all users: Disable and Enable ask for an administrator’s password each time.": {
-  "ar": "هذا العنصر لجميع المستخدمين: يطلب التعطيل والتمكين كلمة سر المسؤول في كل مرة."
- },
- "This permission cannot be revoked here": {
-  "ar": "لا يمكن إلغاء هذا الإذن هنا"
- },
- "This permission is for all users. Revoke asks for an administrator’s password, then removes it.": {
-  "ar": "هذا الإذن لجميع المستخدمين. يطلب الإلغاء كلمة سر المسؤول ثم يزيله."
- },
- "This photo is kept. The other photos of its group are compared with it.": {
-  "ar": "هذه الصورة محفوظة. تُقارن بها صور مجموعتها الأخرى."
- },
- "This photo is kept. To remove it, choose Keep This Instead on another photo of its group.": {
-  "ar": "هذه الصورة محفوظة. لإزالتها، اختر «احتفظ بهذه بدلًا منها» على صورة أخرى من مجموعتها."
- },
- "Together this frees about %@.": {
-  "ar": "يحرّر هذا معًا نحو %@."
- },
- "Uninstall Permanently": {
-  "ar": "إلغاء التثبيت نهائيًا"
- },
- "Unknown Date": {
-  "ar": "تاريخ غير معروف"
- },
- "Unknown app": {
-  "ar": "تطبيق غير معروف"
- },
- "Waiting for approval": {
-  "ar": "بانتظار الموافقة"
- },
- "When something is already at an item's place, it is moved to the Trash first and the backup's copy is put back. You can put the current copy back from Activity. When off, existing items are left alone.": {
-  "ar": "إذا وُجد شيء في مكان عنصر، يُنقل أولًا إلى سلة المهملات ثم تُرجع نسخة النسخة الاحتياطية. يمكنك إرجاع النسخة الحالية من السجل. عند الإيقاف تُترك العناصر الموجودة كما هي."
- },
- "Whole app": {
-  "ar": "التطبيق كاملًا"
- },
- "You can put them back from Activity.": {
-  "ar": "يمكنك إرجاعها من السجل."
- },
- "You chose to keep this photo.": {
-  "ar": "اخترت الاحتفاظ بهذه الصورة."
- },
- "macOS could not change this item.": {
-  "ar": "تعذّر على macOS تغيير هذا العنصر."
- },
- "macOS is waiting for you to allow this item. Only Login Items Settings can allow it.": {
-  "ar": "ينتظر macOS أن تسمح بهذا العنصر. لا يمكن السماح به إلا من إعدادات عناصر تسجيل الدخول."
- }
+"%lld current items could not be moved to the Trash, so they were kept": {
+"en_plural": {
+"one": "%lld current item could not be moved to the Trash, so it was kept",
+"other": "%lld current items could not be moved to the Trash, so they were kept"
+},
+"ar_plural": {
+"zero": "تعذّر نقل 0 عناصر من العناصر الحالية إلى سلة المهملات، فتُركت",
+"one": "تعذّر نقل عنصر واحد من العناصر الحالية إلى سلة المهملات، فتُركت",
+"two": "تعذّر نقل عنصرين من العناصر الحالية إلى سلة المهملات، فتُركت",
+"few": "تعذّر نقل %lld عناصر من العناصر الحالية إلى سلة المهملات، فتُركت",
+"many": "تعذّر نقل %lld عنصرًا من العناصر الحالية إلى سلة المهملات، فتُركت",
+"other": "تعذّر نقل %lld عنصرًا من العناصر الحالية إلى سلة المهملات، فتُركت"
+}
+},
+"%lld current items were moved to the Trash first": {
+"en_plural": {
+"one": "%lld current item was moved to the Trash first",
+"other": "%lld current items were moved to the Trash first"
+},
+"ar_plural": {
+"zero": "نُقل أولًا 0 عناصر من العناصر الحالية إلى سلة المهملات",
+"one": "نُقل أولًا عنصر واحد من العناصر الحالية إلى سلة المهملات",
+"two": "نُقل أولًا عنصران من العناصر الحالية إلى سلة المهملات",
+"few": "نُقل أولًا %lld عناصر من العناصر الحالية إلى سلة المهملات",
+"many": "نُقل أولًا %lld عنصرًا من العناصر الحالية إلى سلة المهملات",
+"other": "نُقل أولًا %lld عنصرًا من العناصر الحالية إلى سلة المهملات"
+}
+},
+"%lld items stay: they are shared with another app, protected, or need the helper.": {
+"en_plural": {
+"one": "%lld item stays: it is shared with another app, protected, or needs the helper.",
+"other": "%lld items stay: they are shared with another app, protected, or need the helper."
+},
+"ar_plural": {
+"zero": "يبقى 0 عناصر: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
+"one": "يبقى عنصر واحد: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
+"two": "يبقى عنصران: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
+"few": "يبقى %lld عناصر: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
+"many": "يبقى %lld عنصرًا: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد.",
+"other": "يبقى %lld عنصرًا: مشترك مع تطبيق آخر أو محمي أو يحتاج إلى المساعد."
+}
+},
+"%lld items were deleted for good, freeing about %@.": {
+"en_plural": {
+"one": "%lld item was deleted for good, freeing about %@.",
+"other": "%lld items were deleted for good, freeing about %@."
+},
+"ar_plural": {
+"zero": "حُذف 0 عناصر نهائيًا، وتحرّر نحو %2$@.",
+"one": "حُذف عنصر واحد نهائيًا، وتحرّر نحو %2$@.",
+"two": "حُذف عنصران نهائيًا، وتحرّر نحو %2$@.",
+"few": "حُذف %lld عناصر نهائيًا، وتحرّر نحو %@.",
+"many": "حُذف %lld عنصرًا نهائيًا، وتحرّر نحو %@.",
+"other": "حُذف %lld عنصرًا نهائيًا، وتحرّر نحو %@."
+}
+},
+"%lld items were stopped and moved to the Trash.": {
+"en_plural": {
+"one": "%lld item was stopped and moved to the Trash.",
+"other": "%lld items were stopped and moved to the Trash."
+},
+"ar_plural": {
+"zero": "أُوقف 0 عناصر ونُقل إلى سلة المهملات.",
+"one": "أُوقف عنصر واحد ونُقل إلى سلة المهملات.",
+"two": "أُوقف عنصران ونُقل إلى سلة المهملات.",
+"few": "أُوقف %lld عناصر ونُقل إلى سلة المهملات.",
+"many": "أُوقف %lld عنصرًا ونُقل إلى سلة المهملات.",
+"other": "أُوقف %lld عنصرًا ونُقل إلى سلة المهملات."
+}
+},
+"Back up %lld apps": {
+"en_plural": {
+"one": "Back up %lld app",
+"other": "Back up %lld apps"
+},
+"ar_plural": {
+"zero": "نسخ 0 تطبيقات احتياطيًا",
+"one": "نسخ تطبيقًا واحدًا احتياطيًا",
+"two": "نسخ تطبيقين احتياطيًا",
+"few": "نسخ %lld تطبيقات احتياطيًا",
+"many": "نسخ %lld تطبيقًا احتياطيًا",
+"other": "نسخ %lld تطبيقًا احتياطيًا"
+}
+},
+"Could not revoke %lld permissions": {
+"en_plural": {
+"one": "Could not revoke %lld permission",
+"other": "Could not revoke %lld permissions"
+},
+"ar_plural": {
+"zero": "تعذّر إلغاء 0 أذونات",
+"one": "تعذّر إلغاء إذن واحد",
+"two": "تعذّر إلغاء إذنين",
+"few": "تعذّر إلغاء %lld أذونات",
+"many": "تعذّر إلغاء %lld إذنًا",
+"other": "تعذّر إلغاء %lld إذنًا"
+}
+},
+"Disable %lld Items": {
+"en_plural": {
+"one": "Disable %lld Item",
+"other": "Disable %lld Items"
+},
+"ar_plural": {
+"zero": "تعطيل 0 عناصر",
+"one": "تعطيل عنصر واحد",
+"two": "تعطيل عنصرين",
+"few": "تعطيل %lld عناصر",
+"many": "تعطيل %lld عنصرًا",
+"other": "تعطيل %lld عنصرًا"
+}
+},
+"Enable %lld Items": {
+"en_plural": {
+"one": "Enable %lld Item",
+"other": "Enable %lld Items"
+},
+"ar_plural": {
+"zero": "تمكين 0 عناصر",
+"one": "تمكين عنصر واحد",
+"two": "تمكين عنصرين",
+"few": "تمكين %lld عناصر",
+"many": "تمكين %lld عنصرًا",
+"other": "تمكين %lld عنصرًا"
+}
+},
+"Move %lld apps to the Trash?": {
+"en_plural": {
+"one": "Move %lld app to the Trash?",
+"other": "Move %lld apps to the Trash?"
+},
+"ar_plural": {
+"zero": "هل تريد نقل 0 تطبيقات إلى سلة المهملات؟",
+"one": "هل تريد نقل تطبيق واحد إلى سلة المهملات؟",
+"two": "هل تريد نقل تطبيقين إلى سلة المهملات؟",
+"few": "هل تريد نقل %lld تطبيقات إلى سلة المهملات؟",
+"many": "هل تريد نقل %lld تطبيقًا إلى سلة المهملات؟",
+"other": "هل تريد نقل %lld تطبيقًا إلى سلة المهملات؟"
+}
+},
+"Move %lld backups to the Trash?": {
+"en_plural": {
+"one": "Move %lld backup to the Trash?",
+"other": "Move %lld backups to the Trash?"
+},
+"ar_plural": {
+"zero": "هل تريد نقل 0 نسخ احتياطية إلى سلة المهملات؟",
+"one": "هل تريد نقل نسخة احتياطية واحدة إلى سلة المهملات؟",
+"two": "هل تريد نقل نسختين احتياطيتين إلى سلة المهملات؟",
+"few": "هل تريد نقل %lld نسخ احتياطية إلى سلة المهملات؟",
+"many": "هل تريد نقل %lld نسخة احتياطية إلى سلة المهملات؟",
+"other": "هل تريد نقل %lld نسخة احتياطية إلى سلة المهملات؟"
+}
+},
+"Remove %lld Items…": {
+"en_plural": {
+"one": "Remove %lld Item…",
+"other": "Remove %lld Items…"
+},
+"ar_plural": {
+"zero": "إزالة 0 عناصر…",
+"one": "إزالة عنصر واحد…",
+"two": "إزالة عنصرين…",
+"few": "إزالة %lld عناصر…",
+"many": "إزالة %lld عنصرًا…",
+"other": "إزالة %lld عنصرًا…"
+}
+},
+"Remove %lld startup items?": {
+"en_plural": {
+"one": "Remove %lld startup item?",
+"other": "Remove %lld startup items?"
+},
+"ar_plural": {
+"zero": "هل تريد إزالة 0 عناصر من عناصر بدء التشغيل؟",
+"one": "هل تريد إزالة عنصر واحد من عناصر بدء التشغيل؟",
+"two": "هل تريد إزالة عنصرين من عناصر بدء التشغيل؟",
+"few": "هل تريد إزالة %lld عناصر من عناصر بدء التشغيل؟",
+"many": "هل تريد إزالة %lld عنصرًا من عناصر بدء التشغيل؟",
+"other": "هل تريد إزالة %lld عنصرًا من عناصر بدء التشغيل؟"
+}
+},
+"Restore %lld Items": {
+"en_plural": {
+"one": "Restore %lld Item",
+"other": "Restore %lld Items"
+},
+"ar_plural": {
+"zero": "استعادة 0 عناصر",
+"one": "استعادة عنصر واحد",
+"two": "استعادة عنصرين",
+"few": "استعادة %lld عناصر",
+"many": "استعادة %lld عنصرًا",
+"other": "استعادة %lld عنصرًا"
+}
+},
+"Restored %lld items": {
+"en_plural": {
+"one": "Restored %lld item",
+"other": "Restored %lld items"
+},
+"ar_plural": {
+"zero": "استُعيد 0 عناصر",
+"one": "استُعيد عنصر واحد",
+"two": "استُعيد عنصران",
+"few": "استُعيد %lld عناصر",
+"many": "استُعيد %lld عنصرًا",
+"other": "استُعيد %lld عنصرًا"
+}
+},
+"Revoke %lld Permissions…": {
+"en_plural": {
+"one": "Revoke %lld Permission…",
+"other": "Revoke %lld Permissions…"
+},
+"ar_plural": {
+"zero": "إلغاء 0 أذونات…",
+"one": "إلغاء إذن واحد…",
+"two": "إلغاء إذنين…",
+"few": "إلغاء %lld أذونات…",
+"many": "إلغاء %lld إذنًا…",
+"other": "إلغاء %lld إذنًا…"
+}
+},
+"Revoke %lld permissions?": {
+"en_plural": {
+"one": "Revoke %lld permission?",
+"other": "Revoke %lld permissions?"
+},
+"ar_plural": {
+"zero": "هل تريد إلغاء 0 أذونات؟",
+"one": "هل تريد إلغاء إذن واحد؟",
+"two": "هل تريد إلغاء إذنين؟",
+"few": "هل تريد إلغاء %lld أذونات؟",
+"many": "هل تريد إلغاء %lld إذنًا؟",
+"other": "هل تريد إلغاء %lld إذنًا؟"
+}
+},
+"Uninstall %lld apps completely?": {
+"en_plural": {
+"one": "Uninstall %lld app completely?",
+"other": "Uninstall %lld apps completely?"
+},
+"ar_plural": {
+"zero": "هل تريد إلغاء تثبيت 0 تطبيقات بالكامل؟",
+"one": "هل تريد إلغاء تثبيت تطبيق واحد بالكامل؟",
+"two": "هل تريد إلغاء تثبيت تطبيقين بالكامل؟",
+"few": "هل تريد إلغاء تثبيت %lld تطبيقات بالكامل؟",
+"many": "هل تريد إلغاء تثبيت %lld تطبيقًا بالكامل؟",
+"other": "هل تريد إلغاء تثبيت %lld تطبيقًا بالكامل؟"
+}
+},
+"Uninstalled %lld apps": {
+"en_plural": {
+"one": "Uninstalled %lld app",
+"other": "Uninstalled %lld apps"
+},
+"ar_plural": {
+"zero": "أُلغي تثبيت 0 تطبيقات",
+"one": "أُلغي تثبيت تطبيق واحد",
+"two": "أُلغي تثبيت تطبيقان",
+"few": "أُلغي تثبيت %lld تطبيقات",
+"many": "أُلغي تثبيت %lld تطبيقًا",
+"other": "أُلغي تثبيت %lld تطبيقًا"
+}
+},
+"%@ is open. Quit it first, then remove this extension together with its app.": {
+"ar": "%@ مفتوح. أنهِه أولًا، ثم أزل هذا الامتداد مع تطبيقه."
+},
+"%@ will lose access to %@ for all users. macOS asks for an administrator’s password first.": {
+"ar": "سيفقد %@ الوصول إلى %@ لجميع المستخدمين. يطلب macOS كلمة سر المسؤول أولًا."
+},
+"1 to 2 Years": {
+"ar": "من سنة إلى سنتين"
+},
+"6 to 12 Months": {
+"ar": "من 6 إلى 12 شهرًا"
+},
+"A backup could not be moved to the Trash.": {
+"ar": "تعذّر نقل نسخة احتياطية إلى سلة المهملات."
+},
+"Allow the selected disabled items to start again": {
+"ar": "اسمح للعناصر المعطّلة المحددة بالتشغيل مرة أخرى"
+},
+"Apps": {
+"ar": "التطبيقات"
+},
+"Back Up": {
+"ar": "نسخ احتياطي"
+},
+"Back Up…": {
+"ar": "نسخ احتياطي…"
+},
+"Back up": {
+"ar": "نسخ احتياطي"
+},
+"Back up apps with Back Up…, or before removing them; the backups appear here.": {
+"ar": "انسخ التطبيقات احتياطيًا بالأمر «نسخ احتياطي…» أو قبل إزالتها؛ تظهر النسخ هنا."
+},
+"Back up first": {
+"ar": "نسخ احتياطي أولًا"
+},
+"Back up the checked apps (or the selected app): the whole app or only its settings. Nothing is removed.": {
+"ar": "انسخ التطبيقات المحددة (أو التطبيق المختار) احتياطيًا: التطبيق كاملًا أو إعداداته فقط. لا يُزال أي شيء."
+},
+"Blurry or Dark": {
+"ar": "ضبابية أو مظلمة"
+},
+"Choose backups": {
+"ar": "اختر النسخ الاحتياطية"
+},
+"Choose one or more backups to see what they hold and what to restore.": {
+"ar": "اختر نسخة احتياطية أو أكثر لترى محتواها وما تريد استعادته."
+},
+"Clear Selection": {
+"ar": "مسح التحديد"
+},
+"Click a photo to compare it with the one kept in its group.": {
+"ar": "انقر صورة لمقارنتها بالصورة المحفوظة في مجموعتها."
+},
+"Compared with the photo kept in its group.": {
+"ar": "مقارنة بالصورة المحفوظة في مجموعتها."
+},
+"Delete the checked apps (or the selected app) and everything they installed for good, as if never installed. Not to the Trash.": {
+"ar": "احذف التطبيقات المحددة (أو التطبيق المختار) وكل ما ثبّتته نهائيًا، كأنها لم تُثبَّت قط. لا تذهب إلى سلة المهملات."
+},
+"Deleted for good": {
+"ar": "حُذف نهائيًا"
+},
+"Dimensions": {
+"ar": "الأبعاد"
+},
+"Disable": {
+"ar": "تعطيل"
+},
+"Disable stops it and keeps it from starting again; its file stays. Enable undoes it.": {
+"ar": "التعطيل يوقفه ويمنعه من التشغيل مجددًا، ويبقى ملفه. التمكين يلغي ذلك."
+},
+"Disabled": {
+"ar": "معطّل"
+},
+"Disabled. It was stopped and will not start again until you enable it.": {
+"ar": "معطّل. أُوقف ولن يعمل مجددًا حتى تمكّنه."
+},
+"Don't Remove": {
+"ar": "لا تُزِل"
+},
+"Each app and everything listed below are deleted for good, as if the app had never been installed. They do not go to the Trash and can't be put back, except from a backup.": {
+"ar": "يُحذف كل تطبيق وكل ما هو مدرج أدناه نهائيًا، كأن التطبيق لم يُثبَّت قط. لا تذهب إلى سلة المهملات ولا يمكن إرجاعها إلا من نسخة احتياطية."
+},
+"Enable": {
+"ar": "تمكين"
+},
+"Enabled. It can start again, and was started now if macOS allowed it.": {
+"ar": "ممكَّن. يمكنه العمل مجددًا، وقد شُغّل الآن إن سمح macOS بذلك."
+},
+"Finding everything the apps installed…": {
+"ar": "جارٍ البحث عن كل ما ثبّتته التطبيقات…"
+},
+"Folder": {
+"ar": "المجلد"
+},
+"Force Quit %@…": {
+"ar": "فرض إنهاء %@…"
+},
+"From the App Store. You can download it again from your purchases.": {
+"ar": "من App Store. يمكنك تنزيله مرة أخرى من مشترياتك."
+},
+"Homebrew cask %@: removed with “brew uninstall --cask --zap” first.": {
+"ar": "حزمة Homebrew %@: تُزال أولًا بالأمر «brew uninstall --cask --zap»."
+},
+"Homebrew formula %@: removed with “brew uninstall” first.": {
+"ar": "صيغة Homebrew %@: تُزال أولًا بالأمر «brew uninstall»."
+},
+"If an app's backup fails, that app is kept.": {
+"ar": "إذا فشل النسخ الاحتياطي لتطبيق، يُترك ذلك التطبيق."
+},
+"Installed by a package (%@). Its installer record stays.": {
+"ar": "ثُبّت بحزمة (%@). يبقى سجل التثبيت."
+},
+"Items for all users are changed with Clenvra’s helper. Install it in Settings, or use Login Items Settings.": {
+"ar": "تُغيَّر العناصر الخاصة بجميع المستخدمين عبر مساعد Clenvra. ثبّته من الإعدادات، أو استخدم إعدادات عناصر تسجيل الدخول."
+},
+"Keep This Instead": {
+"ar": "احتفظ بهذه بدلًا منها"
+},
+"Keep this photo and select the other photos of its group to move to the Trash.": {
+"ar": "احتفظ بهذه الصورة وحدد صور مجموعتها الأخرى لنقلها إلى سلة المهملات."
+},
+"Keeping %@": {
+"ar": "الاحتفاظ بـ %@"
+},
+"Kept, %@": {
+"ar": "محفوظة، %@"
+},
+"Kept: Homebrew could not remove it (%@).": {
+"ar": "تُرك: تعذّر على Homebrew إزالته (%@)."
+},
+"Less than 6 Months": {
+"ar": "أقل من 6 أشهر"
+},
+"Manage in Login Items Settings": {
+"ar": "الإدارة في إعدادات عناصر تسجيل الدخول"
+},
+"Move %@ to the Trash?": {
+"ar": "هل تريد نقل %@ إلى سلة المهملات؟"
+},
+"Move Backups to Trash": {
+"ar": "نقل النسخ الاحتياطية إلى سلة المهملات"
+},
+"Move the checked apps (or the selected app) and their files to the Trash. You can put them back from Activity (⌘⌫)": {
+"ar": "انقل التطبيقات المحددة (أو التطبيق المختار) وملفاتها إلى سلة المهملات. يمكنك إرجاعها من السجل (⌘⌫)"
+},
+"More than 2 Years": {
+"ar": "أكثر من سنتين"
+},
+"Needs your administrator password": {
+"ar": "يحتاج إلى كلمة سر المسؤول"
+},
+"Not Rated": {
+"ar": "غير مقيّمة"
+},
+"Not Removed": {
+"ar": "لن تُزال"
+},
+"Nothing was changed: an administrator’s password is needed for items for all users.": {
+"ar": "لم يتغير شيء: يلزم كلمة سر المسؤول للعناصر الخاصة بجميع المستخدمين."
+},
+"Nothing was replaced. Turn on “Replace the current version” to swap in the backup's copy.": {
+"ar": "لم يُستبدل شيء. فعّل «استبدال الإصدار الحالي» لوضع نسخة النسخة الاحتياطية مكانه."
+},
+"Only the app's settings and data: preferences, Application Support, containers, saved state and cookies. Not the app itself, its caches or logs.": {
+"ar": "إعدادات التطبيق وبياناته فقط: التفضيلات وApplication Support والحاويات والحالة المحفوظة وملفات تعريف الارتباط. ليس التطبيق نفسه ولا ذاكرته المؤقتة أو سجلاته."
+},
+"Programs listed by path, not as an app, can only be changed in System Settings.": {
+"ar": "البرامج المدرجة بمسارها لا كتطبيق لا يمكن تغييرها إلا من إعدادات النظام."
+},
+"Put the checked items of the chosen backups back where they were": {
+"ar": "أرجع العناصر المحددة من النسخ الاحتياطية المختارة إلى أماكنها"
+},
+"Quality": {
+"ar": "الجودة"
+},
+"Quit %@…": {
+"ar": "إنهاء %@…"
+},
+"Quit the app this extension belongs to, so you can remove it": {
+"ar": "أنهِ التطبيق الذي ينتمي إليه هذا الامتداد لتتمكن من إزالته"
+},
+"Rated blurry or dark. It is in no group, so nothing else is kept in its place.": {
+"ar": "مقيّمة كضبابية أو مظلمة. ليست في أي مجموعة، لذا لا يُحتفظ بغيرها مكانها."
+},
+"Remove the selected permissions. macOS asks again the next time the app needs them.": {
+"ar": "أزل الأذونات المحددة. يطلبها macOS مرة أخرى عندما يحتاجها التطبيق."
+},
+"Replace the current version": {
+"ar": "استبدال الإصدار الحالي"
+},
+"Review and move the selected photos to the Trash (⌘⌫)": {
+"ar": "راجع الصور المحددة وانقلها إلى سلة المهملات (⌘⌫)"
+},
+"Screenshot or Document": {
+"ar": "لقطة شاشة أو مستند"
+},
+"Select All but the Kept Photo": {
+"ar": "تحديد الكل عدا الصورة المحفوظة"
+},
+"Select Suggested": {
+"ar": "تحديد المقترح"
+},
+"Select all %@": {
+"ar": "تحديد كل %@"
+},
+"Select every photo except the one kept in each group, and every blurry or dark photo.": {
+"ar": "حدد كل صورة عدا المحفوظة في كل مجموعة، وكل صورة ضبابية أو مظلمة."
+},
+"Select the suggested photos or clear the selection": {
+"ar": "حدد الصور المقترحة أو امسح التحديد"
+},
+"Selected to move to the Trash. Click the photo to compare it with the one kept.": {
+"ar": "محددة للنقل إلى سلة المهملات. انقر الصورة لمقارنتها بالمحفوظة."
+},
+"Selects every photo in this group except the one marked Keep.": {
+"ar": "يحدد كل صورة في هذه المجموعة عدا المعلّمة بالاحتفاظ."
+},
+"Settings only": {
+"ar": "الإعدادات فقط"
+},
+"Show the app backups and restore all or part of them": {
+"ar": "اعرض نسخ التطبيقات الاحتياطية واستعدها كلها أو جزءًا منها"
+},
+"Some items were changed. Others were not: %@": {
+"ar": "تغيّر بعض العناصر. ولم يتغير غيرها: %@"
+},
+"Some items were moved to the Trash. Others were kept: %@": {
+"ar": "نُقل بعض العناصر إلى سلة المهملات. وتُرك غيرها: %@"
+},
+"Stop the selected items and keep them from starting again. Enable undoes it.": {
+"ar": "أوقف العناصر المحددة وامنعها من التشغيل مجددًا. التمكين يلغي ذلك."
+},
+"Stop the selected items and move their files to the Trash": {
+"ar": "أوقف العناصر المحددة وانقل ملفاتها إلى سلة المهملات"
+},
+"Stopped now, they will not start again. Their files go to the Trash, so you can put them back.": {
+"ar": "تُوقف الآن ولن تعمل مجددًا. تذهب ملفاتها إلى سلة المهملات، فيمكنك إرجاعها."
+},
+"The app and every file it owns, so you can go back to this exact state later, for example after an upgrade.": {
+"ar": "التطبيق وكل ملف يملكه، لتعود إلى هذه الحالة نفسها لاحقًا، مثلًا بعد تحديث."
+},
+"The best photo in every group is kept; the others are selected for you to review.": {
+"ar": "يُحتفظ بأفضل صورة في كل مجموعة، والبقية محددة لتراجعها."
+},
+"These apps still have access. Change them in System Settings.": {
+"ar": "ما زال لهذه التطبيقات وصول. غيّرها من إعدادات النظام."
+},
+"These apps will lose these permissions. Permissions for all users ask for an administrator’s password.": {
+"ar": "ستفقد هذه التطبيقات هذه الأذونات. أذونات جميع المستخدمين تطلب كلمة سر المسؤول."
+},
+"These apps will lose these permissions. macOS asks again the next time they need them.": {
+"ar": "ستفقد هذه التطبيقات هذه الأذونات. يطلبها macOS مرة أخرى عندما تحتاجها."
+},
+"These backups can no longer be restored once the Trash is emptied.": {
+"ar": "لا يمكن استعادة هذه النسخ الاحتياطية بعد إفراغ سلة المهملات."
+},
+"This item cannot be changed here. Login Items Settings shows what macOS allows.": {
+"ar": "لا يمكن تغيير هذا العنصر هنا. تعرض إعدادات عناصر تسجيل الدخول ما يسمح به macOS."
+},
+"This item cannot be changed here. Use Login Items Settings.": {
+"ar": "لا يمكن تغيير هذا العنصر هنا. استخدم إعدادات عناصر تسجيل الدخول."
+},
+"This item changed since it was listed, so nothing was done. Refresh and try again.": {
+"ar": "تغيّر هذا العنصر بعد إدراجه، فلم يُفعل شيء. حدّث وحاول مرة أخرى."
+},
+"This item is for all users: Disable and Enable ask for an administrator’s password each time.": {
+"ar": "هذا العنصر لجميع المستخدمين: يطلب التعطيل والتمكين كلمة سر المسؤول في كل مرة."
+},
+"This permission cannot be revoked here": {
+"ar": "لا يمكن إلغاء هذا الإذن هنا"
+},
+"This permission is for all users. Revoke asks for an administrator’s password, then removes it.": {
+"ar": "هذا الإذن لجميع المستخدمين. يطلب الإلغاء كلمة سر المسؤول ثم يزيله."
+},
+"This photo is kept. The other photos of its group are compared with it.": {
+"ar": "هذه الصورة محفوظة. تُقارن بها صور مجموعتها الأخرى."
+},
+"This photo is kept. To remove it, choose Keep This Instead on another photo of its group.": {
+"ar": "هذه الصورة محفوظة. لإزالتها، اختر «احتفظ بهذه بدلًا منها» على صورة أخرى من مجموعتها."
+},
+"Together this frees about %@.": {
+"ar": "يحرّر هذا معًا نحو %@."
+},
+"Uninstall Permanently": {
+"ar": "إلغاء التثبيت نهائيًا"
+},
+"Unknown Date": {
+"ar": "تاريخ غير معروف"
+},
+"Unknown app": {
+"ar": "تطبيق غير معروف"
+},
+"Waiting for approval": {
+"ar": "بانتظار الموافقة"
+},
+"When something is already at an item's place, it is moved to the Trash first and the backup's copy is put back. You can put the current copy back from Activity. When off, existing items are left alone.": {
+"ar": "إذا وُجد شيء في مكان عنصر، يُنقل أولًا إلى سلة المهملات ثم تُرجع نسخة النسخة الاحتياطية. يمكنك إرجاع النسخة الحالية من السجل. عند الإيقاف تُترك العناصر الموجودة كما هي."
+},
+"Whole app": {
+"ar": "التطبيق كاملًا"
+},
+"You can put them back from Activity.": {
+"ar": "يمكنك إرجاعها من السجل."
+},
+"You chose to keep this photo.": {
+"ar": "اخترت الاحتفاظ بهذه الصورة."
+},
+"macOS could not change this item.": {
+"ar": "تعذّر على macOS تغيير هذا العنصر."
+},
+"macOS is waiting for you to allow this item. Only Login Items Settings can allow it.": {
+"ar": "ينتظر macOS أن تسمح بهذا العنصر. لا يمكن السماح به إلا من إعدادات عناصر تسجيل الدخول."
+}
 }

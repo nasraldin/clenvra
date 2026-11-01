@@ -72,4 +72,27 @@ struct StringCatalogTests {
             #expect(stale.isEmpty, "\(url.lastPathComponent) has stale keys (run scripts/sync-strings.sh): \(stale)")
         }
     }
+
+    @Test("a translation whose placeholder takes another argument's type is reported (it crashes at run time)")
+    func mismatchedPlaceholders() throws {
+        let catalog = Data(
+            #"""
+            {"strings": {"%lld safe items, %@": {"localizations": {"ar": {"variations": {"plural": {
+              "one": {"stringUnit": {"state": "translated", "value": "عنصر آمن واحد، %@"}},
+              "two": {"stringUnit": {"state": "translated", "value": "عنصران آمنان، %2$@"}},
+              "other": {"stringUnit": {"state": "translated", "value": "%lld عنصرًا آمنًا، %@"}}}}}}}}}
+            """#.utf8)
+
+        let mismatched = try StringCatalogAudit.mismatchedPlaceholders(in: catalog)
+
+        #expect(mismatched == ["%lld safe items, %@ (ar one)"])
+    }
+
+    @Test("no translation in the repository gives a placeholder another argument's type")
+    func repositoryPlaceholdersMatch() throws {
+        for url in StringCatalogAudit.catalogsInRepository() {
+            let mismatched = try StringCatalogAudit.mismatchedPlaceholders(in: Data(contentsOf: url))
+            #expect(mismatched.isEmpty, "\(url.lastPathComponent): \(mismatched)")
+        }
+    }
 }
