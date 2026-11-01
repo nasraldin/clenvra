@@ -28,7 +28,7 @@ final class AppEnvironment {
     let helper = HelperClient()
     /// Installed, approved, and answering with this version's protocol.
     private(set) var helperAvailable = false
-    /// Installed and answering, but from another version of Clenvra (after an app update): it needs reinstalling.
+    /// Installed but from another version of Clenvra, or not answering (after an app update): it needs reinstalling.
     private(set) var helperNeedsUpdate = false
     /// Available once the login-shell PATH is known (tools from Homebrew, nvm, volta… live there).
     private(set) var toolSession: ToolStorageSession?
@@ -138,7 +138,10 @@ final class AppEnvironment {
     func refreshHelper() async {
         let version = try? await helper.protocolVersion()
         let available = version == HelperIdentity.protocolVersion
-        helperNeedsUpdate = version != nil && !available
+        // Installed but not answering also needs reinstalling: after the app is replaced by a new build, launchd can
+        // keep failing to start the registered helper (exit 78) until it is unregistered and registered again.
+        let installed = SMAppService.daemon(plistName: HelperIdentity.daemonPlistName).status == .enabled
+        helperNeedsUpdate = !available && (version != nil || installed)
         helperAvailable = available
         cleanupSession.helperAvailable = available
         startupSession.helperAvailable = available

@@ -6524,12 +6524,12 @@
         }
       }
     },
-    "It is from another version of Clenvra, so system cleanup, Uninstall’s system files and changes for all users are off until it is updated. macOS may ask you to approve it again.": {
+    "It is from another version of Clenvra or is not answering, so system cleanup, Uninstall’s system files and changes for all users are off until it is updated. macOS may ask you to approve it again.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إنه من إصدار آخر من Clenvra، لذا يتوقف تنظيف النظام وحذف ملفات النظام عند إلغاء التثبيت والتغييرات لجميع المستخدمين حتى يُحدَّث. قد يطلب macOS موافقتك مرة أخرى."
+            "value": "إنه من إصدار آخر من Clenvra أو لا يستجيب، لذا يتوقف تنظيف النظام وملفات النظام في إلغاء التثبيت والتغييرات لجميع المستخدمين حتى يُحدَّث. قد يطلب macOS موافقتك عليه مجددًا."
           }
         }
       }
@@ -12777,12 +12777,12 @@
         }
       }
     },
-    "The helper is installed but did not answer.": {
+    "The helper is installed but did not answer. Remove it and install it again, or use Update Helper on Overview.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المساعد مثبّت لكنه لم يستجب."
+            "value": "المساعد مثبَّت لكنه لم يستجب. أزله ثم ثبّته مجددًا، أو استخدم «تحديث المساعد» في النظرة العامة."
           }
         }
       }
@@ -13167,12 +13167,12 @@
         }
       }
     },
-    "This item is for all users, so it is changed through Clenvra’s helper. The installed helper is from another version of Clenvra; update it, then try again. macOS may ask you to approve it.": {
+    "This item is for all users, so it is changed through Clenvra’s helper. The installed helper is from another version of Clenvra or is not answering; update it, then try again. macOS may ask you to approve it.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذا العنصر لجميع المستخدمين، لذا يُغيَّر عبر مساعد Clenvra. المساعد المثبَّت من إصدار آخر من Clenvra؛ حدّثه ثم حاول مرة أخرى. قد يطلب macOS موافقتك عليه."
+            "value": "هذا العنصر لجميع المستخدمين، لذا يُغيَّر عبر مساعد Clenvra. المساعد المثبَّت من إصدار آخر من Clenvra أو لا يستجيب؛ حدّثه ثم حاول مرة أخرى. قد يطلب macOS موافقتك عليه."
           }
         }
       }

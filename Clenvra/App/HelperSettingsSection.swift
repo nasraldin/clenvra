@@ -37,8 +37,10 @@ struct HelperSettingsSection: View {
                     .foregroundStyle(.orange)
             }
             if connection == .unavailable, status == .enabled {
-                Text("The helper is installed but did not answer.")
-                    .foregroundStyle(.orange)
+                Text(
+                    "The helper is installed but did not answer. Remove it and install it again, or use Update Helper on Overview."
+                )
+                .foregroundStyle(.orange)
             }
             if let failure {
                 Text(failure).foregroundStyle(.red)

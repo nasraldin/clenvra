@@ -88,7 +88,7 @@ struct StartupView: View {
             } message: {
                 helperNeedsUpdate
                     ? Text(
-                        "This item is for all users, so it is changed through Clenvra’s helper. The installed helper is from another version of Clenvra; update it, then try again. macOS may ask you to approve it."
+                        "This item is for all users, so it is changed through Clenvra’s helper. The installed helper is from another version of Clenvra or is not answering; update it, then try again. macOS may ask you to approve it."
                     )
                     : Text(
                         "This item is for all users, so it is changed through Clenvra’s helper. Install it in Settings › System Helper, then try again."

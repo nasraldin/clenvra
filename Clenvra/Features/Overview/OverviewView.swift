@@ -196,7 +196,7 @@ struct OverviewView: View {
                     Image(systemName: "arrow.triangle.2.circlepath")
                 }
                 Text(
-                    "It is from another version of Clenvra, so system cleanup, Uninstall’s system files and changes for all users are off until it is updated. macOS may ask you to approve it again."
+                    "It is from another version of Clenvra or is not answering, so system cleanup, Uninstall’s system files and changes for all users are off until it is updated. macOS may ask you to approve it again."
                 )
                 .font(.callout)
                 .foregroundStyle(.secondary)
