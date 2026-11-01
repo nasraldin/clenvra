@@ -93,6 +93,14 @@ struct SettingsView: View {
             }
         }
         .frame(width: 620)
+        // With Keyboard navigation on, macOS gives the first tab (General) the keyboard focus, and its ring stays there
+        // after another tab is clicked, so it looks selected. Start with nothing focused, as System Settings does, and
+        // drop the focus after a click; a tab chosen with the keyboard keeps it, so keyboard users keep their place.
+        .onAppear { DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) } }
+        .onChange(of: tab) {
+            guard let event = NSApp.currentEvent, [.leftMouseDown, .leftMouseUp].contains(event.type) else { return }
+            DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) }
+        }
         .task { await refreshFullDiskAccess() }
         .sheet(isPresented: $isShowingGuide) { PermissionsGuideView(home: environment.home) }
         // The user may grant access in System Settings and come back.
