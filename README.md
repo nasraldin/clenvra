@@ -17,7 +17,20 @@
 
 Clenvra finds what fills your Mac: caches, logs, developer build data, duplicates, leftovers from removed apps, forgotten startup items. You choose what to remove. Everything goes to the Trash first, every action is recorded, and anything moved can be put back.
 
-> **Status:** 1.0. Signed and notarised builds are on the Releases page; you can also build from source. See [`docs/STATUS.md`](docs/STATUS.md).
+> **Status:** 1.0 release candidate. Signed and notarised builds are on the Releases page; you can also build from source. See [`docs/STATUS.md`](docs/STATUS.md).
+
+<table>
+  <tr>
+    <td width="50%"><a href="docs/store/screenshots/en/01-overview.png"><img src="docs/store/screenshots/en/01-overview.png" alt="Clenvra Overview in English"></a></td>
+    <td width="50%"><a href="docs/store/screenshots/ar/01-overview.png"><img src="docs/store/screenshots/ar/01-overview.png" alt="Clenvra Overview in Arabic"></a></td>
+  </tr>
+  <tr>
+    <td align="center">English</td>
+    <td align="center">العربية</td>
+  </tr>
+</table>
+
+More screenshots: [`docs/store/screenshots`](docs/store/screenshots).
 
 ## Features
 
