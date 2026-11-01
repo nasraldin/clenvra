@@ -78,6 +78,9 @@ public final class RecentItemsSession {
     public private(set) var appLists: [AppRecentList] = []
     public private(set) var selectedLists: Set<RecentList> = []
     public private(set) var selectedApps: Set<String> = []
+    /// Whether the last clearing of apps' lists restarted macOS's list service; if not, it may still show the old
+    /// lists until the person logs out.
+    public private(set) var listServiceRestarted = true
     private var lists: [RecentList: [String]] = [:]
 
     private let store: any RecentListStore
@@ -159,19 +162,29 @@ public final class RecentItemsSession {
         }
         let results = await deleter.run(deletions, mode: .moveToTrash)
         let summary = CleanupSummary(results: results)
-        if summary.movedToTrashCount > 0 { await restartListService() }
+        if summary.movedToTrashCount > 0 { listServiceRestarted = await restartListService() }
         selectedApps = []
         await load()
         isWorking = false
         return summary
     }
 
-    /// `launchctl kickstart -k` restarts the person's own list service; launchd keeps it running.
-    private func restartListService() async {
-        let command = Command(
+    /// Restarts the person's own list service so it reads the lists from disk again: `launchctl kickstart -k`, or, when
+    /// launchd refuses that for Apple's services (System Integrity Protection), a plain stop (`pkill -TERM`), after
+    /// which macOS starts the service again when it is next needed. `false` when neither worked.
+    private func restartListService() async -> Bool {
+        let uid = getuid()
+        let restart = Command(
             executable: "/bin/launchctl",
-            arguments: ["kickstart", "-k", "gui/\(getuid())/com.apple.coreservices.sharedfilelistd"],
+            arguments: ["kickstart", "-k", "gui/\(uid)/com.apple.coreservices.sharedfilelistd"], timeout: .seconds(15))
+        if let result = try? await runner.run(restart), result.terminationReason == .exited, result.exitStatus == 0 {
+            return true
+        }
+        let stop = Command(
+            executable: "/usr/bin/pkill", arguments: ["-TERM", "-x", "-U", "\(uid)", "sharedfilelistd"],
             timeout: .seconds(15))
-        _ = try? await runner.run(command)
+        guard let result = try? await runner.run(stop), result.terminationReason == .exited else { return false }
+        // 0: stopped; 1: not running, so it starts fresh when next needed.
+        return result.exitStatus == 0 || result.exitStatus == 1
     }
 }

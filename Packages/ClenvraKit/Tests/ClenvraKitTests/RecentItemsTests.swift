@@ -47,6 +47,7 @@ struct RecentItemsTests {
     private let kickstart = [
         "kickstart", "-k", "gui/\(getuid())/com.apple.coreservices.sharedfilelistd",
     ]
+    private let stop = ["-TERM", "-x", "-U", "\(getuid())", "sharedfilelistd"]
 
     init() throws {
         scratch = try TemporaryDirectory()
@@ -157,9 +158,40 @@ struct RecentItemsTests {
 
         #expect(summary.movedToTrashCount == 2)
         #expect(!FileManager.default.fileExists(atPath: path("lists/com.example.writer.sfl4")))
-        #expect(runner.commands.filter { $0.arguments == kickstart }.count == 1)
+        #expect(runner.commands.map(\.arguments) == [kickstart])
+        #expect(session.listServiceRestarted)
         #expect(session.appLists.isEmpty)
         #expect(session.selectedApps.isEmpty)
+    }
+
+    @Test("when launchd refuses the restart (System Integrity Protection), the list service is stopped instead")
+    func stopsListServiceWhenRestartIsRefused() async throws {
+        try writeList("com.example.writer", documents: ["docs/a.txt"])
+        runner.stub("/bin/launchctl", kickstart, status: 1)
+        runner.stub("/usr/bin/pkill", stop)
+        let session = session()
+        await session.load()
+        session.toggleApp("com.example.writer")
+
+        _ = await session.clearSelectedApps()
+
+        #expect(runner.commands.map(\.arguments) == [kickstart, stop])
+        #expect(session.listServiceRestarted)
+    }
+
+    @Test("when the list service can be neither restarted nor stopped, that is reported")
+    func reportsListServiceNotRestarted() async throws {
+        try writeList("com.example.writer", documents: ["docs/a.txt"])
+        runner.stub("/bin/launchctl", kickstart, status: 1)
+        runner.stub("/usr/bin/pkill", stop, status: 3)
+        let session = session()
+        await session.load()
+        session.toggleApp("com.example.writer")
+
+        let summary = await session.clearSelectedApps()
+
+        #expect(summary.movedToTrashCount == 1)
+        #expect(!session.listServiceRestarted)
     }
 
     @Test("an app that is open keeps its list, and the list service is not restarted")
