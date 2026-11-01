@@ -17,6 +17,14 @@ struct RecentItemsView: View {
     @State private var message: LocalizedStringResource?
     /// Bundle identifiers of the apps open now; their lists cannot be cleared.
     @State private var openApps: Set<String> = []
+    // The page draws only its own state, copied from the session when a read or a clear finishes. Both tabs share
+    // one session; a table that read it directly was still updated while SwiftUI took it down after a tab switch,
+    // and macOS 27 aborted ("AGGraphGetAttributeSubgraph").
+    @State private var allGroups: [RecentRow] = []
+    /// Chosen lists (`RecentList` raw values) or apps (bundle identifiers).
+    @State private var checked: Set<String> = []
+    @State private var isLoading = true
+    @State private var isWorking = false
     private let groups: ExpandedGroups
 
     init(session: RecentItemsSession, page: Page) {
@@ -28,14 +36,7 @@ struct RecentItemsView: View {
     private var section: AppSection { page == .mac ? .recentItems : .appRecentItems }
 
     var body: some View {
-        let shown = visibleGroups
-        // A new table whenever rows come or go (after Clear, Refresh or a search) instead of SwiftUI changing the old
-        // one in place: on macOS 27 that crashed when a list with highlighted rows went away. Open groups are kept
-        // in scene storage, so they survive.
-        let rowIDs = shown.flatMap { [$0.id] + $0.children.map(\.id) }
-        table(shown)
-            .id(rowIDs)
-            .onChange(of: rowIDs) { highlighted = [] }
+        table(visibleGroups)
             .accessibilityIdentifier("review.results")
             .accessibilityLabel(Text(section.title))
             .pageState(isShown: visibleGroups.isEmpty) { state }
@@ -77,7 +78,7 @@ struct RecentItemsView: View {
     }
 
     @ViewBuilder private var state: some View {
-        if session.isLoading {
+        if isLoading {
             ProgressView {
                 Text("Reading recent items…")
             }
@@ -145,31 +146,21 @@ struct RecentItemsView: View {
         .contextMenu(forSelectionType: RecentRow.ID.self) { ids in
             contextMenu(for: ids)
         }
-        .disabled(session.isWorking)
+        .disabled(isWorking)
     }
 
     @ViewBuilder private func checkbox(for row: RecentRow) -> some View {
-        if let list = row.list, row.isGroup {
+        if row.isGroup, let key = row.list?.rawValue ?? row.app {
             Toggle(
                 isOn: Binding(
-                    get: { session.selectedLists.contains(list) },
-                    set: { session.setSelected($0, list: list) })
+                    get: { checked.contains(key) },
+                    set: { if $0 { checked.insert(key) } else { checked.remove(key) } })
             ) {
                 Text("Include \(row.title)")
             }
             .toggleStyle(.checkbox)
             .labelsHidden()
-        } else if let app = row.app, row.isGroup {
-            Toggle(
-                isOn: Binding(
-                    get: { session.selectedApps.contains(app) },
-                    set: { if $0 != session.selectedApps.contains(app) { session.toggleApp(app) } })
-            ) {
-                Text("Include \(row.title)")
-            }
-            .toggleStyle(.checkbox)
-            .labelsHidden()
-            .disabled(openApps.contains(app))
+            .disabled(row.app.map(openApps.contains) ?? false)
         }
     }
 
@@ -202,7 +193,7 @@ struct RecentItemsView: View {
             }
             .keyboardShortcut("r", modifiers: .command)
             .help(Text("Read the recent items again (⌘R)"))
-            .disabled(session.isLoading || session.isWorking)
+            .disabled(isLoading || isWorking)
 
             ExpandAllButton(allExpanded: groups.allBinding(visibleGroups.map(\.id)))
                 .disabled(visibleGroups.isEmpty)
@@ -214,7 +205,7 @@ struct RecentItemsView: View {
             PrimaryActionButton(
                 title: "Clear…", symbol: "clock.badge.xmark",
                 help: "Review and clear the selected lists (⌘⌫)",
-                isDisabled: session.isWorking || (page == .mac ? session.selectedLists.isEmpty : clearableApps.isEmpty)
+                isDisabled: isWorking || clearable.isEmpty
             ) {
                 isConfirming = true
             }
@@ -223,19 +214,23 @@ struct RecentItemsView: View {
 
     // MARK: - Clearing
 
-    private var clearableApps: Set<String> { session.selectedApps.subtracting(openApps) }
+    /// The chosen lists that are shown; for apps, those of apps that are closed.
+    private var clearable: Set<String> {
+        let shown = Set(allGroups.compactMap { $0.list?.rawValue ?? $0.app })
+        return checked.intersection(shown).subtracting(page == .apps ? openApps : [])
+    }
 
     private var confirmationTitle: Text {
         page == .mac
-            ? Text("Clear \(session.selectedLists.count) lists?")
-            : Text("Clear the recent documents of \(clearableApps.count) apps?")
+            ? Text("Clear \(clearable.count) lists?")
+            : Text("Clear the recent documents of \(clearable.count) apps?")
     }
 
     private var confirmationMessage: LocalizedStringResource {
         if page == .apps {
             return "The documents stay where they are; only the apps’ lists go to the Trash."
         }
-        if session.selectedLists.contains(.finderFolders) {
+        if clearable.contains(RecentList.finderFolders.rawValue) {
             if LiveRecentListStore.openFinderWindows() > 0 {
                 return
                     "The documents and folders stay where they are; only the lists are emptied. To clear Recent Folders, Finder quits and opens again. It reopens its windows, and their folders are listed again: close Finder’s windows first to clear them too."
@@ -247,10 +242,13 @@ struct RecentItemsView: View {
     }
 
     private func clear() {
+        let chosen = clearable
         highlighted = []
+        isWorking = true
         Task {
             if page == .mac {
-                let includesFinder = session.selectedLists.contains(.finderFolders)
+                for list in RecentList.allCases { session.setSelected(chosen.contains(list.rawValue), list: list) }
+                let includesFinder = chosen.contains(RecentList.finderFolders.rawValue)
                 let failed = await session.clearSelectedLists()
                 if failed.isEmpty, includesFinder, !session.names(in: .finderFolders).isEmpty {
                     message = "Cleared. Finder reopened its windows, so their folders are listed again."
@@ -261,22 +259,44 @@ struct RecentItemsView: View {
                         "Some lists could not be cleared. Try again, or use Clear Menu in the Apple menu or Finder’s Go menu."
                 }
             } else {
-                session.setSelectedApps(clearableApps)
+                session.setSelectedApps(chosen)
                 let summary = await session.clearSelectedApps()
                 let kept = summary.problems.count
-                if kept == 0 {
-                    message = "Cleared. The lists are in the Trash, so you can put them back."
-                } else {
+                if kept > 0 {
                     message = "\(kept) lists were kept, because their app is open or the list changed."
+                } else if !session.listServiceRestarted {
+                    message =
+                        "The lists are in the Trash, but macOS keeps a copy in memory: apps may show them until you log out and back in."
+                } else {
+                    message = "Cleared. The lists are in the Trash, so you can put them back."
                 }
             }
+            checked = []
             refreshOpenApps()
+            rebuildRows()
+            isWorking = false
         }
     }
 
     private func reload() async {
         refreshOpenApps()
+        isLoading = true
         await session.load()
+        rebuildRows()
+        isLoading = false
+    }
+
+    /// Copies the session's lists into the page's rows.
+    private func rebuildRows() {
+        highlighted = []
+        allGroups =
+            page == .mac
+            ? RecentList.allCases.compactMap { list in
+                let names = session.names(in: list)
+                return names.isEmpty ? nil : RecentRow(list: list, names: names)
+            }
+            : session.appLists.map(RecentRow.init(app:))
+        checked = checked.intersection(allGroups.compactMap { $0.list?.rawValue ?? $0.app })
     }
 
     private func refreshOpenApps() {
@@ -287,15 +307,8 @@ struct RecentItemsView: View {
     // MARK: - Rows
 
     private var visibleGroups: [RecentRow] {
-        let all: [RecentRow] =
-            page == .mac
-            ? RecentList.allCases.compactMap { list in
-                let names = session.names(in: list)
-                return names.isEmpty ? nil : RecentRow(list: list, names: names)
-            }
-            : session.appLists.map(RecentRow.init(app:))
-        guard !query.isEmpty else { return all }
-        return all.compactMap { $0.filtered(by: query) }
+        guard !query.isEmpty else { return allGroups }
+        return allGroups.compactMap { $0.filtered(by: query) }
     }
 }
 

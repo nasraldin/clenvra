@@ -50,6 +50,13 @@ final class RecentItemsE2EUITests: XCTestCase {
         clear(in: app, expecting: ["Cleared."])
         sleep(5)
         XCTAssertEqual(app.state, .runningForeground, "Clenvra stopped after clearing")
+
+        // Switching between the two tabs after clearing used to stop the app on macOS 27.
+        for section in ["recentItems", "appRecentItems", "recentItems", "appRecentItems"] {
+            open(section: section, in: app)
+        }
+        sleep(3)
+        XCTAssertEqual(app.state, .runningForeground, "Clenvra stopped while switching tabs")
         XCTAssertTrue(textEdit.waitForNonExistence(timeout: 10), "TextEdit's list is still listed")
     }
 }

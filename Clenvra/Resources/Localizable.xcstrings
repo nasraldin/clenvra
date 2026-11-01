@@ -12827,6 +12827,16 @@
         }
       }
     },
+    "The lists are in the Trash, but macOS keeps a copy in memory: apps may show them until you log out and back in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القوائم في سلة المهملات، لكن macOS يحتفظ بنسخة منها في الذاكرة: قد تظهر في التطبيقات حتى تسجّل الخروج ثم تسجّل الدخول مجددًا."
+          }
+        }
+      }
+    },
     "The name looks related. Never selected automatically, so check before removing.": {
       "localizations": {
         "ar": {

@@ -115,5 +115,8 @@
 },
 "The documents and folders stay where they are; only the lists are emptied. To clear Recent Folders, Finder quits and opens again. It reopens its windows, and their folders are listed again: close Finder’s windows first to clear them too.": {
 "ar": "تبقى المستندات والمجلدات في أماكنها؛ تُفرَّغ القوائم فقط. لمسح المجلدات الأخيرة يُغلق Finder ثم يُفتح من جديد، ويعيد فتح نوافذه فتظهر مجلداتها في القائمة مجددًا: أغلق نوافذ Finder أولًا لمسحها أيضًا."
+},
+"The lists are in the Trash, but macOS keeps a copy in memory: apps may show them until you log out and back in.": {
+"ar": "القوائم في سلة المهملات، لكن macOS يحتفظ بنسخة منها في الذاكرة: قد تظهر في التطبيقات حتى تسجّل الخروج ثم تسجّل الدخول مجددًا."
 }
 }
