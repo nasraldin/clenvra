@@ -151,8 +151,7 @@ struct RecentItemsTests {
         runner.stub("/bin/launchctl", kickstart)
         let session = session()
         await session.load()
-        session.toggleApp("com.example.writer")
-        session.toggleApp("com.example.viewer")
+        session.setSelectedApps(["com.example.writer", "com.example.viewer"])
 
         let summary = await session.clearSelectedApps()
 
@@ -171,7 +170,7 @@ struct RecentItemsTests {
         runner.stub("/usr/bin/pkill", stop)
         let session = session()
         await session.load()
-        session.toggleApp("com.example.writer")
+        session.setSelectedApps(["com.example.writer"])
 
         _ = await session.clearSelectedApps()
 
@@ -186,7 +185,7 @@ struct RecentItemsTests {
         runner.stub("/usr/bin/pkill", stop, status: 3)
         let session = session()
         await session.load()
-        session.toggleApp("com.example.writer")
+        session.setSelectedApps(["com.example.writer"])
 
         let summary = await session.clearSelectedApps()
 
@@ -199,7 +198,7 @@ struct RecentItemsTests {
         try writeList("com.example.writer", documents: ["docs/a.txt"])
         let session = session(running: ["com.example.writer"])
         await session.load()
-        session.toggleApp("com.example.writer")
+        session.setSelectedApps(["com.example.writer"])
 
         let summary = await session.clearSelectedApps()
 

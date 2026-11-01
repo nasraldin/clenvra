@@ -138,14 +138,6 @@ public final class RecentItemsSession {
 
     // MARK: - Apps' lists
 
-    public func toggleApp(_ bundleIdentifier: String) {
-        if selectedApps.contains(bundleIdentifier) {
-            selectedApps.remove(bundleIdentifier)
-        } else if appLists.contains(where: { $0.id == bundleIdentifier }) {
-            selectedApps.insert(bundleIdentifier)
-        }
-    }
-
     public func setSelectedApps(_ bundleIdentifiers: Set<String>) {
         selectedApps = bundleIdentifiers.intersection(appLists.map(\.id))
     }
